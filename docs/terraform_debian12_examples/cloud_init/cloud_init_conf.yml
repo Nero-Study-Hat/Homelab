@@ -1,0 +1,20 @@
+#cloud-config
+ssh_pwauth: false
+ssh_deletekeys: false
+
+users:
+- name: ansible
+  gecos: Ansible User
+  groups: users,admin,wheel
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  shell: /bin/bash
+  lock_passwd: true
+  ssh_authorized_keys:
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDJdBIfJQdzYB1g2KCK40AutqNIIKeZqd43J7wQLSTGKjm32cCegDfYiKiRJouHeygwFWgaj2Gdby9C714Uhf1aAn4yFUvzGvSz7j7muxs9987DxIvqJ1Z7XD2KPaK9iUgroj+E0NbyBtHyA7MzICd80HJbiVxOvagvIUxOyP2mN/aU2ICH3K0TThoc01g8zMggA1CjRUkzJZDqotRc66D+ZVtndYD5ql8FuDhTGOeF9SsK9ybQg5alW6EDosHblFh82iKFAvmHPeYD8qzfTDKkddl+hrIHEI9YVwZJpzBOF6nyWWiH4kD54IF8bhbvewIHHgFwask/6k1+/nxF7DX/8tV7T8PPDP3Wd3CYlZlyoOAwkeVlkImbf3+qU7oLCa4M98M/N3m9djiIWIEGvpdB3A0hcjTjOGMlAGkdms19qWeoKm3L1PSf85juE7jkMAT6uuBC9KzcHi4u/L7SK/P2+R3jn4N+QWIev+UFgHudgEA8Pcq0j7KWvjtHHJyylZc= nero@stardom"
+
+runcmd:
+  - chmod 700 /home/ansible/.ssh
+  - chmod 600 .ssh/authorized_keys
+
+package_update: true
+package_upgrade: true

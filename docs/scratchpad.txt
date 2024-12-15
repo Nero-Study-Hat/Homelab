@@ -1,0 +1,29 @@
+try referencing this stuff for working with ansible later
+    # #creates ssh connection to check when the CT is ready for ansible provisioning
+    # connection {
+    #     host = var.ips[count.index]
+    #     user = var.user
+    #     private_key = file(var.ssh_keys["priv"])
+    #     agent = false
+    #     timeout = "3m"
+    # }
+
+    # provisioner "remote-exec" {
+    # # Leave this here so we know when to start with Ansible local-exec 
+    #     inline = [ "echo 'Cool, we are ready for provisioning'"]
+    # }
+
+    # provisioner "local-exec" {
+    #     working_dir = "../../ansible/"
+    #     command = "echo pers_cloud.yaml"
+    # }
+
+    # provisioner "local-exec" {
+    #     working_dir = "../../ansible/"
+    #     command = "ansible-playbook -u ${var.user} --key-file ${var.ssh_keys["priv"]} -i ${var.ips[count.index]}, provision.yaml"
+    # }
+
+    # provisioner "local-exec" {
+    #     working_dir = "../../ansible/"
+    #     command = "ansible-playbook -u ${var.user} --key-file ${var.ssh_keys["priv"]} -i ${var.ips[count.index]}, install-qemu-guest-agent.yaml"
+    # }
