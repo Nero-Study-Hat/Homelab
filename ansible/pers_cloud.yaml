@@ -1,1 +1,8 @@
-my testing gook
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Update apt cache and make sure cmatrix is installed (test task)
+      apt:
+        name: cmatrix
+        update_cache: yes

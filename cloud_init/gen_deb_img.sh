@@ -3,7 +3,7 @@
 wget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2
 
 # Set the VM ID to operate on
-VMID=9001
+VMID="$1"
 # Choose a name for the VM
 TEMPLATE_NAME=Debian12CloudInit
 # Choose the disk image to import
@@ -36,7 +36,6 @@ mkdir -p /var/lib/vz/snippets
 tee "/var/lib/vz/snippets/${CLOUD_CONF}" <<EOF
 #cloud-config
 ssh_pwauth: false
-ssh_deletekeys: false
 
 users:
 - name: ansible
@@ -54,4 +53,8 @@ runcmd:
 
 package_update: true
 package_upgrade: true
+
+packages:
+  - ansible
+  - git
 EOF
