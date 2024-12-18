@@ -101,22 +101,22 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
     }
 
 
-    connection {
-        host = data.sops_file.sops-secret.data["pm_ip"]
-        user = "ansible"
-        private_key = data.sops_file.sops-secret.data["priv_sshkey"]
-        agent = false
-        timeout = "3m"
-    }
+    # connection {
+    #     host = data.sops_file.sops-secret.data["pm_ip"]
+    #     user = "ansible"
+    #     private_key = data.sops_file.sops-secret.data["priv_sshkey"]
+    #     agent = false
+    #     timeout = "3m"
+    # }
 
-    provisioner "remote-exec" {
-    # Leave this here so we know when to start with Ansible local-exec 
-        inline = [ "echo 'Cool, we are ready for provisioning'"]
-    }
+    # provisioner "remote-exec" {
+    # # Leave this here so we know when to start with Ansible local-exec 
+    #     inline = [ "echo 'Cool, we are ready for provisioning'"]
+    # }
 
-    provisioner "local-exec" {
-        working_dir = "../ansible/"
-        command = "cat pers_cloud.yaml"
-    }
+    # provisioner "local-exec" {
+    #     working_dir = "../ansible/"
+    #     command = "cat pers_cloud.yaml"
+    # }
 
 }
