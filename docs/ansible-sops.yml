@@ -1,0 +1,9 @@
+---
+- hosts: all
+  vars:
+    sops: "{{ lookup('community.sops.sops', '../secrets/secrets.yaml') | ansible.builtin.from_yaml }}"
+  become: yes
+  tasks:
+    - name: Individual Lookup Test
+      ansible.builtin.debug:
+        msg: "{{ sops.pm_ip }}"

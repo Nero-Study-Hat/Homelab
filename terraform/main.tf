@@ -12,7 +12,7 @@ terraform {
 }
 
 data "sops_file" "sops-secret" {
-    source_file = "./secrets/secrets.yaml"
+    source_file = "../secrets/secrets.yaml"
 }
 
 provider "proxmox" {
@@ -77,7 +77,7 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
                     mbps_wr_burst      = 0.0
                     mbps_wr_concurrent = 0.0
                     replicate          = true
-                    size               = "32G"
+                    size               = "20G"
                     storage            = "local-lvm"
                 }
             }
@@ -99,24 +99,4 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
         bridge = "vmbr0"
         queues = 2 # num of cores
     }
-
-
-    # connection {
-    #     host = data.sops_file.sops-secret.data["pm_ip"]
-    #     user = "ansible"
-    #     private_key = data.sops_file.sops-secret.data["priv_sshkey"]
-    #     agent = false
-    #     timeout = "3m"
-    # }
-
-    # provisioner "remote-exec" {
-    # # Leave this here so we know when to start with Ansible local-exec 
-    #     inline = [ "echo 'Cool, we are ready for provisioning'"]
-    # }
-
-    # provisioner "local-exec" {
-    #     working_dir = "../ansible/"
-    #     command = "cat pers_cloud.yaml"
-    # }
-
 }

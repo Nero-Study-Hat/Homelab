@@ -35,3 +35,9 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+# Ignore Ansible roles
+/ansible/roles/
+
+# Ignore nix flake generated .direnv dir
+/.direnv/

@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-bash /mnt/nero-priv-data/Workspace/Tech/IT/Homelab/terraform/secrets/state-crypt.sh

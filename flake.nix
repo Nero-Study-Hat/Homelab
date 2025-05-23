@@ -27,6 +27,8 @@
 					ansible
 					sops
 					age
+                	libguestfs
+                	guestfs-tools
 				];
 
 				shellHook = ''

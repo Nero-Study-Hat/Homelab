@@ -1,29 +1,25 @@
-try referencing this stuff for working with ansible later
-    # #creates ssh connection to check when the CT is ready for ansible provisioning
-    # connection {
-    #     host = var.ips[count.index]
-    #     user = var.user
-    #     private_key = file(var.ssh_keys["priv"])
-    #     agent = false
-    #     timeout = "3m"
-    # }
+commands
+ansible-playbook -i inventory.yaml pers_cloud.yaml
 
-    # provisioner "remote-exec" {
-    # # Leave this here so we know when to start with Ansible local-exec 
-    #     inline = [ "echo 'Cool, we are ready for provisioning'"]
-    # }
+    # - name: copy Docker Compose files
+    #   copy:
+    #     src: '{{inventory_dir}}'/docker/{{ item }}
+    #     dest: /home/ansible/{{ item }}
+    #   loop:
+    #     - radicale_compose.yml
 
-    # provisioner "local-exec" {
-    #     working_dir = "../../ansible/"
-    #     command = "echo pers_cloud.yaml"
-    # }
+    # # use files parameter to use multiple docker-compose.yml files
+    # # mind the _v2 suffix
+    # - name: deploy Docker Compose stack
+    #   community.docker.docker_compose_v2:
+    #     project_src: /home/ansible
+    #     files:
+    #       - radicale_compose.yml
 
-    # provisioner "local-exec" {
-    #     working_dir = "../../ansible/"
-    #     command = "ansible-playbook -u ${var.user} --key-file ${var.ssh_keys["priv"]} -i ${var.ips[count.index]}, provision.yaml"
-    # }
+    - name: Get source code absolute path
+      shell: "echo '{{inventory_dir}}'/docker"
+      register: echo
 
-    # provisioner "local-exec" {
-    #     working_dir = "../../ansible/"
-    #     command = "ansible-playbook -u ${var.user} --key-file ${var.ssh_keys["priv"]} -i ${var.ips[count.index]}, install-qemu-guest-agent.yaml"
-    # }
+    - name: Show results
+      ansible.builtin.debug:
+        msg: "{{project_src}}"

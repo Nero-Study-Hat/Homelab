@@ -1,0 +1,77 @@
+
+# Manual Work In Wizard (not env vars because of broken secrets support)
+# - For the database use nextcloud-db as host and nextcloud as table and
+#   user name and enter the MYSQL_PASSWORD from your docker-compose.yml.
+
+# Services (containers) we would like this document to run
+services:
+  ## All services/containers go below this line (note the two space indentation in front).
+
+  # Nextcloud Docker Application
+  nextcloud:
+    image: nextcloud:stable
+    container_name: nextcloud
+    hostname: nextcloud
+    restart: unless-stopped
+    # Defines how we want our container to connect outside
+    networks:
+      # Use an internal network for the nextcloud services
+      - nextcloud_backend
+      - t3_proxy
+    # Persistent volumes with bind mounts to easily move/backup data
+    volumes:
+      # I like to use the /opt folder to hold my Docker bind mounted volumes
+      - /opt/volumes/nextcloud:/var/www/html
+    links:
+      - nextcloud-db
+    depends_on:
+      - nextcloud-db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.nerolab.dev`)"
+      - "traefik.http.routers.nextcloud.entrypoints=https"
+      - "traefik.http.routers.nextcloud.tls=true"
+      - "traefik.http.routers.nextcloud.tls.certresolver=desec"
+
+  # Nextcloud Database - Using MariaDB, but can also use MySQL or PostgreSQL
+  nextcloud-db:
+    image: mariadb:11.4
+    container_name: nextcloud-db
+    hostname: nextcloud-db
+    restart: unless-stopped
+    # Recommended database settings as listed in:
+    # https://docs.nextcloud.com/server/21/admin_manual/configuration_database/linux_database_configuration.html
+    command: --transaction-isolation=READ-COMMITTED --log-bin=msqyld-bin --binlog-format=ROW
+    # Defines how we want our container to connect outside
+    networks:
+      # ONLY using an internal network and not exposing to the internet
+      - nextcloud_backend
+    # Persistent volumes with bind mounts to easily move/backup data
+    volumes:
+      # I like to use the /opt folder to hold my Docker bind mounted volumes
+      - /opt/volumes/nextcloud-db:/var/lib/mysql
+    # Environment (internal to the container) variables to simplify setup (notice the secrets used below)
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_passwd
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD_FILE: /run/secrets/mariadb_user_passwd
+    secrets:
+      - mariadb_root_passwd
+      - mariadb_user_passwd
+
+secrets:
+  mariadb_root_passwd:
+    file: ./data/mariadb_root_passwd.txt
+  mariadb_user_passwd:
+    file: ./data/mariadb_user_passwd.txt
+
+# Declare networks at the high level to avoid confusion and to access those
+#   not initially started by this document.
+networks:
+  # Internal facing network for Nextcloud Docker containers
+  nextcloud_backend:
+    # Define how we want the network created
+    driver: bridge
+  t3_proxy:
+    external: true

@@ -1,0 +1,10 @@
+---
+# install cmd: ansible-galaxy install -r requirements.yml -p "<target/dir/>"
+
+roles:
+  - name: geerlingguy.docker
+    version: 7.4.3
+  - name: geerlingguy.pip
+    version: 3.1.0
+  - name: geerlingguy.swap
+    version: 1.2.0

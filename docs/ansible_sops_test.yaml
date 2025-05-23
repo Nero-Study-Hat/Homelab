@@ -1,0 +1,27 @@
+---
+- name: Create SOPS-encrypted private key
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Load encrypted credentials
+      community.sops.load_vars:
+        file: ../../secrets/secrets.yaml
+        name: sops_secrets
+        expressions: ignore  # explicitly do not evaluate expressions
+                            # on load (this is the default)
+
+    - name: Show IP
+      debug:
+        msg: "The IP is {{ sops_secrets.pm_ip }}"
+
+    - name: write to file
+      ansible.builtin.copy:
+        content: "{{ sops_secrets.pm_ip }}"
+        dest: "./test.txt"
+
+    - name: Wipe private key from Ansible's facts
+      # This is particularly important if the playbook doesn't end here!
+      set_fact:
+        sops_secrets: ''
+
+
