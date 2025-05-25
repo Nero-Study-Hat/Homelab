@@ -20,10 +20,12 @@ services:
       - t3_proxy
     # Persistent volumes with bind mounts to easily move/backup data
     volumes:
-      # I like to use the /opt folder to hold my Docker bind mounted volumes
-      - /opt/volumes/nextcloud:/var/www/html
-    links:
-      - nextcloud-db
+      - /mnt/nextcloud_storage/html:/var/www/html
+      - /mnt/nextcloud_storage/custom_apps:/var/www/html/custom_apps
+      - /mnt/nextcloud_storage/config:/var/www/html/config
+      - /mnt/nextcloud_storage/data:/var/www/html/data
+    environment:
+      NEXTCLOUD_TRUSTED_DOMAINS: nextcloud.nerolab.dev
     depends_on:
       - nextcloud-db
     labels:
@@ -33,24 +35,17 @@ services:
       - "traefik.http.routers.nextcloud.tls=true"
       - "traefik.http.routers.nextcloud.tls.certresolver=desec"
 
-  # Nextcloud Database - Using MariaDB, but can also use MySQL or PostgreSQL
+  # Nextcloud Database
   nextcloud-db:
     image: mariadb:11.4
     container_name: nextcloud-db
     hostname: nextcloud-db
     restart: unless-stopped
-    # Recommended database settings as listed in:
-    # https://docs.nextcloud.com/server/21/admin_manual/configuration_database/linux_database_configuration.html
     command: --transaction-isolation=READ-COMMITTED --log-bin=msqyld-bin --binlog-format=ROW
-    # Defines how we want our container to connect outside
     networks:
-      # ONLY using an internal network and not exposing to the internet
       - nextcloud_backend
-    # Persistent volumes with bind mounts to easily move/backup data
     volumes:
-      # I like to use the /opt folder to hold my Docker bind mounted volumes
-      - /opt/volumes/nextcloud-db:/var/lib/mysql
-    # Environment (internal to the container) variables to simplify setup (notice the secrets used below)
+      - ./nextcloud_db:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_passwd
       MYSQL_DATABASE: nextcloud
@@ -66,12 +61,8 @@ secrets:
   mariadb_user_passwd:
     file: ./data/mariadb_user_passwd.txt
 
-# Declare networks at the high level to avoid confusion and to access those
-#   not initially started by this document.
 networks:
-  # Internal facing network for Nextcloud Docker containers
   nextcloud_backend:
-    # Define how we want the network created
     driver: bridge
   t3_proxy:
     external: true

@@ -60,4 +60,4 @@
         project_name: nextcloud
         project_src: '{{target_compose_dir}}/nextcloud'
         files:
-          - nextcloud_compose.yml
+          - nextcloud_stack.yml

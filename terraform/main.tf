@@ -82,6 +82,22 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
                 }
             }
             scsi1 {
+                disk {
+                    backup             = false
+                    cache              = "none"
+                    discard            = true
+                    emulatessd         = true
+                    iothread           = true
+                    mbps_r_burst       = 0.0
+                    mbps_r_concurrent  = 0.0
+                    mbps_wr_burst      = 0.0
+                    mbps_wr_concurrent = 0.0
+                    replicate          = false
+                    size               = "4T"
+                    storage            = "data-hdd"
+                }
+            }
+            scsi2 {
                 cloudinit {
                     storage = "local-lvm"
                 }
