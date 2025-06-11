@@ -1,3 +1,10 @@
+locals {
+    os_disk_size = "15G"
+    data_disk_size = "2G"
+    netconfig0 = "ip=10.10.0.6/24,gw=10.10.0.1"
+    netconfig1 = "ip=10.0.0.7/24,gw=10.0.0.1"
+}
+
 terraform {
   required_providers {
     sops = {
@@ -12,7 +19,7 @@ terraform {
 }
 
 data "sops_file" "sops-secret" {
-    source_file = "../secrets/secrets.yaml"
+    source_file = "../../../secrets/secrets.yaml"
 }
 
 provider "proxmox" {
@@ -23,10 +30,10 @@ provider "proxmox" {
 }
 
 # requires cloudinit template already manually setup on proxmox
-resource "proxmox_vm_qemu" "debian12-cloud" {
+resource "proxmox_vm_qemu" "debian12-media" {
 
-    name = "debian12-cloud"
-    desc = "A test for using terraform and cloudinit"
+    name = "debian12-media"
+    desc = "Semi-Public Media Server"
     target_node = "pve"
 
     # Activate QEMU agent for this VM
@@ -47,14 +54,15 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
 
     # Cloud-Init Pre-Reqs configuration
     os_type = "cloud-init"
-    clone = "Debian12CloudInit"
+    clone = "Debian12-Tailscale"
 
     # Cloud-Init configuration
     # user is required for running custom cloud init config file
     cicustom = "vendor=local:snippets/ansible_user_setup.yml"
     ciuser     = data.sops_file.sops-secret.data["ci_user"]
     cipassword = data.sops_file.sops-secret.data["ci_password"]
-    ipconfig0  = "ip=10.0.0.6/24,gw=10.0.0.1"
+    ipconfig0  = local.netconfig0
+    ipconfig1  = local.netconfig1
     nameserver = "1.1.1.1 8.8.8.8"
     sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"]
 
@@ -77,7 +85,7 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
                     mbps_wr_burst      = 0.0
                     mbps_wr_concurrent = 0.0
                     replicate          = true
-                    size               = "20G"
+                    size               = local.os_disk_size
                     storage            = "local-lvm"
                 }
             }
@@ -93,7 +101,7 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
                     mbps_wr_burst      = 0.0
                     mbps_wr_concurrent = 0.0
                     replicate          = false
-                    size               = "4T"
+                    size               = local.data_disk_size
                     storage            = "data-hdd"
                 }
             }
@@ -109,10 +117,13 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
         storage = "local-lvm"
     }
 
+    # for vlan support manually on promox create
+    # a linux vlan and linux bridge using that vlan as bridged port
+    # then use the final linux bridge here
     network {
         id = 0
         model = "virtio"
-        bridge = "vmbr0"
+        bridge = "vmbr10"
         queues = 2 # num of cores
     }
 }

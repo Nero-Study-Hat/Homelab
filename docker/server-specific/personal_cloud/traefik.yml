@@ -1,6 +1,6 @@
 api:
   dashboard: true
-  debug: false
+  debug: true
 entryPoints:
   http:
     address: ":80"
@@ -24,11 +24,13 @@ certificatesResolvers:
   desec:
     acme:
       email: nerostudyhat@protonmail.com
-      storage: acme.json
-      caServer: https://acme-v02.api.letsencrypt.org/directory # prod (default)
-      # caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging
+      storage: /certs/acme.json
+      # caServer: https://acme-v02.api.letsencrypt.org/directory # prod (default)
+      caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging
       dnsChallenge:
         provider: desec
         resolvers:
           - "1.1.1.1:53"
           - "1.0.0.1:53"
+log:
+  level: DEBUG

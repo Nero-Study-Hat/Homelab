@@ -1,0 +1,74 @@
+---
+- name: Scratch Test
+  hosts: personal-cloud
+
+  tasks:
+    - name: Install parted
+      ansible.builtin.apt:
+        name: parted
+
+    - name: Read device information (always use unit when probing)
+      community.general.parted: device=/dev/sda unit=MiB
+      register: sdb_info
+
+    - name: Debug print
+      ansible.builtin.debug:
+        msg: "{{ sdb_info.partitions }}"
+        
+    - name: Debug test
+      ansible.builtin.debug:
+        msg: "YELPERS"
+      when: sdb_info.partitions|length < 15
+
+
+
+    # - name: Install parted
+    #   ansible.builtin.apt:
+    #     name: parted
+
+    # - name: Read /dev/sda device information
+    #   community.general.parted: device=/dev/sda unit=MiB
+    #   register: sda_info
+
+    # - name: If /dev/sda empty set var accordingly
+    #   set_fact: 
+    #     stor_disk: 'a'
+    #   when: sda_info.partitions|length == 0
+
+    # - name: Read /dev/sdb device information
+    #   community.general.parted: device=/dev/sdb unit=MiB
+    #   register: sdb_info
+
+    # - name: If /dev/sdb empty set var accordingly
+    #   set_fact:
+    #     stor_disk: 'b'
+    #   when: sdb_info.partitions|length == 0
+
+    # - name: Create an ext4 file-sys on /dev/sda
+    #   community.general.filesystem:
+    #     fstype: ext4
+    #     dev: /dev/sda
+    #   when: stor_disk == 'a'
+
+    # - name: Mount 4TB sda disk for Nextcloud Storage
+    #   ansible.posix.mount:
+    #     path: /mnt/nextcloud_storage
+    #     src: /dev/sda
+    #     fstype: ext4
+    #     state: mounted
+    #   when: stor_disk == 'a'
+
+
+    # - name: Create an ext4 file-sys on /dev/sdb
+    #   community.general.filesystem:
+    #     fstype: ext4
+    #     dev: /dev/sdb
+    #   when: stor_disk == 'b'
+
+    # - name: Mount 4TB sdb disk for Nextcloud Storage
+    #   ansible.posix.mount:
+    #     path: /mnt/nextcloud_storage
+    #     src: /dev/sdb
+    #     fstype: ext4
+    #     state: mounted
+    #   when: stor_disk == 'b'

@@ -24,13 +24,20 @@ services:
       - /mnt/nextcloud_storage/custom_apps:/var/www/html/custom_apps
       - /mnt/nextcloud_storage/config:/var/www/html/config
       - /mnt/nextcloud_storage/data:/var/www/html/data
+      - /etc/localtime:/etc/localtime:ro
     environment:
       NEXTCLOUD_TRUSTED_DOMAINS: nextcloud.nerolab.dev
+      REDIS_HOST: nextcloud-redis
+      REDIS_PORT: 6379
+    links:
+      - nextcloud-db
+      - nextcloud-redis
     depends_on:
       - nextcloud-db
+      - nextcloud-redis
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.nerolab.dev`)"
+      - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.ts.nerolab.dev`)"
       - "traefik.http.routers.nextcloud.entrypoints=https"
       - "traefik.http.routers.nextcloud.tls=true"
       - "traefik.http.routers.nextcloud.tls.certresolver=desec"
@@ -46,6 +53,7 @@ services:
       - nextcloud_backend
     volumes:
       - ./nextcloud_db:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
     environment:
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_passwd
       MYSQL_DATABASE: nextcloud
@@ -54,6 +62,16 @@ services:
     secrets:
       - mariadb_root_passwd
       - mariadb_user_passwd
+
+  nextcloud-redis:
+    hostname: nextcloud-redis
+    container_name: nextcloud-redis
+    image: redis:alpine
+    restart: unless-stopped
+    networks:
+      - nextcloud_backend
+    expose:
+      - 6379
 
 secrets:
   mariadb_root_passwd:

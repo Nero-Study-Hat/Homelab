@@ -1,0 +1,39 @@
+---
+- name: Alpine Test Container Setup
+  vars:
+    docker_dir: "/home/ansible/docker"
+    stack_dir: "/home/ansible/docker/alpine_stack"
+    compose_file: "alpine_stack"
+    local_docker_dir2: "/docker/"
+  hosts: semipub-media
+
+  tasks:
+    - name: Get source code absolute path
+      shell: dirname '{{inventory_dir}}'
+      register: dirname2
+
+    - name: Update local docker directory name variable
+      ansible.builtin.set_fact:
+        local_docker_dir: "{{ [dirname2.stdout, local_docker_dir2] | join('') }}"
+
+    - name: Create the remote docker service directory
+      ansible.builtin.file:
+        path: '{{docker_dir}}'
+        state: directory
+
+    - name: Create the remote project directory
+      ansible.builtin.file:
+        path: '{{stack_dir}}'
+        state: directory
+
+    - name: Copy the docker compose file
+      ansible.builtin.copy:
+        src: "{{local_docker_dir}}/{{compose_file}}.yml"
+        dest: "{{stack_dir}}/{{compose_file}}"
+
+    - name: Deploy Network Stack Docker Compose stack
+      community.docker.docker_compose_v2:
+        project_name: '{{compose_file}}'
+        project_src: '{{stack_dir}}'
+        files:
+          - '{{compose_file}}'

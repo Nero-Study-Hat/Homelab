@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
+### Run Process:
+### pre-req: run on the proxmox node with root
+### cmd: ./script.sh "9001"
+
 wget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2
 
 # Set the VM ID to operate on
 VMID="$1"
 # Choose a name for the VM
-TEMPLATE_NAME=Debian12CloudInit
+TEMPLATE_NAME="Debian12-SSH"
 # Choose the disk image to import
 DISKIMAGE=debian-12-genericcloud-amd64.qcow2
 # Select Host disk
@@ -33,7 +37,7 @@ fi
 
 mkdir -p /var/lib/vz/snippets
 
-tee "/var/lib/vz/snippets/${CLOUD_CONF}" <<EOF
+tee "/var/lib/vz/snippets/${CLOUD_CONF}" > /dev/null <<EOF
 #cloud-config
 ssh_pwauth: false
 
@@ -50,11 +54,8 @@ users:
 runcmd:
   - chmod 700 /home/ansible/.ssh
   - chmod 600 .ssh/authorized_keys
+  - curl -fsSL https://get.docker.com | sh
 
 package_update: true
 package_upgrade: true
-
-packages:
-  - ansible
-  - git
 EOF

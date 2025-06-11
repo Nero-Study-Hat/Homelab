@@ -1,0 +1,38 @@
+---
+- name: SearXNG Setup
+  vars:
+    #TODO: service groups variables (arrays)
+    docker_dir: "/home/ansible/docker"
+    app_dir: "/home/ansible/docker/searxng"
+    compose_file: "searxng_stack.yml"
+  hosts: personal-cloud
+  tasks:
+    - name: Get source code absolute path
+      shell: dirname '{{inventory_dir}}'
+      register: dirname
+
+    - name: Creates remote docker projects directory
+      ansible.builtin.file:
+        path: '{{docker_dir}}'
+        state: directory
+
+### SearXNG Setup ###
+
+    - name: Creates remote SearXNG project directory
+      ansible.builtin.file:
+        path: '{{app_dir}}'
+        state: directory
+
+    - name: Copy SearXNG docker compose file
+      copy:
+        src: "{{dirname.stdout}}/docker/{{ item }}"
+        dest: "{{app_dir}}/{{ item }}"
+      loop:
+        - '{{compose_file}}'
+
+    - name: Deploy SearXNG docker compose stack
+      community.docker.docker_compose_v2:
+        project_name: searxng
+        project_src: '{{app_dir}}'
+        files:
+          - '{{compose_file}}'

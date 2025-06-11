@@ -28,32 +28,32 @@
       loop:
         - nextcloud_stack.yml
 
-    - name: Load Sops Secrets
-      community.sops.load_vars:
-        file: ../../secrets/secrets.yaml
-        name: sops_secrets
-        expressions: ignore  # explicitly do not evaluate expressions
-                            # on load (this is the default)
-
     - name: Creates remote Nextcloud data directory
       ansible.builtin.file:
         path: '{{target_compose_dir}}/nextcloud/data'
         state: directory
 
+    - name: Load Sops Secrets Two
+      community.sops.load_vars:
+        file: ../../../secrets/secrets.yaml
+        name: sops_secrets_two
+        expressions: ignore  # explicitly do not evaluate expressions
+                            # on load (this is the default)
+
     - name: Create mariadb_root_passwd file
       ansible.builtin.copy:
-        content: "{{ sops_secrets.mariadb_root_passwd }}"
+        content: "{{ sops_secrets_two.mariadb_root_passwd }}"
         dest: "{{target_compose_dir}}/nextcloud/data/mariadb_root_passwd.txt"
 
     - name: Create mariadb_user_passwd file
       ansible.builtin.copy:
-        content: "{{ sops_secrets.mariadb_user_passwd }}"
+        content: "{{ sops_secrets_two.mariadb_user_passwd }}"
         dest: "{{target_compose_dir}}/nextcloud/data/mariadb_user_passwd.txt"
 
     - name: Wipe Sops Secrets from Ansible's facts
       # This is particularly important if the playbook doesn't end here!
       set_fact:
-        sops_secrets: ''
+        sops_secrets_two: ''
 
     - name: Deploy Nextcloud Docker Compose stack
       community.docker.docker_compose_v2:

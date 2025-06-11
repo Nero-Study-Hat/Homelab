@@ -1,0 +1,22 @@
+---
+- name: DNS Setup
+  hosts: semipub-media
+
+  tasks:
+    - name: Install resolvconf
+      ansible.builtin.apt:
+        name: resolvconf
+
+    - name: Handle resolvconf service
+      ansible.builtin.systemd_service:
+        name: resolvconf
+        state: started
+        enabled: true
+
+    - name: Ensure the correct nameserver line is in the conf
+      ansible.builtin.lineinfile:
+        path: /etc/resolvconf/resolv.conf.d/head
+        line: 'nameserver 10.0.0.3'
+
+    - name: Update resolveconf
+      ansible.builtin.raw: resolvconf --enable-updates && resolvconf -u && resolvconf --disable-updates

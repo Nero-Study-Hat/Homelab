@@ -1,0 +1,88 @@
+---
+- name: Network Stack Setup
+  vars:
+    docker_dir: "/home/ansible/docker"
+    stack_dir: "/home/ansible/docker/network_stack"
+    compose_file: "network_stack"
+    local_docker_dir: "/docker/server-specific/semipub_media"
+  hosts: semipub-media
+
+  tasks:
+    - name: Get source code absolute path
+      shell: dirname '{{inventory_dir}}'
+      register: dirname
+
+    - name: Update local docker directory name variable
+      ansible.builtin.set_fact:
+        local_docker_dir: "{{ [dirname.stdout, local_docker_dir] | join('') }}"
+
+    - name: Creates remote docker projects directory
+      ansible.builtin.file:
+        path: '{{docker_dir}}'
+        state: directory
+
+    - name: Creates remote Network_Stack project directory
+      ansible.builtin.file:
+        path: '{{stack_dir}}'
+        state: directory
+
+    - name: Copy Network Stack docker compose file
+      ansible.builtin.copy:
+        src: "{{local_docker_dir}}/network_stack.yml"
+        dest: "{{stack_dir}}/{{compose_file}}.yml"
+
+    - name: Load Sops Secrets
+      community.sops.load_vars:
+        file: ../../../secrets/secrets.yaml
+        name: sops_secrets
+        expressions: ignore  # explicitly do not evaluate expressions
+                            # on load (this is the default)
+
+    - name: Create .env file with traefik dashboard credentials and ts_authkey
+      ansible.builtin.copy:
+        dest: "{{stack_dir}}/.env"
+        content: |
+          TRAEFIK_DASHBOARD_CREDENTIALS={{sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS}}
+          TS_AUTHKEY={{sops_secrets.media_server_ts_auth_key}}
+
+    - name: Create api_token file
+      ansible.builtin.copy:
+        content: "{{sops_secrets.desec_api_token}}"
+        dest: "{{stack_dir}}/desec_api_token.txt"
+
+    - name: Wipe Sops Secrets from Ansible's facts
+      set_fact:
+        sops_secrets: ''
+
+    - name: Creates remote Pihole directory
+      ansible.builtin.file:
+        path: '{{stack_dir}}/pihole'
+        state: directory
+
+    - name: Creates remote Traefik directory
+      ansible.builtin.file:
+        path: '{{stack_dir}}/traefik/data'
+        state: directory
+
+    - name: Copy traefik.yml (config) file
+      ansible.builtin.copy:
+        src: "{{local_docker_dir}}/traefik.yml"
+        dest: "{{stack_dir}}/traefik/data/traefik.yml"
+
+    - name: Create tailscale-network docker network with custom subnet
+      community.docker.docker_network:
+        name: tailscale-network
+        ipam_config:
+          - subnet: 172.20.1.0/24
+            gateway: 172.20.1.1
+
+    - name: Create t3_proxy docker network
+      docker_network:
+        name: t3_proxy
+
+    - name: Deploy Network Stack Docker Compose stack
+      community.docker.docker_compose_v2:
+        project_name: network_stack
+        project_src: '{{stack_dir}}'
+        files:
+          - '{{compose_file}}.yml'

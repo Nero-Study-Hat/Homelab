@@ -1,0 +1,19 @@
+#cloud-config
+ssh_pwauth: false
+
+users:
+- name: ansible
+  gecos: Ansible User
+  groups: users,admin,wheel
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  shell: /bin/bash
+  lock_passwd: true
+
+runcmd:
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - tailscale up --ssh --accept-routes --authkey="${tailscale_auth_key}"
+  - tailscale set --ssh
+  - curl -fsSL https://get.docker.com | sh
+
+package_update: true
+package_upgrade: true

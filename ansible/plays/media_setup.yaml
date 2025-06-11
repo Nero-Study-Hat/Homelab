@@ -1,0 +1,8 @@
+---
+- import_playbook: ./media_plays/dns_setup.yaml
+- import_playbook: ./media_plays/disk_setup.yaml
+- import_playbook: ./media_plays/network_stack-setup.yaml
+- import_playbook: ./media_plays/alpine-setup.yaml
+
+- name: Full Setup - Proxmox Debian VM Personal Media Server
+  hosts: semipub-media

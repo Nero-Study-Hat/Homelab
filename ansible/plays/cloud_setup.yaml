@@ -1,0 +1,8 @@
+---
+- import_playbook: ./cloud_plays/disk_setup.yaml
+- import_playbook: ./cloud_plays/network_stack-setup.yaml
+- import_playbook: ./cloud_plays/nextcloud-setup.yaml
+- import_playbook: ./cloud_plays/searxng-setup.yaml
+
+- name: Full Setup - Proxmox Debian VM Personal Cloud Server
+  hosts: personal-cloud
