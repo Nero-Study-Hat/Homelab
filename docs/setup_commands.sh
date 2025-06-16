@@ -21,5 +21,17 @@ ansible-playbook -i ../inventory.yaml nextcloud-setup.yaml
 # https://serverfault.com/a/1165173
 
 docker stop $(docker ps -a -q)
-docker system prune
+docker system prune -a
+docker volume prune -a
 sudo rm -rf /home/ansible/docker
+
+# remove any stopped containers and all unused images
+# docker stop 
+# docker system prune -a
+# docker volume prune -a
+
+# export docker_dir="/home/ansible/docker"
+# sudo rm -rf "${docker_dir}/" "${docker_dir}/"
+
+# for using/keeping existing named volumes
+# docker compose dosetting up zsh autocomplete on nixos

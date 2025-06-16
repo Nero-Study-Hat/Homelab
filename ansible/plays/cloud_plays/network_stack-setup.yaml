@@ -1,12 +1,14 @@
 ---
-- name: Network Stack Setup
+- name: Monitor Stack Setup
   vars:
     docker_dir: "/home/ansible/docker"
     stack_dir: "/home/ansible/docker/network_stack"
-    compose_file: "network_stack_compose"
-    local_docker_dir: "/docker/server-specific/personal_cloud"
+    project_name: "network_stack"
+    local_docker_dir: "/docker/server-specific/personal_cloud/network_stack"
   hosts: personal-cloud
   tasks:
+
+    ### BOILER PLATE ###
     - name: Get source code absolute path
       shell: dirname '{{inventory_dir}}'
       register: dirname
@@ -20,6 +22,7 @@
         path: '{{docker_dir}}'
         state: directory
 
+    ### HANDLE COMPOSE FILE ###
     - name: Creates remote Network_Stack project directory
       ansible.builtin.file:
         path: '{{stack_dir}}'
@@ -27,9 +30,12 @@
 
     - name: Copy Network Stack docker compose file
       ansible.builtin.copy:
-        src: "{{local_docker_dir}}/network_stack.yml"
-        dest: "{{stack_dir}}/{{compose_file}}"
+        src: "{{local_docker_dir}}/"
+        dest: "{{stack_dir}}/"
+      loop:
+        - compose.yml
 
+    ### HANDLE SECRETS ###
     - name: Load Sops Secrets
       community.sops.load_vars:
         file: ../../../secrets/secrets.yaml
@@ -53,6 +59,7 @@
       set_fact:
         sops_secrets: ''
 
+    ### HANDLE SUB-PROJECT DIRECTORIES AND CONFIGS ###
     - name: Creates remote Tailscale directory
       ansible.builtin.file:
         path: '{{stack_dir}}/tailscale'
@@ -73,6 +80,7 @@
         src: "{{local_docker_dir}}/traefik.yml"
         dest: "{{stack_dir}}/traefik/data/traefik.yml"
 
+    ### HANDLE NETWORKING ###
     - name: Create tailscale-network docker network with custom subnet
       community.docker.docker_network:
         name: tailscale-network
@@ -90,9 +98,10 @@
         enabled: false
         state: "stopped"
 
+    ### DEPLOY ###
     - name: Deploy Network Stack Docker Compose stack
       community.docker.docker_compose_v2:
-        project_name: network_stack
+        project_name: '{{project_name}}'
         project_src: '{{stack_dir}}'
         files:
-          - '{{compose_file}}'
+          - compose.yml

@@ -29,6 +29,8 @@
 					age
                 	libguestfs
                 	guestfs-tools
+					nmap
+					openssl
 				];
 
 				shellHook = ''

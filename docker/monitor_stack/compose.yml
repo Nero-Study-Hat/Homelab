@@ -1,0 +1,82 @@
+services:
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      monitoring_backend:
+      tailscale-network:
+        ipv4_address: 172.20.0.10
+      t3_proxy:
+    depends_on:
+      - loki
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.ts.nerolab.dev`)"
+      - "traefik.http.routers.grafana.entrypoints=https"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.tls.certresolver=desec"
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
+
+  loki:
+    container_name: loki
+    image: grafana/loki:3.5.1
+    restart: unless-stopped
+    command: "-config.file=/etc/loki/loki-config.yaml"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data:/loki:rw
+    networks:
+      monitoring_backend:
+      tailscale-network:
+        ipv4_address: 172.20.0.11
+      t3_proxy:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.loki.rule=Host(`loki.ts.nerolab.dev`)"
+      - "traefik.http.routers.loki.entrypoints=https"
+      - "traefik.http.routers.loki.tls=true"
+      - "traefik.http.routers.loki.tls.certresolver=desec"
+      - traefik.http.services.loki.loadbalancer.server.port=3100
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    volumes:
+      - './config.alloy:/etc/alloy/config.alloy'
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      monitoring_backend:
+      tailscale-network:
+        ipv4_address: 172.20.0.13
+      t3_proxy:
+    depends_on:
+      - loki
+    command:
+      - run
+      - --server.http.listen-addr=:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alloy.rule=Host(`alloy.ts.nerolab.dev`)"
+      - "traefik.http.routers.alloy.entrypoints=https"
+      - "traefik.http.routers.alloy.tls=true"
+      - "traefik.http.routers.alloy.tls.certresolver=desec"
+      - traefik.http.services.alloy.loadbalancer.server.port=12345
+
+volumes:
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+
+networks:
+  monitoring_backend:
+  t3_proxy:
+    external: true
+  tailscale-network:
+    external: true
