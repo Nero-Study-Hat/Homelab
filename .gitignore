@@ -37,7 +37,7 @@ override.tf.json
 terraform.rc
 
 # Ignore Ansible roles
-/ansible/roles/
+/ansible/roles_external/
 
 # Ignore nix flake generated .direnv dir
 /.direnv/

@@ -1,0 +1,130 @@
+what is reused in my ansible setup
+
+- debian server base setup
+   - dns setup
+   - disk setup
+   - network setup
+
+what is not reused in my ansible setup
+- specific container stacks that aren't repeated across all hosts
+
+approach: use a group of roles from configuring each server
+- use role: debian-server
+- use role: cloud-server
+- use role: fog-server
+- use role: media-server
+
+main problem: how are external and internal roles separated
+answer: 
+
+
+how my setup is going to work
+https://docs.ansible.com/ansible/2.8/user_guide/playbooks_best_practices.html#top-level-playbooks-are-separated-by-role
+/ansible/
+    plays/
+        homelab.yaml
+        cloud-server.yaml
+        fog-server.yaml
+        media-server.yaml
+    roles/
+        debian-server/
+        cloud-server/
+        fog-server/
+        media-server/
+
+
+Q: Can current sops-ansible setup be used with below roles approaches?
+A:
+
+Q: Where is meta/main.yml downloading my dependancy roles and how can I seprate these as external roles in my project structure?
+A:
+
+use defaults/main.yml for user affectable role vars
+
+server-role/
+    defaults/
+    tasks/
+    vars/
+    meta/
+
+
+possible idea
+- role per service stack
+- hosts are not roles, instead top level playbooks built out of roles (modular pieces)
+
+use files/main.yml for ansible copy module, compose file and config file(s)
+
+service-role/
+    defaults/
+    tasks/
+    vars/
+    meta/
+    files/
+
+dynamic use roles, might not support user var setting:
+https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#including-roles-dynamic-reuse
+
+templates use:
+https://labex.io/tutorials/ansible-ansible-jinja2-templates-390470
+
+
+I have the below structure and content.
+
+├── inventory
+│   ├── host_vars
+│   │   ├── cloud.yaml
+│   │   ├── fog.yaml
+│   │   └── media.yaml
+│   └── hosts.yaml
+├── playbooks
+│   ├── cloud_deploy.yaml
+│   ├── fog_deploy.yaml
+│   ├── homelab_deploy.yaml
+│   └── media_deploy.yaml
+├── roles
+│   ├── alloy
+│   ├── monitor
+│   ├── network
+│   │   ├── defaults
+│   │   │   └── main.yml
+│   │   ├── files
+│   │   │   └── traefik.yml
+│   │   ├── meta
+│   │   │   └── main.yml
+│   │   ├── tasks
+│   │   │   └── main.yml
+│   │   └── templates
+│   │       └── compose.yml.j2
+│   └── nextcloud
+├── roles_external
+└── ansible.cfg
+
+This is my host.yamly
+myhosts:
+  hosts:
+    cloud:
+        ansible_host: <redacted-ip>
+        ansible_become: yes
+        ansible_become_method: sudo
+        ansible_connection: ssh
+        ansible_user: ansible
+        ansible_python_interpreter: "/usr/bin/python3.11"
+
+    fog:
+        ansible_host: <redacted-ip>
+        ansible_become: yes
+        ansible_become_method: sudo
+        ansible_connection: ssh
+        ansible_user: ansible
+        ansible_python_interpreter: "/usr/bin/python3.11"
+
+    media:
+        ansible_host: <redacted-ip>
+        ansible_become: yes
+        ansible_become_method: sudo
+        ansible_connection: ssh
+        ansible_user: ansible
+        ansible_python_interpreter: "/usr/bin/python3.11"
+
+How do I run the cloud_deploy.yaml playbook using the inventory setup here with the host_vars?
+How do I set the default_vars for the network role using sops variables?

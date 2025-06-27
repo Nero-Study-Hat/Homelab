@@ -1,0 +1,43 @@
+### BOILER PLATE ###
+- name: Creates remote docker projects directory
+  ansible.builtin.file:
+    path: '{{docker_dir}}'
+    state: directory
+
+- name: Update local docker directory name variable
+  ansible.builtin.set_fact:
+    stack_dir: "{{ [docker_dir, project_name] | join('/') }}"
+
+- name: Creates remote project directory
+  file:
+    path: '{{stack_dir}}'
+    state: directory
+
+- name: Transfer and convert the docker compose jinja2 template
+  ansible.builtin.template:
+    src: "compose.yml.j2"
+    dest: "{{stack_dir}}/compose.yml"
+
+### MAIN ###
+- name: Creates remote Nextcloud data directory
+  ansible.builtin.file:
+    path: '{{stack_dir}}/data'
+    state: directory
+
+- name: Create mariadb_root_passwd file
+  ansible.builtin.copy:
+    content: "{{ mariadb_root_passwd }}"
+    dest: "{{stack_dir}}/data/mariadb_root_passwd.txt"
+
+- name: Create mariadb_user_passwd file
+  ansible.builtin.copy:
+    content: "{{ mariadb_user_passwd }}"
+    dest: "{{stack_dir}}/data/mariadb_user_passwd.txt"
+
+### DEPLOY ###
+- name: Deploy Docker Compose Stack
+  community.docker.docker_compose_v2:
+    project_name: '{{project_name}}'
+    project_src: '{{stack_dir}}'
+    files:
+      - compose.yml

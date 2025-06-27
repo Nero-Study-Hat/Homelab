@@ -1,0 +1,39 @@
+worker_processes 1;
+
+events {}
+
+stream {
+    map "$ssl_preread_server_name:$remote_addr" $blocked {
+        default 1;
+
+        {% for instance_name, instance in traefik_instances.items() %}
+        # {{ instance_name }}
+        {% for domain in instance.domains_list %}
+        {% for ip in domain.allowed_tailscale_client_ips %}
+        "{{ domain.name }}:{{ ip }}" 0;
+        {% endfor %}
+        {% endfor %}
+        {% endfor %}
+    }
+
+    map $ssl_preread_server_name $backend {
+        hostnames;
+
+        {% for instance_name, instance in traefik_instances.items() %}
+        # traefik-instance-{{ instance_name }}
+        {% for domain in instance.domains_list %}
+        {{ domain.name }}  {{ instance.traefik_ip }}:443;
+        {% endfor %}
+        {% endfor %}
+    }
+
+    server {
+        listen 443;
+        ssl_preread on;
+        proxy_pass $backend;
+
+        if ($blocked) {
+            return 403;
+        }
+    }
+}

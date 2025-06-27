@@ -1,0 +1,73 @@
+### HANDLE COMPOSE FILE & SECRETS ###
+- name: Creates remote docker projects directory
+  ansible.builtin.file:
+    path: '{{docker_dir}}'
+    state: directory
+
+- name: Update local docker directory name variable
+  ansible.builtin.set_fact:
+    stack_dir: "{{ [docker_dir, project_name] | join('/') }}"
+
+- name: Creates remote project directory
+  file:
+    path: '{{stack_dir}}'
+    state: directory
+
+- name: Transfer and convert the docker compose jinja2 template
+  ansible.builtin.template:
+    src: "compose.yml.j2"
+    dest: "{{stack_dir}}/compose.yml"
+
+- name: Create .env file with traefik dashboard credentials and ts_authkey
+  ansible.builtin.copy:
+    dest: "{{stack_dir}}/.env"
+    content: |
+      TRAEFIK_DASHBOARD_CREDENTIALS={{ TRAEFIK_DASHBOARD_CREDENTIALS }}
+      TS_AUTHKEY={{ cloud_server_ts_auth_key }}
+
+- name: Create api_token file
+  ansible.builtin.copy:
+    content: "{{ desec_api_token }}"
+    dest: "{{stack_dir}}/desec_api_token.txt"
+
+### HANDLE SUB-PROJECT DIRECTORIES AND CONFIGS ###
+- name: Creates remote Tailscale directory
+  ansible.builtin.file:
+    path: '{{stack_dir}}/tailscale'
+    state: directory
+
+- name: Creates remote Traefik directory
+  ansible.builtin.file:
+    path: '{{stack_dir}}/traefik/data'
+    state: directory
+
+- name: Copy traefik.yml (config) file
+  ansible.builtin.copy:
+    src: "traefik.yml"
+    dest: "{{stack_dir}}/traefik/data/traefik.yml"
+
+- name: Create acme.json file
+  ansible.builtin.file:
+    path: "{{stack_dir}}/traefik/data/acme.json"
+    state: "touch"
+    mode: '0600'
+
+### HANDLE NETWORKING ###
+- name: Create tailscale-network docker network with custom subnet
+  community.docker.docker_network:
+    name: tailscale-network
+    ipam_config:
+      - subnet: "{{ tailscale_subnet.subnet_cidr }}"
+        gateway: "{{ tailscale_subnet.gateway }}"
+
+- name: Create t3_proxy docker network
+  docker_network:
+    name: t3_proxy
+
+### DEPLOY ###
+- name: Deploy Docker Compose Stack
+  community.docker.docker_compose_v2:
+    project_name: '{{project_name}}'
+    project_src: '{{stack_dir}}'
+    files:
+      - compose.yml

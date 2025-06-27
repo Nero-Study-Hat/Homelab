@@ -1,0 +1,25 @@
+services:
+
+  dnsmasq:
+    image: custom/dnsmasq
+    container_name: dnsmasq
+    expose:
+      - "{{port_num}}/udp"
+    networks:
+      tailscale-network:
+        ipv4_address: {{tailscale_ip}}
+      t3_proxy:
+    volumes:
+      - ./dnsmasq_image/dnsmasq.conf:/etc/dnsmasq.conf:ro
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+networks:
+  t3_proxy:
+    external: true
+  tailscale-network:
+    external: true

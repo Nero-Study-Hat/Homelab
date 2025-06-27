@@ -1,0 +1,3 @@
+docker_dir: "/home/ansible/docker"
+project_name: "searxng"
+domain: ""

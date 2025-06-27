@@ -1,0 +1,70 @@
+
+# Manual Work In Wizard (not env vars because of broken secrets support)
+# - For the database use nextcloud-db as host and nextcloud as table and
+#   user name and enter the MYSQL_PASSWORD from your docker-compose.yml.
+
+# Services (containers) we would like this document to run
+services:
+  ## All services/containers go below this line (note the two space indentation in front).
+
+  # Nextcloud Docker Application
+  {{project_name}}:
+    image: nextcloud:stable
+    container_name: {{project_name}}
+    hostname: {{project_name}}
+    restart: unless-stopped
+    # Defines how we want our container to connect outside
+    networks:
+      # Use an internal network for the nextcloud services
+      - {{project_name}}_backend
+      - t3_proxy
+    # Persistent volumes with bind mounts to easily move/backup data
+    volumes:
+      - {{mounted_dir}}/html:/var/www/html
+      - {{mounted_dir}}/custom_apps:/var/www/html/custom_apps
+      - {{mounted_dir}}/config:/var/www/html/config
+      - {{mounted_dir}}/data:/var/www/html/data
+      - /etc/localtime:/etc/localtime:ro
+    links:
+      - {{project_name}}-db
+    depends_on:
+      - {{project_name}}-db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.{{project_name}}.rule=Host(`{{domain}}`)"
+      - "traefik.http.routers.{{project_name}}.entrypoints=https"
+      - "traefik.http.routers.{{project_name}}.tls=true"
+      - "traefik.http.routers.{{project_name}}.tls.certresolver=desec"
+
+  # Nextcloud Database
+  {{project_name}}-db:
+    image: mariadb:11.4
+    container_name: {{project_name}}-db
+    hostname: {{project_name}}-db
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --log-bin=msqyld-bin --binlog-format=ROW
+    networks:
+      - {{project_name}}_backend
+    volumes:
+      - ./nextcloud_db:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_passwd
+      MYSQL_DATABASE: {{project_name}}
+      MYSQL_USER: {{project_name}}
+      MYSQL_PASSWORD_FILE: /run/secrets/mariadb_user_passwd
+    secrets:
+      - mariadb_root_passwd
+      - mariadb_user_passwd
+
+secrets:
+  mariadb_root_passwd:
+    file: ./data/mariadb_root_passwd.txt
+  mariadb_user_passwd:
+    file: ./data/mariadb_user_passwd.txt
+
+networks:
+  {{project_name}}_backend:
+    driver: bridge
+  t3_proxy:
+    external: true

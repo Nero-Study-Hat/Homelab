@@ -25,6 +25,7 @@
 					terraform
 					go
 					ansible
+					ansible-lint
 					sops
 					age
                 	libguestfs
@@ -35,6 +36,7 @@
 
 				shellHook = ''
 					echo "Starting new shell";
+					export ANSIBLE_CONFIG="ansible/ansible.cfg"
 				'';
 			};
 		}

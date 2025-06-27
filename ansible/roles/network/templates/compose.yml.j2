@@ -1,0 +1,78 @@
+services:
+
+  ts-docker-cloud:
+    image: ghcr.io/tailscale/tailscale:stable
+    hostname: ts-docker-cloud
+    container_name: ts-docker-cloud
+    restart: always
+    networks:
+      tailscale-network:
+        ipv4_address: {{ tailscale_subnet.tailscale_ip }}
+      t3_proxy:
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_ROUTES: {{ tailscale_subnet.subnet_cidr }} # Route for the Pi-hole network
+      TS_ACCEPT_ROUTES: "true"
+      TS_ADVERTISE_DNS: {{ tailscale_subnet.dns_ip }}
+    volumes:
+      - ./tailscale/tailscale-data:/var/lib/tailscale:rw
+      - ./tailscale/tailscale:/var/run/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+
+  traefik:
+    image: traefik:v3.4
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      tailscale-network:
+        ipv4_address: {{ tailscale_subnet.traefik_ip }}
+      t3_proxy:
+    environment:
+      DESEC_TOKEN_FILE: /run/secrets/desec_api_token # note using _FILE for docker secrets
+      TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
+    secrets:
+      - desec_api_token
+    env_file: .env # use .env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/data/traefik.yml:/traefik.yml:ro
+      - ./traefik/data/acme.json:/acme.json
+      # - ./data/config.yml:/config.yml:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`{{domains.traefik}}`)"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`{{domains.traefik}}`)"
+      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=desec"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main={{domains.main}}"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans={{domains.wildcard}}"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+
+secrets:
+  desec_api_token:
+    file: ./desec_api_token.txt
+
+networks:
+  t3_proxy:
+    external: true
+  tailscale-network:
+    external: true
+

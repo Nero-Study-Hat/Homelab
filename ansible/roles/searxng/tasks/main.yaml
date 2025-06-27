@@ -1,0 +1,29 @@
+### BOILER PLATE ###
+- name: Creates remote docker projects directory
+  ansible.builtin.file:
+    path: '{{docker_dir}}'
+    state: directory
+
+- name: Update local docker directory name variable
+  ansible.builtin.set_fact:
+    stack_dir: "{{ [docker_dir, project_name] | join('/') }}"
+
+- name: Creates remote project directory
+  file:
+    path: '{{stack_dir}}'
+    state: directory
+
+- name: Transfer and convert the docker compose jinja2 template
+  ansible.builtin.template:
+    src: "compose.yml.j2"
+    dest: "{{stack_dir}}/compose.yml"
+
+### MAIN ###
+
+### DEPLOY ###
+- name: Deploy Docker Compose Stack
+  community.docker.docker_compose_v2:
+    project_name: '{{project_name}}'
+    project_src: '{{stack_dir}}'
+    files:
+      - compose.yml

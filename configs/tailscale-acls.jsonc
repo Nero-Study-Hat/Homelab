@@ -2,78 +2,45 @@
 {
 	// Declare static groups of users. Use autogroups for all users or users with a specific role.
 	"groups": {
-		"group:personal": ["personal-ts-user"],
-		"group:media": ["media-ts-user"],
-		"group:cloud": ["cloud-ts-user"],
+		"group:personal": ["<redacted-admin>"],
+		"group:family":   ["<redacted-family>"],
+		"group:outside":  ["<redacted-outside>"],
 	},
 
 	"hosts": {
-		"stardom":                "example-ts-ip",
-		"personal-cloud-network": "172.20.0.0/24",
-		"media-network":          "172.20.1.0/24",
-		"cloud-network":          "172.20.2.0/24",
+		"cloud-net": "172.20.0.0/24",
+		"fog-net":   "172.20.2.0/24",
+		"media-net":   "172.20.1.0/24",
+
+		"cloud-dns": "172.20.0.4",
+
+		"traefik-cloud": "172.20.0.3",
+		"traefik-fog":   "172.20.1.3",
+		"traefik-media": "172.20.2.3",
+
+		// test these with docker sidecar mode
+		// normal traefik network block, ts as sidecar
+		"traefik-monitor": "172.20.2.4",
+		"traefik-kasm":    "172.20.2.4",
+
+		"cloud-loki": "172.20.0.11",
 	},
 
 	// Define the tags which can be applied to devices and by which users.
 	"tagOwners": {
-		"tag:ssh-server":            ["personal-ts-user"],
-		"tag:personal-cloud-server": ["personal-ts-user"],
-		"tag:cloud-server":          ["personal-ts-user"],
-		"tag:media-server":          ["personal-ts-user"],
+		"tag:ssh-server":   ["<redacted-admin>"],
+		"tag:cloud-server": ["<redacted-admin>"],
+		"tag:fog-server":   ["<redacted-admin>"],
+		"tag:media-server": ["<redacted-admin>"],
 	},
 
 	"autoApprovers": {
 		"routes": {
-			"172.20.0.0/24": [
-				"tag:personal-cloud-server",
-			],
-			"172.20.1.0/24": [
-				"tag:media-server",
-			],
-			"172.20.2.0/24": [
-				"tag:cloud-server",
-			],
+			"172.20.0.0/24": ["tag:cloud-server"],
+			"172.20.1.0/24": ["tag:fog-server"],
+			"172.20.2.0/24": ["tag:media-server"],
 		},
 	},
-
-	// Define access control lists for users, groups, autogroups, tags,
-	// Tailscale IP addresses, and subnet ranges.
-	"acls": [
-		// Allow all connections.
-		// Comment this section out if you want to define specific restrictions.
-		// {"action": "accept", "src": ["*"], "dst": ["*:*"]},
-
-		{
-			"action": "accept",
-			"src":    ["group:personal"],
-			"dst": [
-				"tag:ssh-server:22",
-				"personal-cloud-network:*",
-				"media-network:*",
-				"cloud-network:*",
-			],
-		},
-		
-		{
-			"action": "accept",
-			"src":    ["group:cloud"],
-			"dst": [
-				"cloud-network:*",
-			],
-		},
-		
-		{
-			"action": "accept",
-			"src":    ["group:media"],
-			"dst": [
-				"media-network:*",
-			],
-		},
-
-		// Allow users in "group:example" to access "tag:example", but only from
-		// devices that are running macOS and have enabled Tailscale client auto-updating.
-		// {"action": "accept", "src": ["group:example"], "dst": ["tag:example:*"], "srcPosture":["posture:autoUpdateMac"]},
-	],
 
 	// Define postures that will be applied to all rules without any specific
 	// srcPosture definition.
@@ -86,17 +53,17 @@
 	// "postures": {
 	//      // Require devices running macOS, a stable Tailscale
 	//      // version and auto update enabled for Tailscale.
-	// 	"posture:autoUpdateMac": [
-	// 	    "node:os == 'macos'",
-	// 	    "node:tsReleaseTrack == 'stable'",
-	// 	    "node:tsAutoUpdate",
-	// 	],
+	//  "posture:autoUpdateMac": [
+	//      "node:os == 'macos'",
+	//      "node:tsReleaseTrack == 'stable'",
+	//      "node:tsAutoUpdate",
+	//  ],
 	//      // Require devices running macOS and a stable
 	//      // Tailscale version.
-	// 	"posture:anyMac": [
-	// 	    "node:os == 'macos'",
-	// 	    "node:tsReleaseTrack == 'stable'",
-	// 	],
+	//  "posture:anyMac": [
+	//      "node:os == 'macos'",
+	//      "node:tsReleaseTrack == 'stable'",
+	//  ],
 	// },
 
 	// Define users and devices that can use Tailscale SSH.
@@ -106,26 +73,101 @@
 			"src":    ["group:personal"],
 			"dst":    ["tag:ssh-server"],
 			"users":  ["autogroup:nonroot", "root"],
+
 			// "checkPeriod": "20h", // optional, only for check actions. default 12h
 		},
+
 		// Allow all users to SSH into their own devices in check mode.
 		// Comment this section out if you want to define specific restrictions.
 		// {
-		// 	"action": "check",
-		// 	"src":    ["autogroup:member"],
-		// 	"dst":    ["autogroup:self"],
-		// 	"users":  ["autogroup:nonroot", "root"],
+		//  "action": "check",
+		//  "src":    ["autogroup:member"],
+		//  "dst":    ["autogroup:self"],
+		//  "users":  ["autogroup:nonroot", "root"],
 		// },
 	],
 
 	// Test access rules every time they're saved.
 	// "tests": [
-	//  	{
-	//  		"src": "alice@example.com",
-	//  		"accept": ["tag:example"],
-	//  		"deny": ["100.101.102.103:443"],
-	//  	},
+	//   {
+	//       "src": "alice@example.com",
+	//       "accept": ["tag:example"],
+	//       "deny": ["100.101.102.103:443"],
+	//   },
 	// ],
 
 	"randomizeClientPort": true,
+
+	"nodeAttrs": [
+		{
+			"target": ["tag:ssh-server"],
+			"ipPool": ["100.80.0.0/29"],
+		},
+		{
+			"target": ["tag:cloud-server"],
+			"ipPool": ["100.70.0.1/32"],
+		},
+		{
+			"target": ["tag:fog-server"],
+			"ipPool": ["100.70.0.2/32"],
+		},
+		{
+			"target": ["tag:media-server"],
+			"ipPool": ["100.70.0.3/32"],
+		},
+	],
+
+	"grants": [
+		{
+			"src": ["group:personal"],
+			"dst": ["tag:ssh-server"],
+			"ip":  ["22"],
+		},
+
+		// {
+		// 	"src": [],
+		// 	"dst": [],
+		// 	"ip":  [],
+		// },
+
+		// https://ubiq.co/tech-blog/how-to-whitelist-ip-in-nginx/
+		// keep current account setup for easy viewing of
+		// what machines are outside in tailscale web ui
+		// {
+		// 	"src": ["group:clients"],
+		// 	"dst": ["nginx"],
+		// 	"ip":  ["tcp:443"],
+		// },
+		// {
+		// 	"src": ["group:clients", "nginx"],
+		// 	"dst": ["client-dns"],
+		// 	"ip":  ["tcp:443"],
+		// },
+
+		{
+			"src": [
+				"group:personal",
+				"tag:dan-client",
+				"cloud-net",
+				"fog-net",
+				"media-net",
+			],
+			"dst": ["cloud-dns"],
+			"ip":  ["*"],
+			// "ip":  ["udp:53"],
+		},
+
+		{
+			"src": ["group:personal"],
+			"dst": ["traefik-cloud", "traefik-fog", "traefik-media"],
+			// "ip":  ["tcp:443"],
+			"ip": ["tcp:80", "tcp:443"], // required for staging testing
+		},
+
+		// {
+		// 	"src": ["tag:example-client"],
+		// 	"dst": ["traefik-cloud", "traefik-media"],
+		// 	"ip":  ["tcp:443"],
+		// },
+	],
 }
