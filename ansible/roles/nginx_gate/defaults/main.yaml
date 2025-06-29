@@ -1,3 +1,17 @@
+project_name: "user_gate"
+docker_dir: "/home/ansible/docker"
+
+ts_auth_key: ""
+
+# default values are examples from cloud host vars
+tailscale_subnet:
+  subnet_cidr: "172.20.0.0/24"
+  gateway: "172.20.0.1"
+  tailscale_ip: "172.20.0.3"
+  dns_ip: "172.20.0.2"
+  nginx_ip: "172.20.0.4"
+
+
 traefik_instances:
   cloud:
     traefik_ip: 172.20.0.3
@@ -12,3 +26,12 @@ traefik_instances:
       - name: app2.media.nerolab.dev
         allowed_tailscale_client_ips:
           - 192.168.1.11  # stardom
+
+dns:
+  upstream_server: "10.0.0.3"
+  records: |
+    # A records
+    address=/cloud.nerolab.dev/10.20.1.20
+
+    # CNAME records
+    cname=nginx.cloud.nerolab.dev,cloud.nerolab.dev

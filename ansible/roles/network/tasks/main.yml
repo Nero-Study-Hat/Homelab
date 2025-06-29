@@ -23,7 +23,7 @@
     dest: "{{stack_dir}}/.env"
     content: |
       TRAEFIK_DASHBOARD_CREDENTIALS={{ TRAEFIK_DASHBOARD_CREDENTIALS }}
-      TS_AUTHKEY={{ cloud_server_ts_auth_key }}
+      TS_AUTHKEY={{ ts_auth_key }}
 
 - name: Create api_token file
   ansible.builtin.copy:

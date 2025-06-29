@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    ports:
+    expose:
       - "80:80"
       - "443:443"
     networks:

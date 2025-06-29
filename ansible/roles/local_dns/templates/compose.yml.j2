@@ -1,14 +1,13 @@
 services:
 
-  dnsmasq:
+  {{project_name}}:
     image: custom/dnsmasq
-    container_name: dnsmasq
+    container_name: {{project_name}}
     expose:
       - "{{port_num}}/udp"
     networks:
-      tailscale-network:
+      {{tailscale_network_name}}:
         ipv4_address: {{tailscale_ip}}
-      t3_proxy:
     volumes:
       - ./dnsmasq_image/dnsmasq.conf:/etc/dnsmasq.conf:ro
     restart: unless-stopped
@@ -19,7 +18,5 @@ services:
       - ALL
 
 networks:
-  t3_proxy:
-    external: true
-  tailscale-network:
+  {{tailscale_network_name}}:
     external: true

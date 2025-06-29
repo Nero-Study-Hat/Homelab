@@ -2,7 +2,7 @@ project_name: "network_stack"
 docker_dir: "/home/ansible/docker"
 
 TRAEFIK_DASHBOARD_CREDENTIALS: ""
-cloud_server_ts_auth_key: ""
+ts_auth_key: ""
 desec_api_token: ""
 
 # default values are examples from cloud host vars
@@ -12,8 +12,6 @@ tailscale_subnet:
   tailscale_ip: "172.20.0.3"
   dns_ip: "172.20.0.2"
   traefik_ip: "172.20.0.4"
-  nextcloud_ip: "172.20.0.6"
-  searxng_ip: "172.20.0.7"
 
 domains:
   traefik: "traefik.cloud.nerolab.dev"

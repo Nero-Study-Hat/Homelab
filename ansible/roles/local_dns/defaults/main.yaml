@@ -1,6 +1,7 @@
 docker_dir: "/home/ansible/docker"
 project_name: "dns_01"
 
+tailscale_network_name: "tailscale-network"
 tailscale_ip: "172.20.0.4"
 
 host_num: "53"

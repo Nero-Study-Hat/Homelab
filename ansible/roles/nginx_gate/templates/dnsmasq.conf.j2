@@ -1,0 +1,38 @@
+# dnsmasq.conf
+
+# General security
+no-resolv                    # Don't use system resolvers
+
+no-poll                      # Don't monitor /etc/resolv.conf
+no-hosts                     # Don't read /etc/hosts
+
+domain-needed                # Reject plain names without a domain
+bogus-priv                   # Never forward private IP ranges
+stop-dns-rebind              # Protect against DNS rebinding
+
+# Logging
+# log-facility=/dev/null       # Avoid logging to disk (or use syslog)
+# log-queries=off              # Disable per-query logging (avoid amplification)
+quiet-dhcp                   # We aren't serving DHCP, so suppress related logs
+quiet-dhcp6
+
+# Performance limits
+dns-forward-max=150          # Lower max concurrent forwards
+cache-size=0                 # Foward-only mode plus less memory usage
+
+# server={{dns.upstream_server}}
+
+# NOTE: didn't work with upstream_server:1.1.1.1
+# Only allow necessary ACME domains
+server=/letsencrypt.org/{{dns.upstream_server}}
+server=/identrust.com/{{dns.upstream_server}}
+server=/lencr.org/{{dns.upstream_server}}
+
+server=/desec.io/{{dns.upstream_server}}
+server=/desec.org/{{dns.upstream_server}}
+
+server=/amazonaws.com/{{dns.upstream_server}}
+server=/example.com/{{dns.upstream_server}}
+
+# Block everything else (respond NXDOMAIN)
+bogus-nxdomain=0.0.0.0

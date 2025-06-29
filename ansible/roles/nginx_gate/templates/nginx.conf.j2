@@ -1,39 +1,61 @@
 worker_processes 1;
 
-events {}
+events {
+    worker_connections 500;
+}
+
+# http block is for testing with acme staging, there is a redirect on traefik to https for when needed
+# traefik.cloud.nerolab.dev
+http {
+    server {
+        listen 0.0.0.0:80;  # Replace with actual tailscale IP
+        server_name traefik.cloud.nerolab.dev;
+
+        location / {
+            allow 100.93.170.126;  # Replace with valid tailnet client IP(s)
+            deny all;
+
+            proxy_pass http://172.20.0.3;  # Forward to internal Traefik container
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+}
 
 stream {
     map "$ssl_preread_server_name:$remote_addr" $blocked {
         default 1;
 
-        {% for instance_name, instance in traefik_instances.items() %}
+        {% for instance_name, instance in traefik_instances.items() +%}
         # {{ instance_name }}
-        {% for domain in instance.domains_list %}
-        {% for ip in domain.allowed_tailscale_client_ips %}
+        {% for domain in instance.domains_list +%}
+        {%- for ip in domain.allowed_tailscale_client_ips +%}
         "{{ domain.name }}:{{ ip }}" 0;
-        {% endfor %}
-        {% endfor %}
-        {% endfor %}
+        {%- endfor +%}
+        {% endfor +%}
+        {% endfor +%}
     }
 
     map $ssl_preread_server_name $backend {
         hostnames;
 
-        {% for instance_name, instance in traefik_instances.items() %}
+        {% for instance_name, instance in traefik_instances.items() +%}
         # traefik-instance-{{ instance_name }}
-        {% for domain in instance.domains_list %}
+        {%- for domain in instance.domains_list +%}
         {{ domain.name }}  {{ instance.traefik_ip }}:443;
-        {% endfor %}
-        {% endfor %}
+        {%- endfor +%}
+        {% endfor +%}
+    }
+
+    # conditional backend: real backend or blackhole
+    map $blocked $final_backend {
+        0 $backend;
+        1 0.0.0.0:1;  # connection refused
     }
 
     server {
         listen 443;
         ssl_preread on;
-        proxy_pass $backend;
-
-        if ($blocked) {
-            return 403;
-        }
+        proxy_pass $final_backend;
     }
 }

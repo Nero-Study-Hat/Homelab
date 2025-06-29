@@ -1,0 +1,84 @@
+### BOILER PLATE ###
+- name: Creates remote docker projects directory
+  ansible.builtin.file:
+    path: '{{docker_dir}}'
+    state: directory
+
+- name: Update local docker directory name variable
+  ansible.builtin.set_fact:
+    stack_dir: "{{ [docker_dir, project_name] | join('/') }}"
+
+- name: Creates remote project directory
+  file:
+    path: '{{stack_dir}}'
+    state: directory
+
+- name: Transfer and convert the docker compose jinja2 template
+  ansible.builtin.template:
+    src: "compose.yml.j2"
+    dest: "{{stack_dir}}/compose.yml"
+
+### MAIN ###
+
+- name: Create gate-tailscale-network docker network with custom subnet
+  community.docker.docker_network:
+    name: gate-tailscale-network
+    ipam_config:
+      - subnet: "{{ tailscale_subnet.subnet_cidr }}"
+        gateway: "{{ tailscale_subnet.gateway }}"
+
+- name: Create .env file with ts_authkey
+  ansible.builtin.copy:
+    dest: "{{stack_dir}}/.env"
+    content: |
+      TS_AUTHKEY={{ ts_auth_key }}
+
+- name: Creates remote TS-NGINX directory
+  ansible.builtin.file:
+    path: '{{stack_dir}}/ts-nginx'
+    state: directory
+
+- name: Template nginx.conf
+  template:
+    src: nginx.conf.j2
+    dest: '{{stack_dir}}/nginx.conf'
+
+### DNS CONFIG
+
+- name: Creates docker image build directory
+  file:
+    path: '{{stack_dir}}/dnsmasq_image'
+    state: directory
+
+- name: Transfer and convert the dnsmasq.conf jinja2 template
+  ansible.builtin.template:
+    src: "dnsmasq.conf.j2"
+    dest: "{{stack_dir}}/dnsmasq_image/dnsmasq.conf"
+
+- name: Copy Dockerfile
+  ansible.builtin.copy:
+    src: "Dnsmasq_Dockerfile"
+    dest: "{{stack_dir}}/dnsmasq_image/Dockerfile"
+
+- name: Add records to dnsmasq.conf file
+  ansible.builtin.lineinfile:
+    path: "{{stack_dir}}/dnsmasq_image/dnsmasq.conf"
+    line: "{{ dns.records }}"
+
+- name: Build custom dnsmasq image
+  docker_image:
+    build:
+      path: '{{stack_dir}}/dnsmasq_image'
+    name: "custom/dnsmasq"
+    tag: latest
+    source: build
+    force_source: true
+    force_tag: true
+
+### DEPLOY ###
+- name: Deploy Docker Compose Stack
+  community.docker.docker_compose_v2:
+    project_name: '{{project_name}}'
+    project_src: '{{stack_dir}}'
+    files:
+      - compose.yml

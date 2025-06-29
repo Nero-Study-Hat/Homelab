@@ -10,58 +10,77 @@
         expressions: ignore  # explicitly do not evaluate expressions
                             # on load (this is the default)
 
-    - name: Include Debian-Server Role
-      include_role:
-        name: debian_server
-      vars:
-        swap_file_size_mb: '1024'
 
-    - name: Include Network Role
+    # - name: Include Debian-Server Role
+    #   include_role:
+    #     name: debian_server
+    #   vars:
+    #     swap_file_size_mb: '1024'
+
+    # - name: Include Network Role
+    #   include_role:
+    #     name: network
+    #   vars:
+    #     TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
+    #     ts_auth_key: "{{ sops_secrets.cloud_server_ts_auth_key }}"
+    #     desec_api_token: "{{ sops_secrets.desec_api_token }}"
+    #     tailscale_subnet:
+    #       subnet_cidr: "{{ cloud_tailscale_subnet.subnet_cidr }}"
+    #       gateway: "{{ cloud_tailscale_subnet.gateway }}"
+    #       tailscale_ip: "{{ cloud_tailscale_subnet.tailscale_ip }}"
+    #       dns_ip: "{{ cloud_tailscale_subnet.dns_ip }}"
+    #       traefik_ip: "{{ cloud_tailscale_subnet.traefik_ip }}"
+    #       nextcloud_ip: "{{ cloud_tailscale_subnet.nextcloud_ip }}"
+    #       searxng_ip: "{{ cloud_tailscale_subnet.searxng_ip }}"
+    #     domains:
+    #       traefik: "{{ cloud_traefik_domains.traefik }}"
+    #       main: "{{ cloud_traefik_domains.main }}"
+    #       wildcard: "{{ cloud_traefik_domains.wildcard }}"
+
+    # - name: Include Local DNS Role - User DNS
+    #   include_role:
+    #     name: local_dns
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_dns.name}}"
+    #     tailscale_ip: "{{cloud_dns.ts_ip}}"
+    #     port_num: "{{cloud_dns.port_num}}"
+    #     dns_records: "{{cloud_dns.records}}"
+    #     upstream_server: "{{cloud_dns.upstream_server}}"
+
+    # - name: Include Nextcloud Role
+    #   include_role:
+    #     name: nextcloud
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_nextcloud.name}}"
+    #     domain: "{{cloud_nextcloud.domain}}"
+    #     mounted_dir: "{{cloud_nextcloud.mounted_dir}}"
+    #     mariadb_user_passwd: "{{ sops_secrets.mariadb_user_passwd }}"
+    #     mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"
+
+    # - name: Include SearXNG Role
+    #   include_role:
+    #     name: searxng
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_searxng.name}}"
+    #     domain: "{{cloud_searxng.domain}}"
+
+    ## USER GATEWAY SETUP ###
+    - name: Include NGINX Gate Role - User Gateway
       include_role:
-        name: network
+        name: nginx_gate
       vars:
-        TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
-        cloud_server_ts_auth_key: "{{ sops_secrets.cloud_server_ts_auth_key }}"
-        desec_api_token: "{{ sops_secrets.desec_api_token }}"
+        docker_dir: "{{cloud_docker_dir}}"
+        project_name: "{{gate_name}}"
+        traefik_instances: "{{ gate_traefik_instances }}"
+        ts_auth_key: "{{ sops_secrets.cloud_gate_server_ts_auth_key }}"
         tailscale_subnet:
-          subnet_cidr: "{{ cloud_tailscale_subnet.subnet_cidr }}"
-          gateway: "{{ cloud_tailscale_subnet.gateway }}"
-          tailscale_ip: "{{ cloud_tailscale_subnet.tailscale_ip }}"
-          dns_ip: "{{ cloud_tailscale_subnet.dns_ip }}"
-          traefik_ip: "{{ cloud_tailscale_subnet.traefik_ip }}"
-          nextcloud_ip: "{{ cloud_tailscale_subnet.nextcloud_ip }}"
-          searxng_ip: "{{ cloud_tailscale_subnet.searxng_ip }}"
-        domains:
-          traefik: "{{ cloud_domains.traefik }}"
-          main: "{{ cloud_domains.main }}"
-          wildcard: "{{ cloud_domains.wildcard }}"
-
-    - name: Include Local DNS Role - User DNS
-      include_role:
-        name: local_dns
-      vars:
-        docker_dir: "{{cloud_docker_dir}}"
-        project_name: "{{user_dns.name}}"
-        tailscale_ip: "{{user_dns.ts_ip}}"
-        port_num: "{{user_dns.port_num}}"
-        dns_records: "{{user_dns.records}}"
-        upstream_server: "{{user_dns.upstream_server}}"
-
-    - name: Include Nextcloud Role
-      include_role:
-        name: nextcloud
-      vars:
-        docker_dir: "{{cloud_docker_dir}}"
-        project_name: "{{cloud_nextcloud.name}}"
-        domain: "{{cloud_nextcloud.domain}}"
-        mounted_dir: "{{cloud_nextcloud.mounted_dir}}"
-        mariadb_user_passwd: "{{ sops_secrets.mariadb_user_passwd }}"
-        mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"
-
-    - name: Include SearXNG Role
-      include_role:
-        name: searxng
-      vars:
-        docker_dir: "{{cloud_docker_dir}}"
-        project_name: "{{cloud_searxng.name}}"
-        domain: "{{cloud_searxng.domain}}"
+          subnet_cidr: "{{ gate_tailscale_subnet.subnet_cidr }}"
+          gateway: "{{ gate_tailscale_subnet.gateway }}"
+          tailscale_ip: "{{ gate_tailscale_subnet.tailscale_ip }}"
+          dns_ip: "{{ gate_tailscale_subnet.dns_ip }}"
+        dns:
+          upstream_server: "{{ gate_dns.upstream_server }}"
+          records: "{{ gate_dns.records }}"
