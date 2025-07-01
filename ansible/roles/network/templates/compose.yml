@@ -23,24 +23,24 @@ services:
       - net_admin
       - sys_module
 
-  # socket-proxy:
-  #   image: "11notes/socket-proxy:stable@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
-  #   hostname: socketproxy
-  #   container_name: socketproxy
-  #   read_only: true
-  #   user: "0:994"
-  #   volumes:
-  #     - "/run/docker.sock:/run/docker.sock:ro" 
-  #     - "socket-proxy.run:/run/proxy"
-  #   restart: "always"
+  socket-proxy:
+    image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
+    hostname: socketproxy
+    container_name: socketproxy
+    read_only: true
+    user: "0:994"
+    volumes:
+      - "/run/docker.sock:/run/docker.sock:ro" # mount host docker socket, the :ro does not mean read-only for the socket, just for the actual file
+      - "socket-proxy:/run/proxy" # this socket is run as 1000:1000, not as root!
+    restart: "always"
 
   traefik:
     image: traefik:v3.4
     container_name: traefik
-    # depends_on:
-    #   socket-proxy:
-    #     condition: "service_healthy"
-    #     restart: true
+    depends_on:
+      socket-proxy:
+        condition: "service_healthy"
+        restart: true
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -60,8 +60,8 @@ services:
       - desec_api_token
     env_file: .env # use .env
     volumes:
-      # - "socket-proxy.run:/var/run" # access docker socket via proxy read-only
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - "socket-proxy:/var/run" # access docker socket via proxy read-only
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/localtime:/etc/localtime:ro
       - ./traefik/data/traefik.yml:/traefik.yml:ro
       - ./traefik/data/acme.json:/acme.json
@@ -88,8 +88,8 @@ secrets:
   desec_api_token:
     file: ./desec_api_token.txt
 
-# volumes:
-#   socket-proxy.run:
+volumes:
+  socket-proxy:
 
 networks:
   tailscale-network:

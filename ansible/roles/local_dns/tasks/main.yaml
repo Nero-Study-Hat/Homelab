@@ -15,7 +15,7 @@
 
 - name: Transfer and convert the docker compose jinja2 template
   ansible.builtin.template:
-    src: "compose.yml.j2"
+    src: "compose.yml"
     dest: "{{stack_dir}}/compose.yml"
 
 ### MAIN ###
