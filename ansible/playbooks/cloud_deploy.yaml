@@ -48,6 +48,14 @@
     #     dns_records: "{{cloud_dns.records}}"
     #     upstream_server: "{{cloud_dns.upstream_server}}"
 
+    # - name: Include SearXNG Role
+    #   include_role:
+    #     name: searxng
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_searxng.name}}"
+    #     domain: "{{cloud_searxng.domain}}"
+
     # - name: Include Nextcloud Role
     #   include_role:
     #     name: nextcloud
@@ -59,28 +67,20 @@
     #     mariadb_user_passwd: "{{ sops_secrets.mariadb_user_passwd }}"
     #     mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"
 
-    # - name: Include SearXNG Role
+    ### USER GATEWAY SETUP ###
+    # - name: Include NGINX Gate Role - User Gateway
     #   include_role:
-    #     name: searxng
+    #     name: nginx_gate
     #   vars:
     #     docker_dir: "{{cloud_docker_dir}}"
-    #     project_name: "{{cloud_searxng.name}}"
-    #     domain: "{{cloud_searxng.domain}}"
-
-    ## USER GATEWAY SETUP ###
-    - name: Include NGINX Gate Role - User Gateway
-      include_role:
-        name: nginx_gate
-      vars:
-        docker_dir: "{{cloud_docker_dir}}"
-        project_name: "{{gate_name}}"
-        traefik_instances: "{{ gate_traefik_instances }}"
-        ts_auth_key: "{{ sops_secrets.cloud_gate_server_ts_auth_key }}"
-        tailscale_subnet:
-          subnet_cidr: "{{ gate_tailscale_subnet.subnet_cidr }}"
-          gateway: "{{ gate_tailscale_subnet.gateway }}"
-          tailscale_ip: "{{ gate_tailscale_subnet.tailscale_ip }}"
-          dns_ip: "{{ gate_tailscale_subnet.dns_ip }}"
-        dns:
-          upstream_server: "{{ gate_dns.upstream_server }}"
-          records: "{{ gate_dns.records }}"
+    #     project_name: "{{gate_name}}"
+    #     traefik_instances: "{{ gate_traefik_instances }}"
+    #     ts_auth_key: "{{ sops_secrets.cloud_gate_server_ts_auth_key }}"
+    #     tailscale_subnet:
+    #       subnet_cidr: "{{ gate_tailscale_subnet.subnet_cidr }}"
+    #       gateway: "{{ gate_tailscale_subnet.gateway }}"
+    #       tailscale_ip: "{{ gate_tailscale_subnet.tailscale_ip }}"
+    #       dns_ip: "{{ gate_tailscale_subnet.dns_ip }}"
+    #     dns:
+    #       upstream_server: "{{ gate_dns.upstream_server }}"
+    #       records: "{{ gate_dns.records }}"

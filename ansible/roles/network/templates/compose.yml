@@ -1,14 +1,14 @@
 services:
 
-  ts-docker-cloud:
+  ts-docker:
     image: ghcr.io/tailscale/tailscale:stable
-    hostname: ts-docker-cloud
-    container_name: ts-docker-cloud
+    hostname: ts-docker
+    container_name: ts-docker
     restart: always
     networks:
       tailscale-network:
         ipv4_address: {{ tailscale_subnet.tailscale_ip }}
-      t3_proxy:
+      t3_dashboard:
     environment:
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
@@ -19,14 +19,28 @@ services:
     volumes:
       - ./tailscale/tailscale-data:/var/lib/tailscale:rw
       - ./tailscale/tailscale:/var/run/tailscale
-      - /dev/net/tun:/dev/net/tun
     cap_add:
       - net_admin
       - sys_module
 
+  # socket-proxy:
+  #   image: "11notes/socket-proxy:stable@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
+  #   hostname: socketproxy
+  #   container_name: socketproxy
+  #   read_only: true
+  #   user: "0:994"
+  #   volumes:
+  #     - "/run/docker.sock:/run/docker.sock:ro" 
+  #     - "socket-proxy.run:/run/proxy"
+  #   restart: "always"
+
   traefik:
     image: traefik:v3.4
     container_name: traefik
+    # depends_on:
+    #   socket-proxy:
+    #     condition: "service_healthy"
+    #     restart: true
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -36,7 +50,9 @@ services:
     networks:
       tailscale-network:
         ipv4_address: {{ tailscale_subnet.traefik_ip }}
-      t3_proxy:
+      {%- for net in t3_networks +%}
+      {{ net.name }}:
+      {%- endfor +%}
     environment:
       DESEC_TOKEN_FILE: /run/secrets/desec_api_token # note using _FILE for docker secrets
       TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
@@ -44,13 +60,15 @@ services:
       - desec_api_token
     env_file: .env # use .env
     volumes:
-      - /etc/localtime:/etc/localtime:ro
+      # - "socket-proxy.run:/var/run" # access docker socket via proxy read-only
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
       - ./traefik/data/traefik.yml:/traefik.yml:ro
       - ./traefik/data/acme.json:/acme.json
       # - ./data/config.yml:/config.yml:ro
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=t3_dashboard"
       - "traefik.http.routers.traefik.entrypoints=http"
       - "traefik.http.routers.traefik.rule=Host(`{{domains.traefik}}`)"
       - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
@@ -70,9 +88,13 @@ secrets:
   desec_api_token:
     file: ./desec_api_token.txt
 
+# volumes:
+#   socket-proxy.run:
+
 networks:
-  t3_proxy:
-    external: true
   tailscale-network:
     external: true
-
+  {%- for net in t3_networks +%}
+  {{ net.name }}:
+    external: true
+  {%- endfor +%}

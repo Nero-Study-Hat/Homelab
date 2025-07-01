@@ -1,3 +1,5 @@
 docker_dir: "/home/ansible/docker"
 project_name: "searxng"
 domain: ""
+t3_network: ""
+tailscale_ip: ""

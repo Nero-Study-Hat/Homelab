@@ -15,7 +15,7 @@
 
 - name: Transfer and convert the docker compose jinja2 template
   ansible.builtin.template:
-    src: "compose.yml.j2"
+    src: "compose.yml"
     dest: "{{stack_dir}}/compose.yml"
 
 - name: Create .env file with traefik dashboard credentials and ts_authkey
@@ -60,9 +60,12 @@
       - subnet: "{{ tailscale_subnet.subnet_cidr }}"
         gateway: "{{ tailscale_subnet.gateway }}"
 
+  # https://stackoverflow.com/questions/73187213/ansible-loop-to-create-docker-networks
 - name: Create t3_proxy docker network
   docker_network:
-    name: t3_proxy
+    name: '{{ item.name }}'
+    internal: true
+  loop: '{{ t3_networks }}'
 
 ### DEPLOY ###
 - name: Deploy Docker Compose Stack

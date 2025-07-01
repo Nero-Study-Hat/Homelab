@@ -17,7 +17,7 @@ services:
     networks:
       # Use an internal network for the nextcloud services
       - {{project_name}}_backend
-      - t3_proxy
+      - {{t3_network}}
     # Persistent volumes with bind mounts to easily move/backup data
     volumes:
       - {{mounted_dir}}/html:/var/www/html
@@ -66,5 +66,6 @@ secrets:
 networks:
   {{project_name}}_backend:
     driver: bridge
-  t3_proxy:
+    internal: true
+  {{t3_network}}:
     external: true

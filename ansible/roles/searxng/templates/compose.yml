@@ -5,9 +5,9 @@ services:
     restart: unless-stopped
     networks:
       tailscale-network:
-        ipv4_address: 172.20.0.7
+        ipv4_address: {{tailscale_ip}}
       {{project_name}}_backend:
-      t3_proxy:
+      {{t3_network}}:
     volumes:
       - ./{{project_name}}:/etc/searxng:rw
     environment:
@@ -30,7 +30,8 @@ services:
 
 networks:
   {{project_name}}_backend:
+    internal: true
   tailscale-network:
     external: true
-  t3_proxy:
+  {{t3_network}}:
     external: true

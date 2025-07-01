@@ -15,7 +15,6 @@ serversTransport:
   insecureSkipVerify: true
 providers:
   docker:
-    network: "t3_proxy"
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
   # file:
@@ -32,7 +31,7 @@ certificatesResolvers:
         resolvers:
           - "1.1.1.1:53"
           - "1.0.0.1:53"
-        propagation:
-          delayBeforeChecks: 30s
+        # propagation:
+        #   delayBeforeChecks: 30s
 log:
   level: DEBUG

@@ -5,6 +5,12 @@ TRAEFIK_DASHBOARD_CREDENTIALS: ""
 ts_auth_key: ""
 desec_api_token: ""
 
+t3_networks:
+  - name: t3_dashboard
+  - name: t3_nginx_test
+  - name: t3_alloy
+  - name: t3_monitor
+
 # default values are examples from cloud host vars
 tailscale_subnet:
   subnet_cidr: "172.20.0.0/24"

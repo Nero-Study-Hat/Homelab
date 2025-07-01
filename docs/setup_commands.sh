@@ -23,7 +23,7 @@ ansible-playbook -i ../inventory.yaml nextcloud-setup.yaml
 docker stop $(docker ps -a -q)
 docker system prune -a
 docker volume prune -a
-sudo rm -rf docker/
+rm -r docker/
 
 # remove any stopped containers and all unused images
 # docker stop 

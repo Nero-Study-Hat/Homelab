@@ -1,0 +1,43 @@
+media_docker_dir: "/home/ansible/docker"
+
+### NETWORK STACK VARS ###
+
+media_dns:
+  name: "media_dns"
+  port_num: "53"
+  ts_ip: "172.20.2.4"
+  upstream_server: "10.0.0.3"
+  records: |
+    address=/media.nerolab.dev/172.20.2.3
+
+media_tailscale_subnet:
+  subnet_cidr: "172.20.2.0/28"
+  gateway: "172.20.2.1"
+  tailscale_ip: "172.20.2.2"
+  traefik_ip: "172.20.2.3"
+  dns_ip: "172.20.2.4"
+
+media_traefik:
+  domains:
+    main: "nerolab.dev"
+    wildcard: "*.media.nerolab.dev"
+    traefik: "traefik.media.nerolab.dev"
+  networks:
+    - name: t3_dashboard
+    - name: t3_nextcloud
+    - name: t3_searxng
+
+### END SERVICE SPECIFIC VARS ###
+
+media_nextcloud:
+  name: "nextcloud"
+  mounted_dir: "/mnt/nextcloud_storage"
+  domain: "nextcloud.media.nerolab.dev"
+  t3_network: "t3_nextcloud"
+  tailscale_ip: "172.20.2.8"
+
+media_searxng:
+  name: "searxng"
+  domain: "searxng.media.nerolab.dev"
+  t3_network: "t3_searxng"
+  tailscale_ip: "172.20.2.7"

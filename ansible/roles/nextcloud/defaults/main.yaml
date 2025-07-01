@@ -1,7 +1,9 @@
 docker_dir: "/home/ansible/docker"
 project_name: "nextcloud"
-domain: "sub.example.com"
 mounted_dir: "/mnt/nextcloud_storage"
 
 mariadb_user_passwd: ""
 mariadb_root_passwd: ""
+
+domain: "sub.example.com"
+t3_network: "t3_nextcloud"

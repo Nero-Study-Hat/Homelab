@@ -1,7 +1,7 @@
 cloud_docker_dir: "/home/ansible/docker"
 
 cloud_dns:
-  name: "user_dns"
+  name: "cloud_dns"
   port_num: "53"
   ts_ip: "172.20.0.4"
   upstream_server: "10.0.0.3"
@@ -16,8 +16,6 @@ cloud_tailscale_subnet:
   tailscale_ip: "172.20.0.2"
   traefik_ip: "172.20.0.3"
   dns_ip: "172.20.0.4"
-  nextcloud_ip: "172.20.0.20"
-  searxng_ip: "172.20.0.21"
 
 cloud_traefik_domains:
   main: "nerolab.dev"
