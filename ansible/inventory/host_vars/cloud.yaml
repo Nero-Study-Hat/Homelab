@@ -6,7 +6,10 @@ cloud_dns:
   ts_ip: "172.20.0.4"
   upstream_server: "10.0.0.3"
   records: |
+    # cloud domains to cloud traefik
     address=/cloud.nerolab.dev/172.20.0.3
+    # this domain to monitor main stack traefik
+    address=/monitor.nerolab.dev/172.20.0.3
 
 ### MAIN VLAN NETWORK STACK
 

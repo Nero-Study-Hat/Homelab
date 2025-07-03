@@ -1,0 +1,16 @@
+docker_dir: ""
+project: ""
+
+t3_network: ""
+
+ts_ip:
+  grafana: ""
+  loki: ""
+  alloy: ""
+
+domains:
+  grafana: ""
+  loki: ""
+  alloy: ""
+
+outpost_header: ""

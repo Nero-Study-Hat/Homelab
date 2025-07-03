@@ -1,0 +1,68 @@
+services:
+
+  socket-proxy:
+    image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
+    container_name: socketproxy
+    restart: "always"
+    read_only: true
+    user: "0:994"
+    volumes:
+      - "/run/docker.sock:/run/docker.sock:ro" # mount host docker socket, the :ro does not mean read-only for the socket, just for the actual file
+      - "socket-proxy:/run/proxy" # this socket is run as 1000:1000, not as root!
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    restart: unless-stopped
+    depends_on:
+      loki:
+      socket-proxy:
+        condition: "service_healthy"
+        restart: true
+    volumes:
+      - './config.alloy:/etc/alloy/config.alloy'
+      - "socket-proxy:/var/run"
+    networks:
+      tailscale-network:
+        ipv4_address: {{ts_ip.alloy}}
+      {{t3_network}}:
+    command:
+      - run
+      - --server.http.listen-addr=:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network={{t3_network}}"
+
+      - "traefik.http.routers.alloy.rule=Host(`{{domains.alloy}}`)"
+      - "traefik.http.routers.alloy.entrypoints=https"
+      - "traefik.http.routers.alloy.tls=true"
+      - "traefik.http.routers.alloy.tls.certresolver=desec"
+      - traefik.http.services.alloy.loadbalancer.server.port=12345
+
+      # Forward log pushes to the trusted Traefik instance (instead of Loki directly)
+      - "traefik.http.routers.alloy-loki.entrypoints=https"
+      - "traefik.http.routers.alloy-loki.rule=Path(`/loki/api/v1/push`)"
+      - "traefik.http.routers.alloy-loki.service=trusted-traefik-forward"
+      - "traefik.http.routers.alloy-loki.tls=true"
+      - "traefik.http.routers.alloy-loki.middlewares=add-tenant-header,rate-limit"
+
+      # Target the trusted VLAN's Traefik instance
+      - "traefik.http.services.trusted-traefik-forward.loadbalancer.server.url=https://monitor.nerolab.dev"
+
+      # Tenant tagging
+      - "traefik.http.middlewares.add-tenant-header.headers.customrequestheaders.X-Scope-OrgID={{outpost_header}}"
+
+      # Rate limiting (still on untrusted side)
+      - "traefik.http.middlewares.rate-limit.ratelimit.average=100"
+      - "traefik.http.middlewares.rate-limit.ratelimit.burst=200"
+
+volumes:
+  socket-proxy:
+
+networks:
+  {{t3_network}}:
+    external: true
+  tailscale-network:
+    external: true

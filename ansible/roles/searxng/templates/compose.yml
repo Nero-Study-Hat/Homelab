@@ -7,7 +7,8 @@ services:
       tailscale-network:
         ipv4_address: {{tailscale_ip}}
       {{project_name}}_backend:
-      {{t3_network}}:
+      {{network_backend.name}}:
+        ipv4_address: {{network_backend.traefik_ips.searxng}}
     volumes:
       - ./{{project_name}}:/etc/searxng:rw
     environment:
@@ -23,6 +24,7 @@ services:
       - SETUID
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network={{network_backend.name}}"
       - "traefik.http.routers.{{project_name}}.rule=Host(`{{domain}}`)"
       - "traefik.http.routers.{{project_name}}.entrypoints=https"
       - "traefik.http.routers.{{project_name}}.tls=true"
@@ -33,5 +35,5 @@ networks:
     internal: true
   tailscale-network:
     external: true
-  {{t3_network}}:
+  {{network_backend.name}}:
     external: true

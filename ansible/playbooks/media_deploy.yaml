@@ -34,7 +34,7 @@
           main: "{{ media_traefik.domains.main }}"
           wildcard: "{{ media_traefik.domains.wildcard }}"
           traefik: "{{ media_traefik.domains.traefik }}"
-        t3_networks: "{{media_traefik.networks}}"
+        networks: "{{media_traefik.networks}}"
 
     - name: Include Local DNS Role - User DNS
       include_role:
@@ -54,16 +54,16 @@
         docker_dir: "{{media_docker_dir}}"
         project_name: "{{media_searxng.name}}"
         domain: "{{media_searxng.domain}}"
-        t3_network: "{{media_searxng.t3_network}}"
+        network_backend: "{{ media_searxng.network_backend }}"
         tailscale_ip: "{{media_searxng.tailscale_ip}}"
 
-    - name: Include Nextcloud Role
-      include_role:
-        name: nextcloud
-      vars:
-        docker_dir: "{{media_docker_dir}}"
-        project_name: "{{media_nextcloud.name}}"
-        domain: "{{media_nextcloud.domain}}"
-        mounted_dir: "{{media_nextcloud.mounted_dir}}"
-        mariadb_user_passwd: "{{ sops_secrets.mariadb_user_passwd }}"
-        mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"
+    # - name: Include Nextcloud Role
+    #   include_role:
+    #     name: nextcloud
+    #   vars:
+    #     docker_dir: "{{media_docker_dir}}"
+    #     project_name: "{{media_nextcloud.name}}"
+    #     domain: "{{media_nextcloud.domain}}"
+    #     mounted_dir: "{{media_nextcloud.mounted_dir}}"
+    #     mariadb_user_passwd: "{{ sops_secrets.mariadb_user_passwd }}"
+    #     mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"

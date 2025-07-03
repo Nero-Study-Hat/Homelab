@@ -61,11 +61,18 @@
         gateway: "{{ tailscale_subnet.gateway }}"
 
   # https://stackoverflow.com/questions/73187213/ansible-loop-to-create-docker-networks
-- name: Create t3_proxy docker network
-  docker_network:
-    name: '{{ item.name }}'
-    internal: true
-  loop: '{{ t3_networks }}'
+# - name: Create t3_proxy docker network
+#   docker_network:
+#     name: '{{ item.name }}'
+#     internal: true
+#   loop: '{{ t3_networks }}'
+
+- name: Create networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    internal: "true"
+    ipam_config: "{{ item.ipam_options }}"
+  loop: '{{ networks }}'
 
 ### DEPLOY ###
 - name: Deploy Docker Compose Stack

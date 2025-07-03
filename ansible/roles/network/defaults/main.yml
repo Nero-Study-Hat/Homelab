@@ -5,11 +5,24 @@ TRAEFIK_DASHBOARD_CREDENTIALS: ""
 ts_auth_key: ""
 desec_api_token: ""
 
-t3_networks:
-  - name: t3_dashboard
-  - name: t3_nginx_test
-  - name: t3_alloy
-  - name: t3_monitor
+# t3_networks:
+#   - name: t3_dashboard
+#   - name: t3_nginx_test
+#   - name: t3_alloy
+#   - name: t3_monitor
+
+
+networks:
+  - name: "t3_dashboard"
+    ipam_options:
+    - subnet: "172.80.0.0/29"
+      gateway: "172.80.0.1"
+    taefik_ip: "172.80.0.2"
+  - name: "t3_searxng"
+    ipam_options:
+    - subnet: "172.80.2.0/29"
+      gateway: "172.80.2.1"
+    taefik_ip: "172.80.2.3"
 
 # default values are examples from cloud host vars
 tailscale_subnet:

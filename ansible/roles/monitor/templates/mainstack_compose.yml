@@ -1,0 +1,105 @@
+services:
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      monitoring_backend:
+      tailscale-network:
+        ipv4_address: {{ts_ip.grafana}}
+      {{t3_network}}:
+    depends_on:
+      - loki
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network={{t3_network}}"
+      - "traefik.http.routers.grafana.rule=Host(`{{domains.grafana}}`)"
+      - "traefik.http.routers.grafana.entrypoints=https"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.tls.certresolver=desec"
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
+
+  loki:
+    container_name: loki
+    image: grafana/loki:3.5.1
+    restart: unless-stopped
+    command: "-config.file=/etc/loki/loki-config.yaml"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data:/loki:rw
+    networks:
+      monitoring_backend:
+      tailscale-network:
+        ipv4_address: {{ts_ip.loki}}
+      {{t3_network}}:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network={{t3_network}}"
+      - "traefik.http.routers.loki.rule=Host(`{{domains.loki}}`)"
+      - "traefik.http.routers.loki.entrypoints=https"
+      - "traefik.http.routers.loki.tls=true"
+      - "traefik.http.routers.loki.tls.certresolver=desec"
+      - traefik.http.services.loki.loadbalancer.server.port=3100
+      # Proxy to incoming alloy to loki traffic the actual Loki instance
+      - "traefik.http.routers.loki-incoming.entrypoints=https"
+      - "traefik.http.routers.loki-incoming.rule=Path(`/loki/api/v1/push`)"
+      - "traefik.http.routers.loki-incoming.service=loki-backend"
+      - "traefik.http.routers.loki-incoming.tls=true"
+      - "traefik.http.services.loki-backend.loadbalancer.server.url=https://{{domains.loki}}"
+
+  socket-proxy:
+    image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
+    container_name: socketproxy
+    restart: "always"
+    read_only: true
+    user: "0:994"
+    volumes:
+      - "/run/docker.sock:/run/docker.sock:ro" # mount host docker socket, the :ro does not mean read-only for the socket, just for the actual file
+      - "socket-proxy:/run/proxy" # this socket is run as 1000:1000, not as root!
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    restart: unless-stopped
+    depends_on:
+      loki:
+      socket-proxy:
+        condition: "service_healthy"
+        restart: true
+    volumes:
+      - './config.alloy:/etc/alloy/config.alloy'
+      - "socket-proxy:/var/run"
+    networks:
+      monitoring_backend:
+      tailscale-network:
+        ipv4_address: {{ts_ip.alloy}}
+      {{t3_network}}:
+    command:
+      - run
+      - --server.http.listen-addr=:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network={{t3_network}}"
+      - "traefik.http.routers.alloy.rule=Host(`{{domains.alloy}}`)"
+      - "traefik.http.routers.alloy.entrypoints=https"
+      - "traefik.http.routers.alloy.tls=true"
+      - "traefik.http.routers.alloy.tls.certresolver=desec"
+      - traefik.http.services.alloy.loadbalancer.server.port=12345
+
+volumes:
+  socket-proxy:
+  grafana_data:
+  loki_data:
+
+networks:
+  monitoring_backend:
+    internal: true
+  {{t3_network}}:
+    external: true
+  tailscale-network:
+    external: true

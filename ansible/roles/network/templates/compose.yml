@@ -30,8 +30,8 @@ services:
     read_only: true
     user: "0:994"
     volumes:
-      - "/run/docker.sock:/run/docker.sock:ro" # mount host docker socket, the :ro does not mean read-only for the socket, just for the actual file
-      - "socket-proxy:/run/proxy" # this socket is run as 1000:1000, not as root!
+      - "/run/docker.sock:/run/docker.sock:ro"
+      - "socket-proxy:/run/proxy" # this socket is run as 1000:1000, not as root
     restart: "always"
 
   traefik:
@@ -50,8 +50,9 @@ services:
     networks:
       tailscale-network:
         ipv4_address: {{ tailscale_subnet.traefik_ip }}
-      {%- for net in t3_networks +%}
+      {%- for net in networks +%}
       {{ net.name }}:
+        ipv4_address: {{ net.traefik_ip }}
       {%- endfor +%}
     environment:
       DESEC_TOKEN_FILE: /run/secrets/desec_api_token # note using _FILE for docker secrets
@@ -61,7 +62,6 @@ services:
     env_file: .env # use .env
     volumes:
       - "socket-proxy:/var/run" # access docker socket via proxy read-only
-      # - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/localtime:/etc/localtime:ro
       - ./traefik/data/traefik.yml:/traefik.yml:ro
       - ./traefik/data/acme.json:/acme.json
@@ -94,7 +94,7 @@ volumes:
 networks:
   tailscale-network:
     external: true
-  {%- for net in t3_networks +%}
+  {%- for net in networks +%}
   {{ net.name }}:
     external: true
   {%- endfor +%}

@@ -8,7 +8,10 @@ media_dns:
   ts_ip: "172.20.2.4"
   upstream_server: "10.0.0.3"
   records: |
+    # media domains to media traefik
     address=/media.nerolab.dev/172.20.2.3
+    # this domain to monitor main stack traefik
+    address=/monitor.nerolab.dev/172.20.0.3
 
 media_tailscale_subnet:
   subnet_cidr: "172.20.2.0/28"
@@ -17,27 +20,55 @@ media_tailscale_subnet:
   traefik_ip: "172.20.2.3"
   dns_ip: "172.20.2.4"
 
+# media_traefik:
+#   domains:
+#     main: "nerolab.dev"
+#     wildcard: "*.media.nerolab.dev"
+#     traefik: "traefik.media.nerolab.dev"
+#   networks:
+#     - name: t3_dashboard
+#     - name: t3_nextcloud
+#     - name: t3_searxng
+
 media_traefik:
   domains:
     main: "nerolab.dev"
     wildcard: "*.media.nerolab.dev"
     traefik: "traefik.media.nerolab.dev"
   networks:
-    - name: t3_dashboard
-    - name: t3_nextcloud
-    - name: t3_searxng
+    - name: "t3_dashboard"
+      ipam_options:
+      - subnet: "172.30.1.0/29"
+        gateway: "172.30.1.2"
+      traefik_ip: "172.30.1.3"
+    - name: "{{media_searxng.network_backend.name}}"
+      ipam_options: "{{media_searxng.network_backend.ipam_options}}"
+      traefik_ip: "{{media_searxng.network_backend.traefik_ips.traefik}}"
 
 ### END SERVICE SPECIFIC VARS ###
 
-media_nextcloud:
-  name: "nextcloud"
-  mounted_dir: "/mnt/nextcloud_storage"
-  domain: "nextcloud.media.nerolab.dev"
-  t3_network: "t3_nextcloud"
-  tailscale_ip: "172.20.2.8"
+# media_nextcloud:
+#   name: "nextcloud"
+#   mounted_dir: "/mnt/nextcloud_storage"
+#   domain: "nextcloud.media.nerolab.dev"
+#   t3_network: "t3_nextcloud"
+#   tailscale_ip: "172.20.2.8"
+
+# media_searxng:
+#   name: "searxng"
+#   domain: "searxng.media.nerolab.dev"
+#   t3_network: "t3_searxng"
+#   tailscale_ip: "172.20.2.7"
 
 media_searxng:
   name: "searxng"
   domain: "searxng.media.nerolab.dev"
-  t3_network: "t3_searxng"
   tailscale_ip: "172.20.2.7"
+  network_backend:
+    name: "t3_searxng"
+    ipam_options:
+    - subnet: "172.30.2.0/29"
+      gateway: "172.30.2.3"
+    traefik_ips:
+      traefik: "172.30.2.4"
+      searxng: "172.30.2.5"
