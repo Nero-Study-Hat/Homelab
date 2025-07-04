@@ -53,26 +53,27 @@
     mode: '0600'
 
 ### HANDLE NETWORKING ###
-- name: Create tailscale-network docker network with custom subnet
+
+- name: Create shared networks
   community.docker.docker_network:
-    name: tailscale-network
-    ipam_config:
-      - subnet: "{{ tailscale_subnet.subnet_cidr }}"
-        gateway: "{{ tailscale_subnet.gateway }}"
+    name: "{{ item.name }}"
+    # internal: "true"
+    ipam_config: "{{ item.ipam_options }}"
+  loop: '{{ networks.shared }}'
 
-  # https://stackoverflow.com/questions/73187213/ansible-loop-to-create-docker-networks
-# - name: Create t3_proxy docker network
-#   docker_network:
-#     name: '{{ item.name }}'
-#     internal: true
-#   loop: '{{ t3_networks }}'
-
-- name: Create networks
+- name: Create traefik specific networks
   community.docker.docker_network:
     name: "{{ item.name }}"
     internal: "true"
     ipam_config: "{{ item.ipam_options }}"
-  loop: '{{ networks }}'
+  loop: '{{ networks.traefik_specific }}'
+
+- name: Create tailscale specific networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    # internal: "true"
+    ipam_config: "{{ item.ipam_options }}"
+  loop: '{{ networks.tailscale_specific }}'
 
 ### DEPLOY ###
 - name: Deploy Docker Compose Stack

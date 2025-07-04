@@ -1,14 +1,12 @@
 services:
   {{project_name}}:
-    container_name: {{project_name}}
+    container_name: "{{project_name}}"
     image: docker.io/searxng/searxng:latest
     restart: unless-stopped
     networks:
-      tailscale-network:
-        ipv4_address: {{tailscale_ip}}
       {{project_name}}_backend:
       {{network_backend.name}}:
-        ipv4_address: {{network_backend.traefik_ips.searxng}}
+        ipv4_address: "{{network_backend.traefik_ips.searxng}}"
     volumes:
       - ./{{project_name}}:/etc/searxng:rw
     environment:
@@ -29,6 +27,7 @@ services:
       - "traefik.http.routers.{{project_name}}.entrypoints=https"
       - "traefik.http.routers.{{project_name}}.tls=true"
       - "traefik.http.routers.{{project_name}}.tls.certresolver=desec"
+      - "traefik.http.services.{{project_name}}.loadbalancer.server.port=443"
 
 networks:
   {{project_name}}_backend:

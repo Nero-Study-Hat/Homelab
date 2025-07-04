@@ -5,8 +5,8 @@ services:
     hostname: ts-gate
     container_name: ts-gate
     expose:
-      - "80:80"
-      - "443:443"
+      - "80"
+      - "443"
       - "53/udp"
     networks:
       gate-tailscale-network:

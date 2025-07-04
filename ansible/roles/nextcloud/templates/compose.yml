@@ -31,10 +31,12 @@ services:
       - {{project_name}}-db
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network={{network_backend.name}}"
       - "traefik.http.routers.{{project_name}}.rule=Host(`{{domain}}`)"
       - "traefik.http.routers.{{project_name}}.entrypoints=https"
       - "traefik.http.routers.{{project_name}}.tls=true"
       - "traefik.http.routers.{{project_name}}.tls.certresolver=desec"
+      - "traefik.http.services.{{project_name}}.loadbalancer.server.port=443"
 
   # Nextcloud Database
   {{project_name}}-db:

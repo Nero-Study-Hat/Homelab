@@ -5,13 +5,20 @@ media_docker_dir: "/home/ansible/docker"
 media_dns:
   name: "media_dns"
   port_num: "53"
-  ts_ip: "172.20.2.4"
+  network_backend:
+    name: "tailscale_dnsmasq"
+    ipam_options:
+    - subnet: "172.20.2.0/29"
+      gateway: "172.20.2.1"
+    tailscale_ips:
+      tailscale: "172.20.2.2"
+      dnsmasq: "172.20.2.4"
   upstream_server: "10.0.0.3"
   records: |
     # media domains to media traefik
-    address=/media.nerolab.dev/172.20.2.3
+    address=/media.nerolab.dev/172.30.1.2
     # this domain to monitor main stack traefik
-    address=/monitor.nerolab.dev/172.20.0.3
+    address=/monitor.nerolab.dev/172.30.1.2
 
 media_tailscale_subnet:
   subnet_cidr: "172.20.2.0/28"
@@ -20,30 +27,31 @@ media_tailscale_subnet:
   traefik_ip: "172.20.2.3"
   dns_ip: "172.20.2.4"
 
-# media_traefik:
-#   domains:
-#     main: "nerolab.dev"
-#     wildcard: "*.media.nerolab.dev"
-#     traefik: "traefik.media.nerolab.dev"
-#   networks:
-#     - name: t3_dashboard
-#     - name: t3_nextcloud
-#     - name: t3_searxng
+# remember to
+# - copy traefik shared ip to dns reverse proxy records
+# - set tailscale acls, autoApprovers, hosts, and grants
+media_networks:
+  shared:
+    - name: "traefik_tailscale"
+      ipam_options:
+      - subnet: "172.30.1.0/29"
+        gateway: "172.30.1.1"
+      traefik_ip: "172.30.1.2"
+      tailscale_ip: "172.30.1.4"
+  traefik_specific:
+    - name: "{{media_searxng.network_backend.name}}"
+      ipam_options: "{{media_searxng.network_backend.ipam_options}}"
+      traefik_ip: "{{media_searxng.network_backend.traefik_ips.traefik}}"
+  tailscale_specific:
+    - name: "{{media_dns.network_backend.name}}"
+      ipam_options: "{{media_dns.network_backend.ipam_options}}"
+      tailscale_ip: "{{media_dns.network_backend.tailscale_ips.tailscale}}"
 
 media_traefik:
   domains:
     main: "nerolab.dev"
     wildcard: "*.media.nerolab.dev"
     traefik: "traefik.media.nerolab.dev"
-  networks:
-    - name: "t3_dashboard"
-      ipam_options:
-      - subnet: "172.30.1.0/29"
-        gateway: "172.30.1.2"
-      traefik_ip: "172.30.1.3"
-    - name: "{{media_searxng.network_backend.name}}"
-      ipam_options: "{{media_searxng.network_backend.ipam_options}}"
-      traefik_ip: "{{media_searxng.network_backend.traefik_ips.traefik}}"
 
 ### END SERVICE SPECIFIC VARS ###
 
@@ -54,21 +62,14 @@ media_traefik:
 #   t3_network: "t3_nextcloud"
 #   tailscale_ip: "172.20.2.8"
 
-# media_searxng:
-#   name: "searxng"
-#   domain: "searxng.media.nerolab.dev"
-#   t3_network: "t3_searxng"
-#   tailscale_ip: "172.20.2.7"
-
 media_searxng:
   name: "searxng"
   domain: "searxng.media.nerolab.dev"
-  tailscale_ip: "172.20.2.7"
   network_backend:
     name: "t3_searxng"
     ipam_options:
     - subnet: "172.30.2.0/29"
-      gateway: "172.30.2.3"
+      gateway: "172.30.2.1"
     traefik_ips:
-      traefik: "172.30.2.4"
+      traefik: "172.30.2.3"
       searxng: "172.30.2.5"

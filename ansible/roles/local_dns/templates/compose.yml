@@ -2,12 +2,12 @@ services:
 
   {{project_name}}:
     image: custom/dnsmasq
-    container_name: {{project_name}}
+    container_name: "{{project_name}}"
     expose:
       - "{{port_num}}/udp"
     networks:
-      {{tailscale_network_name}}:
-        ipv4_address: {{tailscale_ip}}
+      {{network_backend.name}}:
+        ipv4_address: "{{network_backend.tailscale_ips.dnsmasq}}"
     volumes:
       - ./dnsmasq_image/dnsmasq.conf:/etc/dnsmasq.conf:ro
     restart: unless-stopped
@@ -18,5 +18,5 @@ services:
       - ALL
 
 networks:
-  {{tailscale_network_name}}:
+  {{network_backend.name}}:
     external: true

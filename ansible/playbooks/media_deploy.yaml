@@ -24,17 +24,11 @@
         TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
         ts_auth_key: "{{ sops_secrets.media_server_ts_auth_key }}"
         desec_api_token: "{{ sops_secrets.desec_api_token }}"
-        tailscale_subnet:
-          subnet_cidr: "{{ media_tailscale_subnet.subnet_cidr }}"
-          gateway: "{{ media_tailscale_subnet.gateway }}"
-          tailscale_ip: "{{ media_tailscale_subnet.tailscale_ip }}"
-          dns_ip: "{{ media_tailscale_subnet.dns_ip }}"
-          traefik_ip: "{{ media_tailscale_subnet.traefik_ip }}"
         domains:
           main: "{{ media_traefik.domains.main }}"
           wildcard: "{{ media_traefik.domains.wildcard }}"
           traefik: "{{ media_traefik.domains.traefik }}"
-        networks: "{{media_traefik.networks}}"
+        networks: "{{media_networks}}"
 
     - name: Include Local DNS Role - User DNS
       include_role:
@@ -42,7 +36,7 @@
       vars:
         docker_dir: "{{media_docker_dir}}"
         project_name: "{{media_dns.name}}"
-        tailscale_ip: "{{media_dns.ts_ip}}"
+        network_backend: "{{ media_dns.network_backend }}"
         port_num: "{{media_dns.port_num}}"
         dns_records: "{{media_dns.records}}"
         upstream_server: "{{media_dns.upstream_server}}"
@@ -55,7 +49,6 @@
         project_name: "{{media_searxng.name}}"
         domain: "{{media_searxng.domain}}"
         network_backend: "{{ media_searxng.network_backend }}"
-        tailscale_ip: "{{media_searxng.tailscale_ip}}"
 
     # - name: Include Nextcloud Role
     #   include_role:
