@@ -32,7 +32,7 @@ services:
         {{ "," if not loop.last else "\"" }}
       {%- endfor +%}
       TS_ACCEPT_ROUTES: "true"
-      TS_ADVERTISE_DNS: {{ tailscale_subnet.dns_ip }}
+      TS_ADVERTISE_DNS: {{ dns_ip }}
     volumes:
       - ./tailscale/tailscale-data:/var/lib/tailscale:rw
       - ./tailscale/tailscale:/var/run/tailscale
@@ -43,6 +43,7 @@ services:
     image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
     hostname: socketproxy
     container_name: socketproxy
+    network_mode: "none"
     read_only: true
     user: "0:994"
     volumes:

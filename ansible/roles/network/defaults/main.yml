@@ -5,12 +5,11 @@ TRAEFIK_DASHBOARD_CREDENTIALS: ""
 ts_auth_key: ""
 desec_api_token: ""
 
-# t3_networks:
-#   - name: t3_dashboard
-#   - name: t3_nginx_test
-#   - name: t3_alloy
-#   - name: t3_monitor
-
+dns_ip: ""
+domains:
+  traefik: "traefik.cloud.nerolab.dev"
+  main: "nerolab.dev"
+  wildcard: "*.cloud.nerolab.dev"
 
 networks:
   shared:
@@ -32,16 +31,3 @@ networks:
       - subnet: "172.30.2.0/29"
         gateway: "172.30.2.3"
       tailscale_ip: "172.30.2.4"
-
-# default values are examples from cloud host vars
-tailscale_subnet:
-  subnet_cidr: "172.20.0.0/24"
-  gateway: "172.20.0.1"
-  tailscale_ip: "172.20.0.3"
-  dns_ip: "172.20.0.2"
-  traefik_ip: "172.20.0.4"
-
-domains:
-  traefik: "traefik.cloud.nerolab.dev"
-  main: "nerolab.dev"
-  wildcard: "*.cloud.nerolab.dev"

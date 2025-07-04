@@ -27,11 +27,9 @@ services:
       - "traefik.http.routers.{{project_name}}.entrypoints=https"
       - "traefik.http.routers.{{project_name}}.tls=true"
       - "traefik.http.routers.{{project_name}}.tls.certresolver=desec"
-      - "traefik.http.services.{{project_name}}.loadbalancer.server.port=443"
 
 networks:
   {{project_name}}_backend:
-    internal: true
   tailscale-network:
     external: true
   {{network_backend.name}}:

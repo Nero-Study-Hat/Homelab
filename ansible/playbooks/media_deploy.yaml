@@ -28,6 +28,7 @@
           main: "{{ media_traefik.domains.main }}"
           wildcard: "{{ media_traefik.domains.wildcard }}"
           traefik: "{{ media_traefik.domains.traefik }}"
+        dns_ip: "{{media_dns.network_backend.tailscale_ips.dnsmasq}}"
         networks: "{{media_networks}}"
 
     - name: Include Local DNS Role - User DNS
