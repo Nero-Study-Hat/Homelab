@@ -9,14 +9,13 @@ services:
       - "443"
       - "53/udp"
     networks:
-      gate-tailscale-network:
-        ipv4_address: {{ tailscale_subnet.tailscale_ip }}
+      - gate-tailscale-network
     environment:
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
       TS_USERSPACE: false
       TS_ACCEPT_ROUTES: "true"
-      TS_ADVERTISE_DNS: {{ tailscale_subnet.dns_ip }}
+      TS_ADVERTISE_DNS: "{{ dns.ip }}"
       TS_EXTRA_ARGS: "--accept-routes"
     volumes:
       - ./ts-nginx:/var/lib/tailscale
@@ -53,4 +52,4 @@ services:
 
 networks:
   gate-tailscale-network:
-    external: true
+    driver: bridge

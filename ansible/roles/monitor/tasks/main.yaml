@@ -15,10 +15,20 @@
 
 ### MAIN ###
 
-- block: # MAIN STACk
-  - name: Transfer and convert the docker compose jinja2 template
+- block: # CENTER
+  - name: Include Local DNS Role - User DNS
+    include_role:
+      name: local_dns
+    vars:
+      dns_docker_dir: "{{docker_dir}}"
+      dns_project_name: "{{project_name}}"
+      net_name: "{{ shared_network_backend.name }}"
+      dns_ip: "{{shared_network_backend.ips.dns}}"
+      upstream_server: "{{dns.upstream_server}}"
+      config: "{{dns.config}}"
+  - name: Transfer and convert the docker compose jinja2 template - Center
     ansible.builtin.template:
-      src: "mainstack_compose.yml"
+      src: "center_compose.yml"
       dest: "{{stack_dir}}/compose.yml"
   - name: Transfer and convert the alloy config jinja2 template
     ansible.builtin.template:
@@ -28,10 +38,10 @@
     ansible.builtin.copy:
       src: "loki-config.yaml"
       dest: "{{stack_dir}}/loki-config.yaml"
-    when: sub_role == "main_stack"
+  when: sub_role == "center"
 
 - block: # OUTPOST
-  - name: Transfer and convert the docker compose jinja2 template
+  - name: Transfer and convert the docker compose jinja2 template - Outpost
     ansible.builtin.template:
       src: "outpost_compose.yml"
       dest: "{{stack_dir}}/compose.yml"
@@ -39,7 +49,19 @@
     ansible.builtin.template:
       src: "config.alloy"
       dest: "{{stack_dir}}/config.alloy"
-    when: sub_role == "outpost"
+  - name: Copy traefik.yml (config) file
+    ansible.builtin.copy:
+      src: "traefik.yml"
+      dest: "{{stack_dir}}/traefik.yml"
+  - name: Create acme.json file
+    ansible.builtin.file:
+      path: "{{stack_dir}}/acme.json"
+      state: "touch"
+      mode: '0600'
+  - name: Create t3_proxy_outpost docker network
+    docker_network:
+      name: 't3_proxy_outpost'
+  when: sub_role == "outpost"
 
 ### DEPLOY ###
 - name: Deploy Docker Compose Stack

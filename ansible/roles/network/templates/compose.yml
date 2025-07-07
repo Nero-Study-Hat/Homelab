@@ -4,7 +4,8 @@ services:
     image: ghcr.io/tailscale/tailscale:stable
     hostname: ts-docker
     container_name: ts-docker
-    restart: always
+    restart: unless-stopped
+    dns: "{{networks.shared[0].dns_ip}}"
     networks:
       {%- for net in networks.shared +%}
       {{ net.name }}:
@@ -32,7 +33,7 @@ services:
         {{ "," if not loop.last else "\"" }}
       {%- endfor +%}
       TS_ACCEPT_ROUTES: "true"
-      TS_ADVERTISE_DNS: {{ dns_ip }}
+      TS_EXTRA_ARGS: "--accept-routes"
     volumes:
       - ./tailscale/tailscale-data:/var/lib/tailscale:rw
       - ./tailscale/tailscale:/var/run/tailscale
@@ -64,6 +65,7 @@ services:
     expose:
       - "80/tcp"
       - "443/tcp"
+    dns: "{{networks.shared[0].dns_ip}}"
     networks:
       {%- for net in networks.shared +%}
       {{ net.name }}:
@@ -87,6 +89,7 @@ services:
       # - ./data/config.yml:/config.yml:ro
     labels:
       - "traefik.enable=true"
+      - "traefik.zone.main=true"
       - "traefik.docker.network=traefik_tailscale"
       - "traefik.http.routers.traefik.entrypoints=http"
       - "traefik.http.routers.traefik.rule=Host(`{{domains.traefik}}`)"

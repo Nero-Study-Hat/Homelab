@@ -1,22 +1,7 @@
-docker_dir: "/home/ansible/docker"
-project_name: "dns_01"
-
-network_backend:
-  name: ""
-  ipam_options:
-  - subnet: ""
-    gateway: ""
-  tailscale_ips:
-    tailscale: "172.25.2.2"
-    dnsmasq: "172.25.2.3"
-
-host_num: "53"
-
+dns_docker_dir: "/home/ansible/docker"
+dns_project_name: "monitor-center" # project attached too
+net_name: ""
+dns_ip: "172.25.2.3"
 upstream_server: "10.0.0.3"
-
-dns_records: |
-  # A records
+config: |
   address=/cloud.nerolab.dev/10.20.1.20
-
-  # CNAME records
-  cname=nginx.cloud.nerolab.dev,cloud.nerolab.dev
