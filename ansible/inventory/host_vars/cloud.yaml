@@ -15,29 +15,8 @@ cloud_docker_dir: "/home/ansible/docker"
 # "cloud-traefik": "10.110.0.2",
 # "cloud-dns": "10.110.1.4",
 
-# restricted nameserver (dns)
-# 10.110.1.4
-
 
 ### MAIN VLAN NETWORK STACK
-
-cloud_dns:
-  name: "cloud_dns"
-  port_num: "53"
-  network_backend:
-    name: "tailscale_dnsmasq"
-    ipam_options:
-    - subnet: "10.110.1.0/29"
-      gateway: "10.110.1.1"
-    tailscale_ips:
-      tailscale: "10.110.1.2"
-      dnsmasq: "10.110.1.4"
-  upstream_server: "10.0.0.3"
-  records: |
-    # cloud domains to cloud traefik
-    address=/cloud.nerolab.dev/10.110.0.2
-    # this domain to monitor main stack traefik
-    address=/monitor.nerolab.dev/10.110.0.2
 
 # remember to
 # - copy traefik shared ip to dns reverse proxy records
@@ -62,10 +41,7 @@ cloud_networks:
     - name: "{{cloud_nextcloud.network_backend.name}}"
       ipam_options: "{{cloud_nextcloud.network_backend.ipam_options}}"
       traefik_ip: "{{cloud_nextcloud.network_backend.traefik_ips.traefik}}"
-  tailscale_specific:
-    - name: "{{cloud_dns.network_backend.name}}"
-      ipam_options: "{{cloud_dns.network_backend.ipam_options}}"
-      tailscale_ip: "{{cloud_dns.network_backend.tailscale_ips.tailscale}}"
+  tailscale_specific: ""
 
 cloud_traefik:
   domains:
@@ -107,6 +83,9 @@ gate_traefik_instances:
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
       - name: loki.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+      - name: alloy.cloud.nerolab.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
   media:

@@ -16,29 +16,8 @@ media_docker_dir: "/home/ansible/docker"
 # "media-traefik-monitor-outpost": "10.130.21.4",
 # "media-dns": "10.130.1.4",
 
-# restricted nameserver (dns)
-# 10.130.1.4
-
 
 ### MAIN VLAN NETWORK STACK
-
-media_dns:
-  name: "media_dns"
-  port_num: "53"
-  network_backend:
-    name: "tailscale_dnsmasq"
-    ipam_options:
-    - subnet: "10.130.1.0/29"
-      gateway: "10.130.1.1"
-    tailscale_ips:
-      tailscale: "10.130.1.2"
-      dnsmasq: "10.130.1.4"
-  upstream_server: "10.0.0.3"
-  records: |
-    # media domains to media traefik
-    address=/media.nerolab.dev/10.130.0.2
-    # this domain to monitor main stack traefik
-    address=/monitor.nerolab.dev/10.130.0.2
 
 media_networks:
   shared:
@@ -47,24 +26,23 @@ media_networks:
       - subnet: "10.130.0.0/29"
         gateway: "10.130.0.1"
       traefik_ip: "10.130.0.2"
-      tailscale_ip: "10.130.0.4"
+      tailscale_ip: "10.130.0.3"
+      dns_ip: "10.130.0.4"
   traefik_specific: # these containers don't have Tailscale DNS and connection-ability
     - name: "{{media_searxng.network_backend.name}}"
       ipam_options: "{{media_searxng.network_backend.ipam_options}}"
       traefik_ip: "{{media_searxng.network_backend.traefik_ips.traefik}}"
-  tailscale_specific:
-    - name: "{{media_dns.network_backend.name}}"
-      ipam_options: "{{media_dns.network_backend.ipam_options}}"
-      tailscale_ip: "{{media_dns.network_backend.tailscale_ips.tailscale}}"
-    - name: "{{media_monitor_outpost.network_backend.name}}"
-      ipam_options: "{{media_monitor_outpost.network_backend.ipam_options}}"
-      tailscale_ip: "{{media_monitor_outpost.network_backend.tailscale_ips.tailscale}}"
+  tailscale_specific: ""
 
 media_traefik:
   domains:
     main: "nerolab.dev"
     wildcard: "*.media.nerolab.dev"
     traefik: "traefik.media.nerolab.dev"
+  dns:
+    upstream_server: "10.0.0.3"
+    config: |
+      address=/cloud.nerolab.dev/10.130.0.2
 
 
 ### MONITOR OUTPOST ###
@@ -73,17 +51,22 @@ media_monitor_outpost:
   name: "monitor_outpost"
   sub_role: "outpost"
   network_backend:
-    name: "tailscale_monitor_outpost"
+    name: "monitor_outpost"
     ipam_options:
     - subnet: "10.130.21.0/29"
       gateway: "10.130.21.1"
-    tailscale_ips:
-      tailscale: "10.130.21.2"
-      traefik: "10.130.21.4"
-      alloy: "10.130.21.5"
+    traefik_ips:
+      tailscale_traefik: "10.130.21.2"
+      alloy: "10.130.21.3"
+      dns: "10.130.21.4"
   outpost_header: "media-outpost"
   domains:
     loki: "loki.cloud.nerolab.dev"
+    trusted_traefik: "traefik.cloud.nerolab.dev"
+  dns:
+    upstream_server: "10.0.0.3"
+    config: |
+      address=/cloud.nerolab.dev/10.130.21.2
 
 
 ### END SERVICE SPECIFIC VARS ###

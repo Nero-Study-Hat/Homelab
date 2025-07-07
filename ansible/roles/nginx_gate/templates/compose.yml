@@ -2,8 +2,8 @@ services:
 
   ts-gate:
     image: tailscale/tailscale:latest
-    hostname: ts-gate
     container_name: ts-gate
+    hostname: ts-gate
     expose:
       - "80"
       - "443"

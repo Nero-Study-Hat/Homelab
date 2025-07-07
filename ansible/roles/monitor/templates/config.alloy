@@ -1,3 +1,8 @@
+logging {
+  level = "info"
+  format = "logfmt"
+}
+
 discovery.docker "linux" {
   host = "unix:///var/run/docker.sock"
 }
@@ -24,7 +29,24 @@ loki.source.docker "default" {
     host = "unix:///var/run/docker.sock"
     targets = discovery.relabel.logs_integrations_docker.output
     labels = {"platform" = "docker"}
-    forward_to = [loki.write.default.receiver]
+    forward_to = [loki.process.drop_traefik_dbg.receiver]
+}
+
+loki.process "drop_traefik_dbg" {
+  stage.drop {
+      older_than = "168h"
+      drop_counter_reason = "older than a week"
+  }
+
+  stage.docker {}
+  stage.match {
+    selector = `{container_name="traefik"}` //TODO: make var for center or outpost traefik container name
+    stage.drop {
+      expression = `DBG github\.com/traefik/traefik/v3/pkg/server/service/loadbalancer/wrr/wrr\.go:173 > Service selected by WRR:`
+      drop_counter_reason = "traefik loki alloy log loop"
+    }
+  }
+  forward_to = [loki.write.default.receiver]
 }
 
 loki.write "default" {
@@ -33,5 +55,7 @@ loki.write "default" {
     headers = {
       "X-Scope-OrgID" = "{{outpost_header}}",
     }
+    batch_wait = "5s"
+    batch_size = "10MiB"
   }
 }

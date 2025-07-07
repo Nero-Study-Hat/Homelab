@@ -3,14 +3,14 @@ project_name: ""
 
 sub_role: ""
 
-ts_network_backend:
+t3_network_backend:
   name: ""
   ipam_options:
   - subnet: ""
     gateway: ""
-  tailscale_ips:
-    tailscale: "172.80.2.2"
-    traefik: "172.80.2.3"
+  traefik_ips:
+    tailscale_traefik: "172.80.2.2"
+    alloy: "172.80.2.3"
 
 shared_network_backend:
   name: ""
@@ -31,6 +31,7 @@ domains:
   alloy: ""
 
 outpost_header: ""
+ts_auth_key: ""
 
 dns:
   upstream_server: "10.0.0.3"

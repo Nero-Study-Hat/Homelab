@@ -1,15 +1,29 @@
 services:
 
-  socket-proxy-outpost:
-    image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
-    container_name: socket-proxy-outpost
-    network_mode: "none"
-    restart: "always"
-    read_only: true
-    user: "0:994"
+  ts-monitor-outpost:
+    image: tailscale/tailscale:latest
+    container_name: ts-monitor-outpost
+    hostname: ts-monitor-outpost
+    expose:
+      - "80"
+      - "443"
+    dns: "{{t3_network_backend.traefik_ips.dns}}"
+    networks:
+      {{t3_network_backend.name}}:
+        ipv4_address: {{t3_network_backend.traefik_ips.tailscale_traefik}}
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: false
+      TS_ACCEPT_ROUTES: "true"
+      TS_EXTRA_ARGS: "--accept-routes"
     volumes:
-      - "/run/docker.sock:/run/docker.sock:ro" # mount host docker socket, the :ro does not mean read-only for the socket, just for the actual file
-      - "socket-proxy:/run/proxy" # this socket is run as 1000:1000, not as root!
+      - ./ts-outpost:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
 
   traefik-outpost:
     image: traefik:v3.4
@@ -19,15 +33,9 @@ services:
         condition: "service_healthy"
         restart: true
     restart: unless-stopped
+    network_mode: service:ts-monitor-outpost
     security_opt:
       - no-new-privileges:true
-    expose:
-      - "80/tcp"
-      - "443/tcp"
-    networks:
-      {{ts_network_backend.name}}:
-        ipv4_address: {{ts_network_backend.tailscale_ips.alloy}}
-      t3_proxy_outpost:
     volumes:
       - "socket-proxy:/var/run" # access docker socket via proxy read-only
       - /etc/localtime:/etc/localtime:ro
@@ -36,7 +44,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.zone.outpost=true"
-      - "traefik.docker.network=t3_proxy_outpost"
+      - "traefik.docker.network=monitor_outpost"
+      - "traefik.http.services.traefik.loadbalancer.server.port=80"
 
   alloy:
     image: grafana/alloy:latest
@@ -49,8 +58,10 @@ services:
     volumes:
       - './config.alloy:/etc/alloy/config.alloy'
       - "socket-proxy:/var/run"
+    dns: "{{t3_network_backend.traefik_ips.dns}}"
     networks:
-      t3_proxy_outpost:
+      {{t3_network_backend.name}}:
+        ipv4_address: {{t3_network_backend.traefik_ips.alloy}}
     command:
       - run
       - --storage.path=/var/lib/alloy/data
@@ -58,12 +69,12 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.zone.outpost=true"
-      - "traefik.docker.network=t3_proxy_outpost"
-      # Forward log pushes to the trusted Traefik instance (instead of Loki directly)
+      - "traefik.docker.network=monitor_outpost"
+      # Forward log pushes to the trusted Traefik instance from the untrusted Traefik instance (instead of Loki directly)
       - "traefik.http.routers.alloy-loki.entrypoints=http"
-      - "traefik.http.routers.alloy-loki.rule=Path(`/loki/api/v1/push`)"
+      - "traefik.http.routers.alloy-loki.rule=Host(`{{domains.untrusted_traefik}}`)"
       - "traefik.http.routers.alloy-loki.service=trusted-traefik-forward"
-      - "traefik.http.services.trusted-traefik-forward.loadbalancer.server.url=https://monitor.nerolab.dev"
+      - "traefik.http.services.trusted-traefik-forward.loadbalancer.server.url=http://{{domains.trusted_traefik}}"
       # Add middleware
       - "traefik.http.routers.alloy-loki.middlewares=add-tenant-header,rate-limit"
       # Tenant tagging
@@ -72,11 +83,20 @@ services:
       - "traefik.http.middlewares.rate-limit.ratelimit.average=100"
       - "traefik.http.middlewares.rate-limit.ratelimit.burst=200"
 
+  socket-proxy-outpost:
+    image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
+    container_name: socket-proxy-outpost
+    network_mode: "none"
+    restart: "always"
+    read_only: true
+    user: "0:994"
+    volumes:
+      - "/run/docker.sock:/run/docker.sock:ro" # mount host docker socket, the :ro does not mean read-only for the socket, just for the actual file
+      - "socket-proxy:/run/proxy" # this socket is run as 1000:1000, not as root!
+
 volumes:
   socket-proxy:
 
 networks:
-  t3_proxy_outpost:
-    external: true
-  {{ts_network_backend.name}}:
-    external: true
+  {{t3_network_backend.name}}:
+     external: true

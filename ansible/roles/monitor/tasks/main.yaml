@@ -41,6 +41,29 @@
   when: sub_role == "center"
 
 - block: # OUTPOST
+  - name: Create traefik specific networks
+    community.docker.docker_network:
+      name: "{{ t3_network_backend.name }}"
+      ipam_config: "{{ t3_network_backend.ipam_options }}"
+  - name: Include Local DNS Role - User DNS
+    include_role:
+      name: local_dns
+    vars:
+      dns_docker_dir: "{{docker_dir}}"
+      dns_project_name: "{{project_name}}"
+      net_name: "{{ t3_network_backend.name }}"
+      dns_ip: "{{t3_network_backend.traefik_ips.dns}}"
+      upstream_server: "{{dns.upstream_server}}"
+      config: "{{dns.config}}"
+  - name: Create .env file with ts_authkey
+    ansible.builtin.copy:
+      dest: "{{stack_dir}}/.env"
+      content: |
+        TS_AUTHKEY={{ ts_auth_key }}
+  - name: Creates remote TS-OUPOST directory
+    ansible.builtin.file:
+      path: '{{stack_dir}}/ts-outpost'
+      state: directory
   - name: Transfer and convert the docker compose jinja2 template - Outpost
     ansible.builtin.template:
       src: "outpost_compose.yml"

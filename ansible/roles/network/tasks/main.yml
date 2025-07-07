@@ -74,7 +74,7 @@
     name: "{{ item.name }}"
     # internal: "true"
     ipam_config: "{{ item.ipam_options }}"
-  loop: '{{ networks.tailscale_specific }}'
+  loop: '{{ networks.tailscale_specific  | default([], true) }}'
 
 ### LOCAL DNS SETUP ###
 

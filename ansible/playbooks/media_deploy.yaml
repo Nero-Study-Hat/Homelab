@@ -16,40 +16,29 @@
     #   vars:
     #     swap_file_size_mb: '1024'
 
-    - name: Include Network Role
-      include_role:
-        name: network
-      vars:
-        TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
-        ts_auth_key: "{{ sops_secrets.media_server_ts_auth_key }}"
-        desec_api_token: "{{ sops_secrets.desec_api_token }}"
-        docker_dir: "{{media_docker_dir}}"
-        domains:
-          main: "{{ media_traefik.domains.main }}"
-          wildcard: "{{ media_traefik.domains.wildcard }}"
-          traefik: "{{ media_traefik.domains.traefik }}"
-        dns_ip: "{{media_dns.network_backend.tailscale_ips.dnsmasq}}"
-        networks: "{{media_networks}}"
+    # - name: Include Network Role
+    #   include_role:
+    #     name: network
+    #   vars:
+    #     TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
+    #     ts_auth_key: "{{ sops_secrets.media_server_ts_auth_key }}"
+    #     desec_api_token: "{{ sops_secrets.desec_api_token }}"
+    #     docker_dir: "{{media_docker_dir}}"
+    #     domains:
+    #       main: "{{ media_traefik.domains.main }}"
+    #       wildcard: "{{ media_traefik.domains.wildcard }}"
+    #       traefik: "{{ media_traefik.domains.traefik }}"
+    #     dns: "{{media_traefik.dns}}"
+    #     networks: "{{media_networks}}"
 
-    - name: Include Local DNS Role - User DNS
-      include_role:
-        name: local_dns
-      vars:
-        docker_dir: "{{media_docker_dir}}"
-        project_name: "{{media_dns.name}}"
-        network_backend: "{{ media_dns.network_backend }}"
-        port_num: "{{media_dns.port_num}}"
-        dns_records: "{{media_dns.records}}"
-        upstream_server: "{{media_dns.upstream_server}}"
-
-    - name: Include SearXNG Role
-      include_role:
-        name: searxng
-      vars:
-        docker_dir: "{{media_docker_dir}}"
-        project_name: "{{media_searxng.name}}"
-        domain: "{{media_searxng.domain}}"
-        network_backend: "{{ media_searxng.network_backend }}"
+    # - name: Include SearXNG Role
+    #   include_role:
+    #     name: searxng
+    #   vars:
+    #     docker_dir: "{{media_docker_dir}}"
+    #     project_name: "{{media_searxng.name}}"
+    #     domain: "{{media_searxng.domain}}"
+    #     network_backend: "{{ media_searxng.network_backend }}"
 
     - name: Include Monitor Outpost Role
       include_role:
@@ -58,6 +47,8 @@
         docker_dir: "{{media_docker_dir}}"
         project_name: "{{media_monitor_outpost.name}}"
         sub_role: "{{media_monitor_outpost.sub_role}}"
-        ts_network_backend: "{{ media_monitor_outpost.network_backend }}"
-        outpost_header: "{{media_monitor_outpost.outpost_header}}"
+        t3_network_backend: "{{ media_monitor_outpost.network_backend }}"
         domains: "{{media_monitor_outpost.domains}}"
+        outpost_header: "{{media_monitor_outpost.outpost_header}}"
+        ts_auth_key: "{{ sops_secrets.media_server_monitor_outpost_ts_auth_key }}"
+        dns: "{{media_monitor_outpost.dns}}"

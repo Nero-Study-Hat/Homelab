@@ -26,5 +26,8 @@ schema_config:
         prefix: index_
         period: 24h
 
+querier:
+  multi_tenant_queries_enabled: true
+
 # ruler:
 #   alertmanager_url: http://localhost:9093

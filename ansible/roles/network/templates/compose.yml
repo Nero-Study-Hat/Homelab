@@ -19,19 +19,10 @@ services:
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
       TS_SOCKET: /var/run/tailscale/tailscaled.sock
-      TS_ROUTES: "
-      {%- for net in networks.shared -%}
-      {%- for item in net.ipam_options -%}
-        {{ item.subnet }}
-      {%- endfor -%}
-        {{ "," if not loop.last else "" }}
-      {%- endfor +%},
-      {%- for net in networks.tailscale_specific -%}
-      {%- for item in net.ipam_options -%}
-        {{ item.subnet }}
-      {%- endfor -%}
-        {{ "," if not loop.last else "\"" }}
-      {%- endfor +%}
+      TS_ROUTES: "{{ (
+        networks.shared | map(attribute='ipam_options') | sum(start=[]) +
+        networks.tailscale_specific | map(attribute='ipam_options') | sum(start=[])
+      ) | map(attribute='subnet') | join(',') }}"
       TS_ACCEPT_ROUTES: "true"
       TS_EXTRA_ARGS: "--accept-routes"
     volumes:

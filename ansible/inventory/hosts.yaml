@@ -9,7 +9,7 @@ myhosts:
         ansible_python_interpreter: "/usr/bin/python3.11"
 
     fog:
-        ansible_host: 100.80.0.1
+        ansible_host: 100.80.0.2
         ansible_become: yes
         ansible_become_method: sudo
         ansible_connection: ssh
@@ -17,7 +17,7 @@ myhosts:
         ansible_python_interpreter: "/usr/bin/python3.11"
 
     media:
-        ansible_host: 100.80.0.2
+        ansible_host: 100.80.0.1
         ansible_become: yes
         ansible_become_method: sudo
         ansible_connection: ssh

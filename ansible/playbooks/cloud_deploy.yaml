@@ -17,29 +17,29 @@
     #   vars:
     #     swap_file_size_mb: '1024'
 
-    - name: Include Network Role
-      include_role:
-        name: network
-      vars:
-        TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
-        ts_auth_key: "{{ sops_secrets.cloud_server_ts_auth_key }}"
-        desec_api_token: "{{ sops_secrets.desec_api_token }}"
-        docker_dir: "{{cloud_docker_dir}}"
-        domains:
-          main: "{{ cloud_traefik.domains.main }}"
-          wildcard: "{{ cloud_traefik.domains.wildcard }}"
-          traefik: "{{ cloud_traefik.domains.traefik }}"
-        dns: "{{cloud_traefik.dns}}"
-        networks: "{{cloud_networks}}"
+    # - name: Include Network Role
+    #   include_role:
+    #     name: network
+    #   vars:
+    #     TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
+    #     ts_auth_key: "{{ sops_secrets.cloud_server_ts_auth_key }}"
+    #     desec_api_token: "{{ sops_secrets.desec_api_token }}"
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     domains:
+    #       main: "{{ cloud_traefik.domains.main }}"
+    #       wildcard: "{{ cloud_traefik.domains.wildcard }}"
+    #       traefik: "{{ cloud_traefik.domains.traefik }}"
+    #     dns: "{{cloud_traefik.dns}}"
+    #     networks: "{{cloud_networks}}"
 
-    - name: Include SearXNG Role
-      include_role:
-        name: searxng
-      vars:
-        docker_dir: "{{cloud_docker_dir}}"
-        project_name: "{{cloud_searxng.name}}"
-        domain: "{{cloud_searxng.domain}}"
-        network_backend: "{{ cloud_searxng.network_backend }}"
+    # - name: Include SearXNG Role
+    #   include_role:
+    #     name: searxng
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_searxng.name}}"
+    #     domain: "{{cloud_searxng.domain}}"
+    #     network_backend: "{{ cloud_searxng.network_backend }}"
 
     # - name: Include Nextcloud Role
     #   include_role:
@@ -53,18 +53,18 @@
     #     mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"
     #     network_backend: "{{ cloud_nextcloud.network_backend }}"
 
-    - name: Include NGINX Gate Role - User Gateway
-      include_role:
-        name: nginx_gate
-      vars:
-        docker_dir: "{{cloud_docker_dir}}"
-        project_name: "{{gate_name}}"
-        traefik_instances: "{{ gate_traefik_instances }}"
-        ts_auth_key: "{{ sops_secrets.cloud_gate_server_ts_auth_key }}"
-        dns:
-          ip: "{{ gate_dns_conf.ip }}"
-          upstream_server: "{{ gate_dns_conf.upstream_server }}"
-          records: "{{ gate_dns_conf.records }}"
+    # - name: Include NGINX Gate Role - User Gateway
+    #   include_role:
+    #     name: nginx_gate
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{gate_name}}"
+    #     traefik_instances: "{{ gate_traefik_instances }}"
+    #     ts_auth_key: "{{ sops_secrets.cloud_gate_server_ts_auth_key }}"
+    #     dns:
+    #       ip: "{{ gate_dns_conf.ip }}"
+    #       upstream_server: "{{ gate_dns_conf.upstream_server }}"
+    #       records: "{{ gate_dns_conf.records }}"
 
     - name: Include Monitor Center Role - User Gateway
       include_role:

@@ -68,6 +68,8 @@ services:
     image: grafana/alloy:latest
     container_name: alloy
     restart: unless-stopped
+    expose:
+      - "12345/tcp"
     depends_on:
     - loki
     - socket-proxy-alloy
@@ -81,7 +83,7 @@ services:
         ipv4_address: {{shared_network_backend.ips.alloy}}
     command:
       - run
-      - --server.http.listen-addr=:12345
+      - --server.http.listen-addr=0.0.0.0:12345
       - --storage.path=/var/lib/alloy/data
       - /etc/alloy/config.alloy
     labels:
@@ -92,7 +94,7 @@ services:
       - "traefik.http.routers.alloy.entrypoints=https"
       - "traefik.http.routers.alloy.tls=true"
       - "traefik.http.routers.alloy.tls.certresolver=desec"
-      - traefik.http.services.alloy.loadbalancer.server.port=12345
+      - "traefik.http.services.alloy.loadbalancer.server.port=12345"
 
 volumes:
   socket-proxy:
