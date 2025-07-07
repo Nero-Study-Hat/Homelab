@@ -31,7 +31,7 @@ loki.write "default" {
   endpoint {
     url = "https://{{domains.loki}}/loki/api/v1/push"
     headers = {
-      "X-Custom-Header" = "{{outpost_header}}",
+      "X-Scope-OrgID" = "{{outpost_header}}",
     }
   }
 }
