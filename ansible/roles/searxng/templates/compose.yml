@@ -22,6 +22,7 @@ services:
       - SETUID
     labels:
       - "traefik.enable=true"
+      - "traefik.zone.main=true"
       - "traefik.docker.network={{network_backend.name}}"
       - "traefik.http.routers.{{project_name}}.rule=Host(`{{domain}}`)"
       - "traefik.http.routers.{{project_name}}.entrypoints=https"

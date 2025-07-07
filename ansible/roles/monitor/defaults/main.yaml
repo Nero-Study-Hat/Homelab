@@ -1,12 +1,29 @@
 docker_dir: ""
-project: ""
+project_name: ""
 
-t3_network: ""
+sub_role: ""
 
-ts_ip:
-  grafana: ""
-  loki: ""
-  alloy: ""
+ts_network_backend:
+  name: ""
+  ipam_options:
+  - subnet: ""
+    gateway: ""
+  tailscale_ips:
+    tailscale: "172.80.2.2"
+    traefik: "172.80.2.3"
+
+shared_network_backend:
+  name: ""
+  ipam_options:
+  - subnet: ""
+    gateway: ""
+  ips:
+    tailscale: "172.80.2.2"
+    traefik: "172.80.2.3"
+    grafana: ""
+    loki: ""
+    alloy: ""
+    dns: ""
 
 domains:
   grafana: ""
@@ -14,3 +31,10 @@ domains:
   alloy: ""
 
 outpost_header: ""
+
+dns:
+  upstream_server: "10.0.0.3"
+  config: |
+    address=/cloud.nerolab.dev/10.20.1.20
+    
+# server=10.0.0.3
