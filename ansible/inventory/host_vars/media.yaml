@@ -1,6 +1,26 @@
 media_docker_dir: "/home/ansible/docker"
 
-### NETWORK STACK VARS ###
+# Tailscale Config for the below.
+
+# autoApprovers routes
+# "10.130.0.0/29": ["tag:media-server"], // traefik
+# "10.130.1.0/29": ["tag:media-server"], // dns
+# "10.130.21.0/29": ["tag:media-server"], // monitor-outpost
+
+# hosts
+# "media-traefik-net": "10.130.0.0/29",
+# "media-dns-net": "10.130.1.0/29",
+# "media-monitor-outpost-net": "10.130.21.0/29",
+
+# "media-traefik": "10.130.0.2",
+# "media-traefik-monitor-outpost": "10.130.21.4",
+# "media-dns": "10.130.1.4",
+
+# restricted nameserver (dns)
+# 10.130.1.4
+
+
+### MAIN VLAN NETWORK STACK
 
 media_dns:
   name: "media_dns"
@@ -8,37 +28,27 @@ media_dns:
   network_backend:
     name: "tailscale_dnsmasq"
     ipam_options:
-    - subnet: "172.20.2.0/29"
-      gateway: "172.20.2.1"
+    - subnet: "10.130.1.0/29"
+      gateway: "10.130.1.1"
     tailscale_ips:
-      tailscale: "172.20.2.2"
-      dnsmasq: "172.20.2.4"
+      tailscale: "10.130.1.2"
+      dnsmasq: "10.130.1.4"
   upstream_server: "10.0.0.3"
   records: |
     # media domains to media traefik
-    address=/media.nerolab.dev/172.30.1.2
+    address=/media.nerolab.dev/10.130.0.2
     # this domain to monitor main stack traefik
-    address=/monitor.nerolab.dev/172.30.1.2
+    address=/monitor.nerolab.dev/10.130.0.2
 
-media_tailscale_subnet:
-  subnet_cidr: "172.20.2.0/28"
-  gateway: "172.20.2.1"
-  tailscale_ip: "172.20.2.2"
-  traefik_ip: "172.20.2.3"
-  dns_ip: "172.20.2.4"
-
-# remember to
-# - copy traefik shared ip to dns reverse proxy records
-# - set tailscale acls, autoApprovers, hosts, and grants
 media_networks:
   shared:
     - name: "traefik_tailscale"
       ipam_options:
-      - subnet: "172.30.1.0/29"
-        gateway: "172.30.1.1"
-      traefik_ip: "172.30.1.2"
-      tailscale_ip: "172.30.1.4"
-  traefik_specific:
+      - subnet: "10.130.0.0/29"
+        gateway: "10.130.0.1"
+      traefik_ip: "10.130.0.2"
+      tailscale_ip: "10.130.0.4"
+  traefik_specific: # these containers don't have Tailscale DNS and connection-ability
     - name: "{{media_searxng.network_backend.name}}"
       ipam_options: "{{media_searxng.network_backend.ipam_options}}"
       traefik_ip: "{{media_searxng.network_backend.traefik_ips.traefik}}"
@@ -46,6 +56,9 @@ media_networks:
     - name: "{{media_dns.network_backend.name}}"
       ipam_options: "{{media_dns.network_backend.ipam_options}}"
       tailscale_ip: "{{media_dns.network_backend.tailscale_ips.tailscale}}"
+    - name: "{{media_monitor_outpost.network_backend.name}}"
+      ipam_options: "{{media_monitor_outpost.network_backend.ipam_options}}"
+      tailscale_ip: "{{media_monitor_outpost.network_backend.tailscale_ips.tailscale}}"
 
 media_traefik:
   domains:
@@ -53,14 +66,27 @@ media_traefik:
     wildcard: "*.media.nerolab.dev"
     traefik: "traefik.media.nerolab.dev"
 
-### END SERVICE SPECIFIC VARS ###
 
-# media_nextcloud:
-#   name: "nextcloud"
-#   mounted_dir: "/mnt/nextcloud_storage"
-#   domain: "nextcloud.media.nerolab.dev"
-#   t3_network: "t3_nextcloud"
-#   tailscale_ip: "172.20.2.8"
+### MONITOR OUTPOST ###
+
+media_monitor_outpost:
+  name: "monitor_outpost"
+  sub_role: "outpost"
+  network_backend:
+    name: "tailscale_monitor_outpost"
+    ipam_options:
+    - subnet: "10.130.21.0/29"
+      gateway: "10.130.21.1"
+    tailscale_ips:
+      tailscale: "10.130.21.2"
+      traefik: "10.130.21.4"
+      alloy: "10.130.21.5"
+  outpost_header: "media-outpost"
+  domains:
+    loki: "loki.cloud.nerolab.dev"
+
+
+### END SERVICE SPECIFIC VARS ###
 
 media_searxng:
   name: "searxng"
@@ -68,8 +94,8 @@ media_searxng:
   network_backend:
     name: "t3_searxng"
     ipam_options:
-    - subnet: "172.30.2.0/29"
-      gateway: "172.30.2.1"
+    - subnet: "10.130.31.0/29"
+      gateway: "10.130.31.1"
     traefik_ips:
-      traefik: "172.30.2.3"
-      searxng: "172.30.2.5"
+      traefik: "10.130.31.3"
+      searxng: "10.130.31.5"

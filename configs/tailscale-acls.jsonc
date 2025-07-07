@@ -2,43 +2,49 @@
 {
 	// Declare static groups of users. Use autogroups for all users or users with a specific role.
 	"groups": {
-		"group:personal": ["<redacted-admin>"],
-		"group:family":   ["<redacted-family>"],
-		"group:outside":  ["<redacted-outside>"],
+		"group:personal": ["redacted@github"],
+		"group:family":   ["redacted@outlook.com"],
+		"group:outside":  ["redacted@outlook.com"],
 	},
 
 	"hosts": {
-		"cloud-net": "172.20.0.0/24",
-		"fog-net":   "172.20.2.0/24",
-		"media-net":   "172.20.1.0/24",
+		"cloud-traefik-net": "172.20.0.0/29",
+		"cloud-dns-net": "172.20.1.0/29",
+		"cloud-monitor-center-net": "172.20.20.0/29",
 
-		"cloud-dns": "172.20.0.4",
+		"cloud-traefik": "172.20.0.2",
+		"cloud-dns": "172.20.1.2",
+		
+		"media-traefik-net": "172.22.0.0/29",
+		"media-dns-net": "172.22.1.0/29",
+		"media-monitor-outpost-net": "172.22.21.0/29",
 
-		"traefik-cloud": "172.20.0.3",
-		"traefik-fog":   "172.20.1.3",
-		"traefik-media": "172.20.2.3",
-
-		// test these with docker sidecar mode
-		// normal traefik network block, ts as sidecar
-		"traefik-monitor": "172.20.2.4",
-		"traefik-kasm":    "172.20.2.4",
-
-		"cloud-loki": "172.20.0.11",
+		"media-traefik": "172.22.0.2",
+		"media-traefik-monitor-outpost": "172.22.21.4",
+		"media-dns": "172.22.1.2",
 	},
 
 	// Define the tags which can be applied to devices and by which users.
 	"tagOwners": {
-		"tag:ssh-server":   ["<redacted-admin>"],
-		"tag:cloud-server": ["<redacted-admin>"],
-		"tag:fog-server":   ["<redacted-admin>"],
-		"tag:media-server": ["<redacted-admin>"],
+		"tag:ssh-server":        ["redacted@github"],
+		"tag:cloud-gate-server": ["redacted@github"],
+
+		"tag:cloud-server": ["redacted@github"],
+		"tag:fog-server":   ["redacted@github"],
+		"tag:media-server": ["redacted@github"],
+
+		"tag:redacted-client":   ["redacted@outlook.com"],
 	},
 
 	"autoApprovers": {
 		"routes": {
-			"172.20.0.0/24": ["tag:cloud-server"],
-			"172.20.1.0/24": ["tag:fog-server"],
-			"172.20.2.0/24": ["tag:media-server"],
+			"172.20.0.0/29": ["tag:cloud-server"], // traefik
+			"172.20.1.0/29": ["tag:cloud-server"], // dns
+			"172.20.20.0/29": ["tag:cloud-server"], // monitor-center
+
+			"172.22.0.0/29": ["tag:media-server"], // traefik
+			"172.22.1.0/29": ["tag:media-server"], // dns
+			"172.22.21.0/29": ["tag:media-server"], // monitor-outpost
 		},
 	},
 
@@ -104,6 +110,10 @@
 			"ipPool": ["100.80.0.0/29"],
 		},
 		{
+			"target": ["tag:cloud-gate-server"],
+			"ipPool": ["100.80.1.1/32"],
+		},
+		{
 			"target": ["tag:cloud-server"],
 			"ipPool": ["100.70.0.1/32"],
 		},
@@ -147,22 +157,56 @@
 		{
 			"src": [
 				"group:personal",
-				"tag:dan-client",
-				"cloud-net",
-				"fog-net",
-				"media-net",
+				"tag:redacted-client",
 			],
-			"dst": ["cloud-dns"],
-			"ip":  ["*"],
-			// "ip":  ["udp:53"],
+			"dst": ["tag:cloud-gate-server"],
+			"ip":  ["udp:53"],
 		},
 
+		// {
+		// 	"src": [
+		// 		"group:personal",
+		// 		"tag:redacted-client",
+		// 	],
+		// 	"dst": ["tag:cloud-gate-server"],
+		// 	// "ip":  ["tcp:443"],
+		// 	// "ip": ["tcp:80", "tcp:443"], // required for staging testing
+		// 	"ip": ["*"],
+		// },
+
 		{
-			"src": ["group:personal"],
-			"dst": ["traefik-cloud", "traefik-fog", "traefik-media"],
+			"src": ["tag:cloud-gate-server"],
+			"dst": ["cloud-traefik", "media-traefik"],
 			// "ip":  ["tcp:443"],
 			"ip": ["tcp:80", "tcp:443"], // required for staging testing
 		},
+
+		{
+			"src": [
+				"cloud-traefik-net",
+				"cloud-dns-net",
+				"cloud-monitor-center-net",
+			],
+			"dst": ["cloud-dns"],
+			"ip":  ["udp:53"],
+		},
+
+		{
+			"src": [
+				"media-traefik-net",
+				"media-dns-net",
+				"media-monitor-outpost-net",
+			],
+			"dst": ["media-dns"],
+			"ip":  ["udp:53"],
+		},
+
+		// {
+		// 	"src": ["group:personal", "tag:redacted-client"],
+		// 	"dst": ["traefik-cloud", "traefik-fog", "traefik-media"],
+		// 	// "ip":  ["tcp:443"],
+		// 	"ip": ["tcp:80", "tcp:443"], // required for staging testing
+		// },
 
 		// {
 		// 	"src": ["tag:example-client"],

@@ -15,17 +15,10 @@
 
 - name: Transfer and convert the docker compose jinja2 template
   ansible.builtin.template:
-    src: "compose.yml.j2"
+    src: "compose.yml"
     dest: "{{stack_dir}}/compose.yml"
 
 ### MAIN ###
-
-- name: Create gate-tailscale-network docker network with custom subnet
-  community.docker.docker_network:
-    name: gate-tailscale-network
-    ipam_config:
-      - subnet: "{{ tailscale_subnet.subnet_cidr }}"
-        gateway: "{{ tailscale_subnet.gateway }}"
 
 - name: Create .env file with ts_authkey
   ansible.builtin.copy:

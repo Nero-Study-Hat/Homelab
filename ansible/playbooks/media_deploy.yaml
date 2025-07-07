@@ -20,10 +20,10 @@
       include_role:
         name: network
       vars:
-        docker_dir: "{{media_docker_dir}}"
         TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
         ts_auth_key: "{{ sops_secrets.media_server_ts_auth_key }}"
         desec_api_token: "{{ sops_secrets.desec_api_token }}"
+        docker_dir: "{{media_docker_dir}}"
         domains:
           main: "{{ media_traefik.domains.main }}"
           wildcard: "{{ media_traefik.domains.wildcard }}"
@@ -51,13 +51,13 @@
         domain: "{{media_searxng.domain}}"
         network_backend: "{{ media_searxng.network_backend }}"
 
-    # - name: Include Nextcloud Role
-    #   include_role:
-    #     name: nextcloud
-    #   vars:
-    #     docker_dir: "{{media_docker_dir}}"
-    #     project_name: "{{media_nextcloud.name}}"
-    #     domain: "{{media_nextcloud.domain}}"
-    #     mounted_dir: "{{media_nextcloud.mounted_dir}}"
-    #     mariadb_user_passwd: "{{ sops_secrets.mariadb_user_passwd }}"
-    #     mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"
+    - name: Include Monitor Outpost Role
+      include_role:
+        name: monitor
+      vars:
+        docker_dir: "{{media_docker_dir}}"
+        project_name: "{{media_monitor_outpost.name}}"
+        sub_role: "{{media_monitor_outpost.sub_role}}"
+        ts_network_backend: "{{ media_monitor_outpost.network_backend }}"
+        outpost_header: "{{media_monitor_outpost.outpost_header}}"
+        domains: "{{media_monitor_outpost.domains}}"

@@ -6,4 +6,11 @@ mariadb_user_passwd: ""
 mariadb_root_passwd: ""
 
 domain: "sub.example.com"
-t3_network: "t3_nextcloud"
+network_backend:
+  name: ""
+  ipam_options:
+  - subnet: ""
+    gateway: ""
+  traefik_ips:
+    traefik: "172.80.2.2"
+    nextcloud: "172.80.2.3"

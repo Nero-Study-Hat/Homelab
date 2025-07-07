@@ -2,7 +2,6 @@ docker_dir: "/home/ansible/docker"
 project_name: "searxng"
 domain: ""
 
-# t3_network: ""
 network_backend:
   name: ""
   ipam_options:
@@ -11,5 +10,3 @@ network_backend:
   traefik_ips:
     traefik: "172.80.2.2"
     searxng: "172.80.2.3"
-
-tailscale_ip: ""
