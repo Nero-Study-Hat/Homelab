@@ -61,12 +61,13 @@ media_monitor_outpost:
       dns: "10.130.21.4"
   outpost_header: "media-outpost"
   domains:
-    loki: "loki.cloud.nerolab.dev"
+    traefik: "traefik.media.nerolab.dev"
     trusted_traefik: "traefik.cloud.nerolab.dev"
   dns:
     upstream_server: "10.0.0.3"
     config: |
-      address=/cloud.nerolab.dev/10.130.21.2
+      address=/traefik.media.nerolab.dev/10.130.21.2
+      address=/traefik.cloud.nerolab.dev/10.110.20.3
 
 
 ### END SERVICE SPECIFIC VARS ###

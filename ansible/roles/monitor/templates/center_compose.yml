@@ -21,7 +21,7 @@ services:
       - "traefik.http.routers.grafana.entrypoints=https"
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.routers.grafana.tls.certresolver=desec"
-      - traefik.http.services.grafana.loadbalancer.server.port=3000
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   loki:
     container_name: loki
@@ -40,19 +40,20 @@ services:
       - "traefik.enable=true"
       - "traefik.zone.main=true"
       - "traefik.docker.network={{shared_network_backend.name}}"
-      # Service 1
-      - "traefik.http.routers.loki.rule=Host(`{{domains.loki}}`)"
+      # loki service
       - "traefik.http.routers.loki.entrypoints=https"
+      - "traefik.http.routers.loki.rule=Host(`{{domains.loki}}`)"
       - "traefik.http.routers.loki.tls=true"
       - "traefik.http.routers.loki.tls.certresolver=desec"
       - "traefik.http.routers.loki.service=loki"
       - "traefik.http.services.loki.loadbalancer.server.port=3100"
-      # Service 2
+      # loki-incoming server
       - "traefik.http.routers.loki-incoming.entrypoints=https"
-      - "traefik.http.routers.loki-incoming.rule=Path(`/loki/api/v1/push`)"
-      - "traefik.http.routers.loki-incoming.service=loki-backend"
+      - "traefik.http.routers.loki-incoming.rule=Host(`{{domains.traefik}}`) && PathPrefix(`/loki/api/v1/push`)"
       - "traefik.http.routers.loki-incoming.tls=true"
-      - "traefik.http.services.loki-backend.loadbalancer.server.url=https://{{domains.loki}}"
+      - "traefik.http.routers.loki-incoming.tls.certresolver=desec"
+      - "traefik.http.routers.loki-incoming.service=loki-backend"
+      - "traefik.http.services.loki-backend.loadbalancer.server.url=https://{{domains.loki}}:3100"
 
   socket-proxy-alloy:
     image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
@@ -73,6 +74,8 @@ services:
     depends_on:
     - loki
     - socket-proxy-alloy
+    # environment:
+    #   - OTEL_EXPORTER_OTLP_ENDPOINT=https://{{domains.traefik}}:4318
     volumes:
       - './config.alloy:/etc/alloy/config.alloy'
       - "socket-proxy:/var/run"

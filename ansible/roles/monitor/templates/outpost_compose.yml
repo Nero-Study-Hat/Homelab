@@ -7,6 +7,7 @@ services:
     expose:
       - "80"
       - "443"
+      - "4318"
     dns: "{{t3_network_backend.traefik_ips.dns}}"
     networks:
       {{t3_network_backend.name}}:
@@ -36,6 +37,12 @@ services:
     network_mode: service:ts-monitor-outpost
     security_opt:
       - no-new-privileges:true
+    environment:
+      DESEC_TOKEN_FILE: /run/secrets/desec_api_token # note using _FILE for docker secrets
+      TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
+    secrets:
+      - desec_api_token
+    env_file: .env # use .env
     volumes:
       - "socket-proxy:/var/run" # access docker socket via proxy read-only
       - /etc/localtime:/etc/localtime:ro
@@ -45,7 +52,19 @@ services:
       - "traefik.enable=true"
       - "traefik.zone.outpost=true"
       - "traefik.docker.network=monitor_outpost"
-      - "traefik.http.services.traefik.loadbalancer.server.port=80"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`{{domains.traefik}}`)"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`{{domains.traefik}}`)"
+      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=desec"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main={{domains.main}}"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans={{domains.wildcard}}"
 
   alloy:
     image: grafana/alloy:latest
@@ -62,6 +81,8 @@ services:
     networks:
       {{t3_network_backend.name}}:
         ipv4_address: {{t3_network_backend.traefik_ips.alloy}}
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=https://{{domains.traefik}}:4318
     command:
       - run
       - --storage.path=/var/lib/alloy/data
@@ -70,16 +91,16 @@ services:
       - "traefik.enable=true"
       - "traefik.zone.outpost=true"
       - "traefik.docker.network=monitor_outpost"
-      # Forward log pushes to the trusted Traefik instance from the untrusted Traefik instance (instead of Loki directly)
-      - "traefik.http.routers.alloy-loki.entrypoints=http"
-      - "traefik.http.routers.alloy-loki.rule=Host(`{{domains.untrusted_traefik}}`)"
+      # Forward log pushes to the trusted Traefik instance from the untrusted Traefik instance
+      - "traefik.http.routers.alloy-loki.entrypoints=https"
+      - "traefik.http.routers.alloy-loki.rule=Host(`{{domains.traefik}}`) && PathPrefix(`/loki/api/v1/push`)"
+      - "traefik.http.routers.alloy-loki.tls=true"
+      - "traefik.http.routers.alloy-loki.tls.certresolver=desec"
       - "traefik.http.routers.alloy-loki.service=trusted-traefik-forward"
-      - "traefik.http.services.trusted-traefik-forward.loadbalancer.server.url=http://{{domains.trusted_traefik}}"
+      - "traefik.http.services.trusted-traefik-forward.loadbalancer.server.url=https://{{domains.trusted_traefik}}:443"
       # Add middleware
       - "traefik.http.routers.alloy-loki.middlewares=add-tenant-header,rate-limit"
-      # Tenant tagging
       - "traefik.http.middlewares.add-tenant-header.headers.customrequestheaders.X-Scope-OrgID={{outpost_header}}"
-      # Rate limiting (still on untrusted side)
       - "traefik.http.middlewares.rate-limit.ratelimit.average=100"
       - "traefik.http.middlewares.rate-limit.ratelimit.burst=200"
 
@@ -93,6 +114,10 @@ services:
     volumes:
       - "/run/docker.sock:/run/docker.sock:ro" # mount host docker socket, the :ro does not mean read-only for the socket, just for the actual file
       - "socket-proxy:/run/proxy" # this socket is run as 1000:1000, not as root!
+
+secrets:
+  desec_api_token:
+    file: ./desec_api_token.txt
 
 volumes:
   socket-proxy:

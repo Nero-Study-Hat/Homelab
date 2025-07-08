@@ -119,6 +119,7 @@ cloud_monitor_center:
       dns: "10.110.20.8"
   outpost_header: "cloud-outpost"
   domains:
+    traefik: "traefik.cloud.nerolab.dev"
     grafana: "grafana.cloud.nerolab.dev"
     loki: "loki.cloud.nerolab.dev"
     mimir: "mimir.cloud.nerolab.dev"
