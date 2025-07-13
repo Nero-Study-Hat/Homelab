@@ -32,27 +32,6 @@
     #     dns: "{{cloud_traefik.dns}}"
     #     networks: "{{cloud_networks}}"
 
-    # - name: Include SearXNG Role
-    #   include_role:
-    #     name: searxng
-    #   vars:
-    #     docker_dir: "{{cloud_docker_dir}}"
-    #     project_name: "{{cloud_searxng.name}}"
-    #     domain: "{{cloud_searxng.domain}}"
-    #     network_backend: "{{ cloud_searxng.network_backend }}"
-
-    # - name: Include Nextcloud Role
-    #   include_role:
-    #     name: nextcloud
-    #   vars:
-    #     docker_dir: "{{cloud_docker_dir}}"
-    #     project_name: "{{cloud_nextcloud.name}}"
-    #     domain: "{{cloud_nextcloud.domain}}"
-    #     mounted_dir: "{{cloud_nextcloud.mounted_dir}}"
-    #     mariadb_user_passwd: "{{ sops_secrets.mariadb_user_passwd }}"
-    #     mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"
-    #     network_backend: "{{ cloud_nextcloud.network_backend }}"
-
     # - name: Include NGINX Gate Role - User Gateway
     #   include_role:
     #     name: nginx_gate
@@ -66,15 +45,51 @@
     #       upstream_server: "{{ gate_dns_conf.upstream_server }}"
     #       records: "{{ gate_dns_conf.records }}"
 
-    - name: Include Monitor Center Role - User Gateway
+    # - name: Include SearXNG Role
+    #   include_role:
+    #     name: searxng
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_searxng.name}}"
+    #     domain: "{{cloud_searxng.domain}}"
+    #     network_backend: "{{ cloud_searxng.network_backend }}"
+
+    - name: Include Edgeshark Role
       include_role:
-        name: monitor
+        name: edgeshark
       vars:
+        ts_auth_key: "{{ sops_secrets.cloud_shark_server_ts_auth_key }}"
         docker_dir: "{{cloud_docker_dir}}"
-        project_name: "{{cloud_monitor_center.name}}"
-        sub_role: "{{cloud_monitor_center.sub_role}}"
-        shared_network_backend: "{{cloud_monitor_center.network_backend}}"
-        outpost_header: "{{cloud_monitor_center.outpost_header}}"
-        domains: "{{cloud_monitor_center.domains}}"
-        dns: "{{cloud_monitor_center.dns}}"
-        
+        project_name: "{{cloud_edgeshark.name}}"
+        domains: "{{cloud_edgeshark.domains}}"
+        network_backend: "{{ cloud_edgeshark.network_backend }}"
+
+
+
+# ---
+
+    # - name: Include Monitor Center Role - User Gateway
+    #   include_role:
+    #     name: monitor
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_monitor_center.name}}"
+    #     sub_role: "{{cloud_monitor_center.sub_role}}"
+    #     shared_network_backend: "{{cloud_monitor_center.network_backend}}"
+    #     outpost_header: "{{cloud_monitor_center.outpost_header}}"
+    #     domains: "{{cloud_monitor_center.domains}}"
+    #     dns: "{{cloud_monitor_center.dns}}"
+
+
+# --- 
+    # - name: Include Nextcloud Role
+    #   include_role:
+    #     name: nextcloud
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_nextcloud.name}}"
+    #     domain: "{{cloud_nextcloud.domain}}"
+    #     mounted_dir: "{{cloud_nextcloud.mounted_dir}}"
+    #     mariadb_user_passwd: "{{ sops_secrets.mariadb_user_passwd }}"
+    #     mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"
+    #     network_backend: "{{ cloud_nextcloud.network_backend }}"

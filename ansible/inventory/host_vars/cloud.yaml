@@ -23,6 +23,7 @@ cloud_docker_dir: "/home/ansible/docker"
 # - set tailscale acls, autoApprovers, hosts, and grants
 cloud_networks:
   shared:
+  # traefik tailscale
     - name: "traefik_tailscale"
       ipam_options:
       - subnet: "10.110.0.0/29"
@@ -30,17 +31,24 @@ cloud_networks:
       traefik_ip: "10.110.0.2"
       tailscale_ip: "10.110.0.4"
       dns_ip: "10.110.0.5"
+  # monitor center
     - name: "{{cloud_monitor_center.network_backend.name}}"
       ipam_options: "{{cloud_monitor_center.network_backend.ipam_options}}"
       traefik_ip: "{{cloud_monitor_center.network_backend.ips.traefik}}"
       tailscale_ip: "{{cloud_monitor_center.network_backend.ips.tailscale}}"
   traefik_specific: # these containers don't have Tailscale DNS and connection-ability
+  # searxng
     - name: "{{cloud_searxng.network_backend.name}}"
       ipam_options: "{{cloud_searxng.network_backend.ipam_options}}"
       traefik_ip: "{{cloud_searxng.network_backend.traefik_ips.traefik}}"
+  # nextcloud
     - name: "{{cloud_nextcloud.network_backend.name}}"
       ipam_options: "{{cloud_nextcloud.network_backend.ipam_options}}"
       traefik_ip: "{{cloud_nextcloud.network_backend.traefik_ips.traefik}}"
+  # edgeshark
+    - name: "{{cloud_edgeshark.network_backend.name}}"
+      ipam_options: "{{cloud_edgeshark.network_backend.ipam_options}}"
+      traefik_ip: "{{cloud_edgeshark.network_backend.traefik_ips.traefik}}"
   tailscale_specific: ""
 
 cloud_traefik:
@@ -88,6 +96,12 @@ gate_traefik_instances:
       - name: alloy.cloud.nerolab.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
+      - name: edgeshark.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+      - name: wireshark.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
   media:
     traefik_ip: 10.130.0.2
     domains_list:
@@ -129,6 +143,20 @@ cloud_monitor_center:
     config: |
       address=/cloud.nerolab.dev/10.110.20.3
 
+cloud_edgeshark:
+  name: "edgeshark"
+  domains:
+    edgeshark: "edgeshark.cloud.nerolab.dev"
+    wireshark: "wireshark.cloud.nerolab.dev"
+  network_backend:
+    name: "edgeshark"
+    ipam_options:
+    - subnet: "10.110.2.0/29"
+      gateway: "10.110.2.1"
+    traefik_ips:
+      traefik: "10.110.2.2"
+      ts_shark: "10.110.2.3"
+      wireshark: "10.110.2.4"
 
 ### END SERVICE SPECIFIC VARS ###
 
