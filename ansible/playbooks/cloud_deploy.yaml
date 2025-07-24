@@ -31,6 +31,7 @@
     #       traefik: "{{ cloud_traefik.domains.traefik }}"
     #     dns: "{{cloud_traefik.dns}}"
     #     networks: "{{cloud_networks}}"
+    #     macvlan: "{{cloud_macvlan_network_center}}"
 
     # - name: Include NGINX Gate Role - User Gateway
     #   include_role:
@@ -44,6 +45,7 @@
     #       ip: "{{ gate_dns_conf.ip }}"
     #       upstream_server: "{{ gate_dns_conf.upstream_server }}"
     #       records: "{{ gate_dns_conf.records }}"
+    #     macvlan: "{{cloud_macvlan_user_gate}}"
 
     # - name: Include SearXNG Role
     #   include_role:
@@ -63,7 +65,7 @@
         project_name: "{{cloud_edgeshark.name}}"
         domains: "{{cloud_edgeshark.domains}}"
         network_backend: "{{ cloud_edgeshark.network_backend }}"
-
+        macvlan: "{{cloud_macvlan_edgeshark}}"
 
 
 # ---

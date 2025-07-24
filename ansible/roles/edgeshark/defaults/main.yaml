@@ -7,6 +7,15 @@ domains:
 
 ts_auth_key: ""
 
+macvlan:
+  name: ""
+  parent_interface: ""
+  ip: ""
+  mac_address: ""
+  ipam_options:
+  - subnet: ""
+    gateway: ""
+
 network_backend:
   name: "edgeshark"
   ipam_options:

@@ -55,11 +55,25 @@
       dns_ip: "{{t3_network_backend.traefik_ips.dns}}"
       upstream_server: "{{dns.upstream_server}}"
       config: "{{dns.config}}"
-  - name: Create .env file with ts_authkey
+  - name: Create .env file with traefik dashboard credentials and ts_authkey
     ansible.builtin.copy:
       dest: "{{stack_dir}}/.env"
       content: |
+        TRAEFIK_DASHBOARD_CREDENTIALS={{ TRAEFIK_DASHBOARD_CREDENTIALS }}
         TS_AUTHKEY={{ ts_auth_key }}
+
+  - name: Create a docker MACVLAN for tailscale direct connections
+    community.docker.docker_network:
+      name: "{{ macvlan.name }}"
+      ipam_config: "{{ macvlan.ipam_options }}"
+      driver: "macvlan"
+      driver_options:
+        parent: "{{ macvlan.parent_interface }}"
+
+  - name: Create api_token file
+    ansible.builtin.copy:
+      content: "{{ desec_api_token }}"
+      dest: "{{stack_dir}}/desec_api_token.txt"
   - name: Creates remote TS-OUPOST directory
     ansible.builtin.file:
       path: '{{stack_dir}}/ts-outpost'

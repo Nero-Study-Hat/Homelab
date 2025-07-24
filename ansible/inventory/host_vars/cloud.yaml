@@ -16,7 +16,7 @@ cloud_docker_dir: "/home/ansible/docker"
 # "cloud-dns": "10.110.1.4",
 
 
-### MAIN VLAN NETWORK STACK
+### NETWORK CENTER ###
 
 # remember to
 # - copy traefik shared ip to dns reverse proxy records
@@ -61,6 +61,15 @@ cloud_traefik:
     config: |
       address=/cloud.nerolab.dev/10.110.0.2
 
+# added to dhcp static mappings in opnsense
+cloud_macvlan_network_center:
+  name: "macvlan_network_center"
+  parent_interface: "eth0"
+  ip: "10.20.1.11"
+  mac_address: "c6:19:a8:7f:0e:39"
+  ipam_options:
+  - subnet: "10.20.1.8/29"
+    gateway: "10.20.1.9"
 
 #### USER GATEWAY ###
 
@@ -112,6 +121,15 @@ gate_traefik_instances:
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
 
+# added to dhcp static mappings in opnsense
+cloud_macvlan_user_gate:
+  name: "macvlan_user_gate"
+  parent_interface: "eth1"
+  ip: "10.20.1.19"
+  mac_address: "56:9d:02:b2:98:a4"
+  ipam_options:
+  - subnet: "10.20.1.16/29"
+    gateway: "10.20.1.17"
 
 ### MONITOR CENTER ###
 
@@ -157,6 +175,16 @@ cloud_edgeshark:
       traefik: "10.110.2.2"
       ts_shark: "10.110.2.3"
       wireshark: "10.110.2.4"
+
+# added to dhcp static mappings in opnsense
+cloud_macvlan_edgeshark:
+  name: "macvlan_edgeshark"
+  parent_interface: "eth2"
+  ip: "10.20.1.27"
+  mac_address: "a6:d2:73:22:72:d5"
+  ipam_options:
+  - subnet: "10.20.1.24/29"
+    gateway: "10.20.1.25"
 
 ### END SERVICE SPECIFIC VARS ###
 

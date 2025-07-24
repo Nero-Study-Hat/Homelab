@@ -68,6 +68,14 @@
     force_source: true
     force_tag: true
 
+- name: Create a docker MACVLAN for tailscale direct connections
+  community.docker.docker_network:
+    name: "{{ macvlan.name }}"
+    ipam_config: "{{ macvlan.ipam_options }}"
+    driver: "macvlan"
+    driver_options:
+      parent: "{{ macvlan.parent_interface }}"
+
 ### DEPLOY ###
 - name: Deploy Docker Compose Stack
   community.docker.docker_compose_v2:
@@ -75,3 +83,16 @@
     project_src: '{{stack_dir}}'
     files:
       - compose.yml
+
+  #TODO: make container name variable and local network
+- name: Delete default ip route
+  community.docker.docker_container_exec:
+    container: 'ts-gate'
+    command: "ip route delete default via 10.110.4.1 dev eth0"
+    chdir: /
+
+- name: Add desired default ip route
+  community.docker.docker_container_exec:
+    container: 'ts-gate'
+    command: "ip route add default via {{macvlan.ipam_options[0].gateway}} dev eth1"
+    chdir: /

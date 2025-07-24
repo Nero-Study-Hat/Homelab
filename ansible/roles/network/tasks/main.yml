@@ -76,6 +76,14 @@
     ipam_config: "{{ item.ipam_options }}"
   loop: '{{ networks.tailscale_specific  | default([], true) }}'
 
+- name: Create a docker MACVLAN for tailscale direct connections
+  community.docker.docker_network:
+    name: "{{ macvlan.name }}"
+    ipam_config: "{{ macvlan.ipam_options }}"
+    driver: "macvlan"
+    driver_options:
+      parent: "{{ macvlan.parent_interface }}"
+
 ### LOCAL DNS SETUP ###
 
 - name: Include Local DNS Role - User DNS

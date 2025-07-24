@@ -10,6 +10,15 @@ domains:
   main: "nerolab.dev"
   wildcard: "*.cloud.nerolab.dev"
 
+macvlan:
+  name: ""
+  parent_interface: ""
+  ip: ""
+  mac_address: ""
+  ipam_options:
+  - subnet: ""
+    gateway: ""
+
 networks:
   shared:
     - name: "traefik_tailscale"

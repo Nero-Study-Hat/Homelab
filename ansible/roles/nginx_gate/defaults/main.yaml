@@ -18,6 +18,15 @@ traefik_instances:
         allowed_tailscale_client_ips:
           - 192.168.1.11  # stardom
 
+macvlan:
+  name: ""
+  parent_interface: ""
+  ip: ""
+  mac_address: ""
+  ipam_options:
+  - subnet: ""
+    gateway: ""
+
 dns:
   ip: ""
   upstream_server: "10.0.0.3"

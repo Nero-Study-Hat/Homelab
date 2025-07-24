@@ -1,0 +1,47 @@
+# vlan 101: CLOUD
+auto vmbr0.101
+iface vmbr0.101 inet manual
+
+auto vmbr101
+iface vmbr101 inet manual
+        bridge-ports vmbr0.101
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 102: C_Network_Center
+auto vmbr0.102
+iface vmbr0.102 inet manual
+
+auto vmbr102
+iface vmbr102 inet manual
+        bridge-ports vmbr0.102
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 103: C_User_Gate
+auto vmbr0.103
+iface vmbr0.103 inet manual
+
+auto vmbr103
+iface vmbr103 inet manual
+        bridge-ports vmbr0.103
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 104: C_Edgeshark
+auto vmbr0.104
+iface vmbr0.104 inet manual
+
+auto vmbr104
+iface vmbr104 inet manual
+        bridge-ports vmbr0.104
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094

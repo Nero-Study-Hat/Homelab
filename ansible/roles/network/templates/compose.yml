@@ -1,12 +1,18 @@
 services:
 
-  ts-docker:
+  ts-network-center:
     image: ghcr.io/tailscale/tailscale:stable
-    hostname: ts-docker
-    container_name: ts-docker
+    hostname: ts-network-center
+    container_name: ts-network-center
     restart: unless-stopped
     dns: "{{networks.shared[0].dns_ip}}"
+    expose:
+      - "41641/udp"
     networks:
+      {{ macvlan.name }}:
+        ipv4_address: "{{ macvlan.ip }}"
+        mac_address: "{{ macvlan.mac_address }}"
+
       {%- for net in networks.shared +%}
       {{ net.name }}:
         ipv4_address: {{ net.tailscale_ip }}
@@ -25,6 +31,7 @@ services:
       ) | map(attribute='subnet') | join(',') }}"
       TS_ACCEPT_ROUTES: "true"
       TS_EXTRA_ARGS: "--accept-routes"
+      TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
     volumes:
       - ./tailscale/tailscale-data:/var/lib/tailscale:rw
       - ./tailscale/tailscale:/var/run/tailscale
@@ -78,6 +85,14 @@ services:
       - ./traefik/data/traefik.yml:/traefik.yml:ro
       - ./traefik/data/acme.json:/acme.json
       # - ./data/config.yml:/config.yml:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'  # Limit to 50% of one CPU core
+          memory: 512M  # Limit to 512MB RAM
+        reservations:
+          cpus: '0.1'  # Reserve 10% of one CPU core
+          memory: 128M  # Reserve 128MB RAM
     labels:
       - "traefik.enable=true"
       - "traefik.zone.main=true"
@@ -105,6 +120,9 @@ volumes:
   socket-proxy:
 
 networks:
+  {{ macvlan.name }}:
+    external: true
+
   {%- for net in networks.shared +%}
   {{ net.name }}:
     external: true

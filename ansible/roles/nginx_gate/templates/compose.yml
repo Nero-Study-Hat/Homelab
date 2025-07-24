@@ -8,8 +8,13 @@ services:
       - "80"
       - "443"
       - "53/udp"
+      - "41641/udp"
     networks:
-      - gate-tailscale-network
+      {{ macvlan.name }}:
+        ipv4_address: "{{ macvlan.ip }}"
+        mac_address: "{{ macvlan.mac_address }}"
+      gate-tailscale-network:
+        ipv4_address: "10.110.4.2"
     environment:
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
@@ -17,6 +22,7 @@ services:
       TS_ACCEPT_ROUTES: "true"
       TS_ADVERTISE_DNS: "{{ dns.ip }}"
       TS_EXTRA_ARGS: "--accept-routes"
+      TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
     volumes:
       - ./ts-nginx:/var/lib/tailscale
     devices:
@@ -51,5 +57,11 @@ services:
       - ALL
 
 networks:
+  {{ macvlan.name }}:
+    external: true
   gate-tailscale-network:
-    driver: bridge
+    ipam:
+      config:
+        - subnet: "10.110.4.0/29"
+          gateway: "10.110.4.1"
+    internal: "false"

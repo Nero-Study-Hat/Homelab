@@ -36,7 +36,8 @@ services:
     cgroup: host
     networks:
       99-ghost-in-da-edge:
-          priority: 100
+        ipv4_address: "10.110.3.3"
+        priority: 100
 
   ts-shark:
     image: tailscale/tailscale:latest
@@ -45,9 +46,14 @@ services:
     expose:
       - "80"
       - "5001"
+      - "41641/udp"
     networks:
+      {{ macvlan.name }}:
+        ipv4_address: "{{ macvlan.ip }}"
+        mac_address: "{{ macvlan.mac_address }}"
       99-ghost-in-da-edge:
-          priority: 100
+        ipv4_address: "10.110.3.2"
+        priority: 100
       {{network_backend.name}}:
         ipv4_address: "{{network_backend.traefik_ips.ts_shark}}"
     environment:
@@ -120,42 +126,15 @@ services:
       - "traefik.http.routers.edgeshark.service=edgeshark-port"
       - "traefik.http.services.edgeshark-port.loadbalancer.server.port=5001"
 
-  # gui for connecting to edgeshark and viewing traffic on specific interfaces
-  # wireshark:
-  #   image: lscr.io/linuxserver/wireshark:latest
-  #   container_name: wireshark
-  #   restart: unless-stopped
-  #   cap_add:
-  #     - NET_ADMIN
-  #   expose:
-  #     - "3000"
-  #   networks:
-  #     {{network_backend.name}}:
-  #       ipv4_address: "{{network_backend.traefik_ips.wireshark}}"
-  #     wireshark-out:
-  #   environment:
-  #       # default username and password are abc
-  #     - PUID=1000 # User ID - find yours with `id your_user_name`
-  #     - PGID=1002 # Group ID - find yours with `id your_user_name`
-  #     - TZ=America/New_York
-  #   volumes:
-  #     - ./wireshark:/config
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.zone.main=true"
-  #     - "traefik.docker.network={{network_backend.name}}"
-  #     - "traefik.http.routers.wireshark.rule=Host(`{{domains.wireshark}}`)"
-  #     - "traefik.http.routers.wireshark.entrypoints=https"
-  #     - "traefik.http.routers.wireshark.tls=true"
-  #     - "traefik.http.routers.wireshark.tls.certresolver=desec"
-  #     - "traefik.http.routers.wireshark.service=wireshark-port"
-  #     - "traefik.http.services.wireshark-port.loadbalancer.server.port=3000"
-
 networks:
+  {{ macvlan.name }}:
+    external: true
   99-ghost-in-da-edge:
     name: ghost-in-da-edge
-    internal: false
-  wireshark-out:
+    ipam:
+      config:
+        - subnet: "10.110.3.0/29"
+          gateway: "10.110.3.1"
     internal: false
   {{network_backend.name}}:
     external: true
