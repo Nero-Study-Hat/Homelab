@@ -1,3 +1,5 @@
+### VLAN CLOUD ###
+
 # vlan 101: CLOUD
 auto vmbr0.101
 iface vmbr0.101 inet manual
@@ -41,6 +43,57 @@ iface vmbr0.104 inet manual
 auto vmbr104
 iface vmbr104 inet manual
         bridge-ports vmbr0.104
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+
+### VLAN MEDIA ###
+
+# vlan 301: MEDIA
+auto vmbr0.301
+iface vmbr0.301 inet manual
+
+auto vmbr301
+iface vmbr301 inet manual
+        bridge-ports vmbr0.301
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 102: M_Network_Center
+auto vmbr0.302
+iface vmbr0.302 inet manual
+
+auto vmbr302
+iface vmbr302 inet manual
+        bridge-ports vmbr0.302
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 303: M_Outpost
+auto vmbr0.303
+iface vmbr0.303 inet manual
+
+auto vmbr303
+iface vmbr303 inet manual
+        bridge-ports vmbr0.303
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 304: M_Edgeshark
+auto vmbr0.304
+iface vmbr0.304 inet manual
+
+auto vmbr304
+iface vmbr304 inet manual
+        bridge-ports vmbr0.304
         bridge-stp off
         bridge-fd 0
         bridge-vlan-aware yes

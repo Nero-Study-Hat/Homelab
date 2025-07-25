@@ -129,6 +129,10 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
         storage = "local-lvm"
     }
 
+    # for vlan support manually on promox create
+    # a linux vlan and linux bridge using that vlan as bridged port
+    # then use the final linux bridge here
+
     ## VLAN INTERFACES ##
     # network center interface
     network {

@@ -8,16 +8,22 @@ services:
       - "80"
       - "443"
       - "4318"
+      - "41641/udp"
     dns: "{{t3_network_backend.traefik_ips.dns}}"
     networks:
+      {{ macvlan.name }}:
+        ipv4_address: {{ macvlan.ip }}
+        mac_address: {{ macvlan.mac_address }}
       {{t3_network_backend.name}}:
         ipv4_address: {{t3_network_backend.traefik_ips.tailscale_traefik}}
     environment:
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
       TS_USERSPACE: false
       TS_ACCEPT_ROUTES: "true"
       TS_EXTRA_ARGS: "--accept-routes"
+      TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
     volumes:
       - ./ts-outpost:/var/lib/tailscale
     devices:
@@ -52,19 +58,21 @@ services:
       - "traefik.enable=true"
       - "traefik.zone.outpost=true"
       - "traefik.docker.network=monitor_outpost"
+      - "traefik.http.routers.traefik.service=traefik-port"
+      - "traefik.http.services.traefik-port.loadbalancer.server.port=80"
       - "traefik.http.routers.traefik.entrypoints=http"
       - "traefik.http.routers.traefik.rule=Host(`{{domains.traefik}}`)"
-      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
       - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
       - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
       - "traefik.http.routers.traefik-secure.entrypoints=https"
       - "traefik.http.routers.traefik-secure.rule=Host(`{{domains.traefik}}`)"
-      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
       - "traefik.http.routers.traefik-secure.tls=true"
       - "traefik.http.routers.traefik-secure.tls.certresolver=desec"
       - "traefik.http.routers.traefik-secure.tls.domains[0].main={{domains.main}}"
       - "traefik.http.routers.traefik-secure.tls.domains[0].sans={{domains.wildcard}}"
+      - "traefik.http.routers.traefik-secure.service=traefik-secure-port"
+      - "traefik.http.services.traefik-secure-port.loadbalancer.server.port=443"
 
   alloy:
     image: grafana/alloy:latest
@@ -81,8 +89,6 @@ services:
     networks:
       {{t3_network_backend.name}}:
         ipv4_address: {{t3_network_backend.traefik_ips.alloy}}
-    environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=https://{{domains.traefik}}:4318
     command:
       - run
       - --storage.path=/var/lib/alloy/data
@@ -93,16 +99,25 @@ services:
       - "traefik.docker.network=monitor_outpost"
       # Forward log pushes to the trusted Traefik instance from the untrusted Traefik instance
       - "traefik.http.routers.alloy-loki.entrypoints=https"
-      - "traefik.http.routers.alloy-loki.rule=Host(`{{domains.traefik}}`) && PathPrefix(`/loki/api/v1/push`)"
+      - "traefik.http.routers.alloy-loki.rule=Host(`{{domains.loki}}`) && PathPrefix(`/loki/api/v1/push`)"
       - "traefik.http.routers.alloy-loki.tls=true"
       - "traefik.http.routers.alloy-loki.tls.certresolver=desec"
       - "traefik.http.routers.alloy-loki.service=trusted-traefik-forward"
-      - "traefik.http.services.trusted-traefik-forward.loadbalancer.server.url=https://{{domains.trusted_traefik}}:443"
+      - "traefik.http.services.trusted-traefik-forward.loadbalancer.server.url=https://{{domains.loki_forward}}"
+      - "traefik.http.services.trusted-traefik-forward.loadbalancer.passHostHeader=false"
       # Add middleware
       - "traefik.http.routers.alloy-loki.middlewares=add-tenant-header,rate-limit"
       - "traefik.http.middlewares.add-tenant-header.headers.customrequestheaders.X-Scope-OrgID={{outpost_header}}"
       - "traefik.http.middlewares.rate-limit.ratelimit.average=100"
       - "traefik.http.middlewares.rate-limit.ratelimit.burst=200"
+
+  # alloy-debug:
+  #   container_name: alloy-debug
+  #   image: alpine
+  #   command: ["sleep", "infinity"]
+  #   network_mode: "service:alloy"
+  #   stdin_open: true
+  #   tty: true
 
   socket-proxy-outpost:
     image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
@@ -123,5 +138,7 @@ volumes:
   socket-proxy:
 
 networks:
+  {{ macvlan.name }}:
+    external: true
   {{t3_network_backend.name}}:
      external: true

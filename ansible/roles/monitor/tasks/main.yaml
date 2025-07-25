@@ -107,3 +107,22 @@
     project_src: '{{stack_dir}}'
     files:
       - compose.yml
+
+- block: # OUTPOST
+    #TODO: make container name variable and local network
+  - name: Delete default ip route
+    community.docker.docker_container_exec:
+      container: 'ts-monitor-outpost'
+      command: "ip route delete default"
+      chdir: /
+
+  - name: Container get eth device number
+    ansible.builtin.raw: "docker exec ts-monitor-outpost ip r | grep {{macvlan.ip}} | awk '{print $3}'"
+    register: eth_num
+
+  - name: Add desired default ip route
+    community.docker.docker_container_exec:
+      container: 'ts-monitor-outpost'
+      command: "ip route add default via {{macvlan.ipam_options[0].gateway}} dev {{eth_num.stdout}}"
+      chdir: /
+  when: sub_role == "outpost"

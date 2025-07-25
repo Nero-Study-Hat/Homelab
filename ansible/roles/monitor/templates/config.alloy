@@ -42,7 +42,7 @@ loki.process "drop_traefik_dbg" {
   stage.match {
     selector = `{container_name=~"traefik|traefik-outpost"}` //TODO: make var for center or outpost traefik container name
     stage.drop {
-      expression = `DBG github\.com/traefik/traefik/v3/pkg/server/service/loadbalancer/wrr/wrr\.go:173 > Service selected by WRR:`
+      expression = `.*DBG.*github\.com/traefik/traefik/v3/pkg/server/service/loadbalancer/wrr/wrr\.go:173.*`
       drop_counter_reason = "traefik loki alloy log loop"
     }
   }
@@ -56,7 +56,7 @@ loki.write "default" {
       "X-Scope-OrgID" = "{{outpost_header}}",
     }
     batch_wait = "5s"
-    batch_size = "10MiB"
+    batch_size = "15MiB"
     tls_config {
       insecure_skip_verify = false
     }

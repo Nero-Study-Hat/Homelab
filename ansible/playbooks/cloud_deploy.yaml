@@ -56,31 +56,31 @@
     #     domain: "{{cloud_searxng.domain}}"
     #     network_backend: "{{ cloud_searxng.network_backend }}"
 
-    - name: Include Edgeshark Role
-      include_role:
-        name: edgeshark
-      vars:
-        ts_auth_key: "{{ sops_secrets.cloud_shark_server_ts_auth_key }}"
-        docker_dir: "{{cloud_docker_dir}}"
-        project_name: "{{cloud_edgeshark.name}}"
-        domains: "{{cloud_edgeshark.domains}}"
-        network_backend: "{{ cloud_edgeshark.network_backend }}"
-        macvlan: "{{cloud_macvlan_edgeshark}}"
+    # - name: Include Edgeshark Role
+    #   include_role:
+    #     name: edgeshark
+    #   vars:
+    #     ts_auth_key: "{{ sops_secrets.cloud_shark_server_ts_auth_key }}"
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_edgeshark.name}}"
+    #     domains: "{{cloud_edgeshark.domains}}"
+    #     network_backend: "{{ cloud_edgeshark.network_backend }}"
+    #     macvlan: "{{cloud_macvlan_edgeshark}}"
 
 
 # ---
 
-    # - name: Include Monitor Center Role - User Gateway
-    #   include_role:
-    #     name: monitor
-    #   vars:
-    #     docker_dir: "{{cloud_docker_dir}}"
-    #     project_name: "{{cloud_monitor_center.name}}"
-    #     sub_role: "{{cloud_monitor_center.sub_role}}"
-    #     shared_network_backend: "{{cloud_monitor_center.network_backend}}"
-    #     outpost_header: "{{cloud_monitor_center.outpost_header}}"
-    #     domains: "{{cloud_monitor_center.domains}}"
-    #     dns: "{{cloud_monitor_center.dns}}"
+    - name: Include Monitor Center Role - User Gateway
+      include_role:
+        name: monitor
+      vars:
+        docker_dir: "{{cloud_docker_dir}}"
+        project_name: "{{cloud_monitor_center.name}}"
+        sub_role: "{{cloud_monitor_center.sub_role}}"
+        shared_network_backend: "{{cloud_monitor_center.network_backend}}"
+        outpost_header: "{{cloud_monitor_center.outpost_header}}"
+        domains: "{{cloud_monitor_center.domains}}"
+        dns: "{{cloud_monitor_center.dns}}"
 
 
 # --- 

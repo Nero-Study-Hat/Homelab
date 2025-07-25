@@ -51,11 +51,15 @@
 - name: Delete default ip route
   community.docker.docker_container_exec:
     container: 'ts-shark'
-    command: "ip route delete default via 10.110.3.1 dev eth1"
+    command: "ip route delete default"
     chdir: /
+
+- name: Container get eth device number
+  ansible.builtin.raw: "docker exec ts-shark ip r | grep {{macvlan.ip}} | awk '{print $3}'"
+  register: eth_num
 
 - name: Add desired default ip route
   community.docker.docker_container_exec:
     container: 'ts-shark'
-    command: "ip route add default via {{macvlan.ipam_options[0].gateway}} dev eth2"
+    command: "ip route add default via {{macvlan.ipam_options[0].gateway}} dev {{eth_num.stdout}}"
     chdir: /

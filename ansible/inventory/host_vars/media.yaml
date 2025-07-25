@@ -42,7 +42,17 @@ media_traefik:
   dns:
     upstream_server: "10.0.0.3"
     config: |
-      address=/cloud.nerolab.dev/10.130.0.2
+      address=/media.nerolab.dev/10.130.0.2
+
+# added to dhcp static mappings in opnsense
+media_macvlan_network_center:
+  name: "macvlan_network_center"
+  parent_interface: "eth0"
+  ip: "10.20.3.11"
+  mac_address: "3a:d3:d3:3b:2a:5d"
+  ipam_options:
+  - subnet: "10.20.3.8/29"
+    gateway: "10.20.3.9"
 
 
 ### MONITOR OUTPOST ###
@@ -61,13 +71,26 @@ media_monitor_outpost:
       dns: "10.130.21.4"
   outpost_header: "media-outpost"
   domains:
-    traefik: "traefik.media.nerolab.dev"
-    trusted_traefik: "traefik.cloud.nerolab.dev"
+    main: "nerolab.dev"
+    wildcard: "*.monitor.nerolab.dev"
+    traefik: "traefik.monitor.nerolab.dev"
+    loki: "loki.monitor.nerolab.dev"
+    loki_forward: "loki.cloud.nerolab.dev"
   dns:
     upstream_server: "10.0.0.3"
     config: |
-      address=/traefik.media.nerolab.dev/10.130.21.2
-      address=/traefik.cloud.nerolab.dev/10.110.20.3
+      address=/monitor.nerolab.dev/10.130.21.2
+      address=/cloud.nerolab.dev/10.110.20.3
+
+# added to dhcp static mappings in opnsense
+media_macvlan_outpost:
+  name: "macvlan_outpost"
+  parent_interface: "eth1"
+  ip: "10.20.3.19"
+  mac_address: "32:97:96:6e:dc:45"
+  ipam_options:
+  - subnet: "10.20.3.16/29"
+    gateway: "10.20.3.17"
 
 
 ### END SERVICE SPECIFIC VARS ###

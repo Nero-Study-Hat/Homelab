@@ -3,11 +3,6 @@ locals {
     os_disk_size = "30G"
     # data_disk_size = "2T"
     data_disk_size = "500G"
-    # below IP address must be available in the below bridge
-    # a static dhcp entry is required for the below config
-    netconfig0 = "ip=10.20.3.6/24,gw=10.20.3.1"
-    bridge_name = "vmbr103"
-    mac_address = "e6:20:5f:93:ec:ec"
     # cloud-init settings
     cloud_init_name = "Debian12-Tailscale"
     cloud_init_snippet = "vendor=local:snippets/ansible_user_setup.yml"
@@ -69,11 +64,18 @@ resource "proxmox_vm_qemu" "debian12-media" {
     cicustom   = local.cloud_init_snippet
     ciuser     = data.sops_file.sops-secret.data["ci_user"]
     cipassword = data.sops_file.sops-secret.data["ci_password"]
-    ipconfig0  = local.netconfig0
-    # ipconfig1  = local.netconfig1
-    nameserver = "1.1.1.1 8.8.8.8"
     sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"]
 
+    # network config
+    # below IP addresses must be available in the below bridges
+    # static dhcp entries are required for the below config
+    nameserver = "1.1.1.1 8.8.8.8"
+    # vlans
+    ipconfig0  = "ip=10.20.3.10/29,gw=10.20.3.9"
+    ipconfig1  = "ip=10.20.3.18/29,gw=10.20.3.17"
+    ipconfig2  = "ip=10.20.3.26/29,gw=10.20.3.25"
+    # main interface, note: must be last
+    ipconfig3  = "ip=10.20.3.6/29,gw=10.20.3.1"
 
     serial {
         id = 0
@@ -128,11 +130,41 @@ resource "proxmox_vm_qemu" "debian12-media" {
     # for vlan support manually on promox create
     # a linux vlan and linux bridge using that vlan as bridged port
     # then use the final linux bridge here
+
+    ## VLAN INTERFACES ##
+    # network center interface
     network {
         id = 0
-        macaddr = local.mac_address
+        macaddr = "ca:42:3c:61:6d:8f"
         model = "virtio"
-        bridge = local.bridge_name
+        bridge = "vmbr302"
+        queues = local.cores # num of cores
+    }
+
+    # monitor outpost interface
+    network {
+        id = 1
+        macaddr = "6a:c9:bd:ad:39:16"
+        model = "virtio"
+        bridge = "vmbr303"
+        queues = local.cores # num of cores
+    }
+
+    # edgeshark interface
+    network {
+        id = 2
+        macaddr = "3e:1c:43:2e:50:5a"
+        model = "virtio"
+        bridge = "vmbr304"
+        queues = local.cores # num of cores
+    }
+
+    # main interface NOTE: last id # to be used as default route
+    network {
+        id = 3
+        macaddr = "e6:20:5f:93:ec:ec"
+        model = "virtio"
+        bridge = "vmbr301"
         queues = local.cores # num of cores
     }
 }
