@@ -20,21 +20,19 @@ shared_network_backend:
   ips:
     tailscale: "172.80.2.2"
     traefik: "172.80.2.3"
+    dns: ""
     grafana: ""
     loki: ""
+    mimir: ""
     alloy: ""
-    dns: ""
 
 domains:
   grafana: ""
   loki: ""
+  mimir: ""
   alloy: ""
 
 outpost_header: ""
-
-TRAEFIK_DASHBOARD_CREDENTIALS: ""
-ts_auth_key: ""
-desec_api_token: ""
 
 dns:
   upstream_server: "10.0.0.3"
@@ -49,3 +47,11 @@ macvlan:
   ipam_options:
   - subnet: ""
     gateway: ""
+
+### populated via sops ###
+TRAEFIK_DASHBOARD_CREDENTIALS: ""
+ts_auth_key: ""
+desec_api_token: ""
+
+mimir_user: ""
+mimir_password: ""

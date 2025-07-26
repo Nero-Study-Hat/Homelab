@@ -15,6 +15,16 @@
 
 ### MAIN ###
 
+- name: Transfer and convert the docker compose jinja2 template - Center
+  ansible.builtin.template:
+    src: "{{sub_role}}_compose.yml"
+    dest: "{{stack_dir}}/compose.yml"
+
+- name: Creates alloy dir
+  file:
+    path: '{{stack_dir}}/alloy'
+    state: directory
+
 - block: # CENTER
   - name: Include Local DNS Role - User DNS
     include_role:
@@ -26,18 +36,30 @@
       dns_ip: "{{shared_network_backend.ips.dns}}"
       upstream_server: "{{dns.upstream_server}}"
       config: "{{dns.config}}"
-  - name: Transfer and convert the docker compose jinja2 template - Center
-    ansible.builtin.template:
-      src: "center_compose.yml"
-      dest: "{{stack_dir}}/compose.yml"
   - name: Transfer and convert the alloy config jinja2 template
     ansible.builtin.template:
       src: "config.alloy"
-      dest: "{{stack_dir}}/config.alloy"
+      dest: "{{stack_dir}}/alloy/config.alloy"
+  - name: Creates loki dir
+    file:
+      path: '{{stack_dir}}/loki'
+      state: directory
   - name: Copy loki-config file
     ansible.builtin.copy:
       src: "loki-config.yaml"
-      dest: "{{stack_dir}}/loki-config.yaml"
+      dest: "{{stack_dir}}/loki/loki-config.yaml"
+  - name: Creates mimir dir
+    file:
+      path: '{{stack_dir}}/mimir'
+      state: directory
+  - name: Copy mimir config file
+    ansible.builtin.copy:
+      src: "mimir.yaml"
+      dest: "{{stack_dir}}/mimir/mimir.yaml"
+  - name: Copy mimir alertmanager config file
+    ansible.builtin.copy:
+      src: "alertmanager-fallback-config.yaml"
+      dest: "{{stack_dir}}/mimir/alertmanager-fallback-config.yaml"
   when: sub_role == "center"
 
 - block: # OUTPOST
@@ -78,14 +100,10 @@
     ansible.builtin.file:
       path: '{{stack_dir}}/ts-outpost'
       state: directory
-  - name: Transfer and convert the docker compose jinja2 template - Outpost
-    ansible.builtin.template:
-      src: "outpost_compose.yml"
-      dest: "{{stack_dir}}/compose.yml"
   - name: Transfer and convert the alloy config jinja2 template
     ansible.builtin.template:
       src: "config.alloy"
-      dest: "{{stack_dir}}/config.alloy"
+      dest: "{{stack_dir}}/alloy/config.alloy"
   - name: Copy traefik.yml (config) file
     ansible.builtin.copy:
       src: "traefik.yml"

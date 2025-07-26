@@ -23,13 +23,40 @@ services:
       - "traefik.http.routers.grafana.tls.certresolver=desec"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
+  # when added as grafana data source follow the below
+  # name & tenant per prometheus datasource (no support tenant|tenant)
+  # prometheus url (for prom api): https://{{domains.mimir}}/prometheus 
+  mimir:
+    container_name: mimir
+    hostname: mimir
+    image: grafana/mimir:latest
+    command: ["-config.file=/etc/mimir.yaml"]
+    dns: {{shared_network_backend.ips.dns}}
+    networks:
+      monitoring_backend:
+      {{shared_network_backend.name}}:
+        ipv4_address: {{shared_network_backend.ips.mimir}}
+    volumes:
+      - ./mimir/mimir.yaml:/etc/mimir.yaml
+      - ./mimir/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml
+      - mimir_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.zone.main=true"
+      - "traefik.docker.network={{shared_network_backend.name}}"
+      - "traefik.http.routers.mimir.rule=Host(`{{domains.mimir}}`)"
+      - "traefik.http.routers.mimir.entrypoints=https"
+      - "traefik.http.routers.mimir.tls=true"
+      - "traefik.http.routers.mimir.tls.certresolver=desec"
+      - "traefik.http.services.mimir.loadbalancer.server.port=9009"
+
   loki:
     container_name: loki
     image: grafana/loki:3.5.1
     restart: unless-stopped
     command: "-config.file=/etc/loki/loki-config.yaml"
     volumes:
-      - ./loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
       - loki_data:/loki:rw
     dns: {{shared_network_backend.ips.dns}}
     networks:
@@ -64,14 +91,6 @@ services:
     depends_on:
     - loki
     - socket-proxy-alloy
-    volumes:
-      - './config.alloy:/etc/alloy/config.alloy'
-      - "socket-proxy:/var/run"
-    dns: {{shared_network_backend.ips.dns}}
-    networks:
-      monitoring_backend:
-      {{shared_network_backend.name}}:
-        ipv4_address: {{shared_network_backend.ips.alloy}}
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
@@ -85,6 +104,19 @@ services:
         reservations:
           cpus: '0.1'  # Reserve 10% of one CPU core
           memory: 128M  # Reserve 128MB RAM
+    dns: {{shared_network_backend.ips.dns}}
+    networks:
+      monitoring_backend:
+      {{shared_network_backend.name}}:
+        ipv4_address: {{shared_network_backend.ips.alloy}}
+    # additional required for cadvisor
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - './alloy/config.alloy:/etc/alloy/config.alloy'
+      - "socket-proxy:/var/run"
     labels:
       - "traefik.enable=true"
       - "traefik.zone.main=true"
@@ -95,10 +127,36 @@ services:
       - "traefik.http.routers.alloy.tls.certresolver=desec"
       - "traefik.http.services.alloy.loadbalancer.server.port=12345"
 
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    dns: {{shared_network_backend.ips.dns}}
+    networks:
+      monitoring_backend:
+      {{shared_network_backend.name}}:
+        ipv4_address: {{shared_network_backend.ips.cadvisor}}
+    # Mounts necessary directories for cAdvisor to access container runtime information.
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:rw"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "socket-proxy:/var/run"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.zone.main=true"
+      - "traefik.docker.network={{shared_network_backend.name}}"
+      - "traefik.http.routers.cadvisor.rule=Host(`{{domains.cadvisor}}`)"
+      - "traefik.http.routers.cadvisor.entrypoints=https"
+      - "traefik.http.routers.cadvisor.tls=true"
+      - "traefik.http.routers.cadvisor.tls.certresolver=desec"
+      - "traefik.http.services.cadvisor.loadbalancer.server.port=8080"
+
 volumes:
   socket-proxy:
   grafana_data:
   loki_data:
+  mimir_data:
 
 networks:
   monitoring_backend:
