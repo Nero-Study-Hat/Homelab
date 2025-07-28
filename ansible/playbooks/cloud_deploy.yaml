@@ -74,13 +74,17 @@
       include_role:
         name: monitor
       vars:
+        ts_auth_key: "{{ sops_secrets.cloud_server_monitor_center_ts_auth_key }}"
         docker_dir: "{{cloud_docker_dir}}"
         project_name: "{{cloud_monitor_center.name}}"
         sub_role: "{{cloud_monitor_center.sub_role}}"
         shared_network_backend: "{{cloud_monitor_center.network_backend}}"
         outpost_header: "{{cloud_monitor_center.outpost_header}}"
         domains: "{{cloud_monitor_center.domains}}"
+        traefik_scrape_addresses: "{{cloud_monitor_center.traefik_scrape_addresses}}"
+        tailscale_scrape_addresses: "{{cloud_monitor_center.tailscale_scrape_addresses}}"
         dns: "{{cloud_monitor_center.dns}}"
+        macvlan: "{{cloud_macvlan_monitor_center}}"
 
 
 # --- 

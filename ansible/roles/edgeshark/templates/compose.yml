@@ -57,6 +57,7 @@ services:
       {{network_backend.name}}:
         ipv4_address: "{{network_backend.traefik_ips.ts_shark}}"
     environment:
+      TS_ENABLE_METRICS: "true"
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
       TS_USERSPACE: false

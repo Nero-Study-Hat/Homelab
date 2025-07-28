@@ -1,6 +1,9 @@
 api:
   dashboard: true
+
 entryPoints:
+  metrics:
+    address: ":9100"
   http:
     address: ":80"
     http:
@@ -10,8 +13,17 @@ entryPoints:
           scheme: https
   https:
     address: ":443"
+
+metrics:
+  prometheus:
+    entryPoint: metrics
+    addEntryPointsLabels: true
+    addRoutersLabels: true
+    addServicesLabels: true
+
 serversTransport:
   insecureSkipVerify: true
+
 providers:
   docker:
     constraints: "Label(`traefik.zone.main`, `true`)"
@@ -19,6 +31,7 @@ providers:
     exposedByDefault: false
   # file:
   #   filename: /config.yml
+
 certificatesResolvers:
   desec:
     acme:
@@ -31,7 +44,7 @@ certificatesResolvers:
         resolvers:
           - "1.1.1.1:53"
           - "1.0.0.1:53"
-        propagation:
-          delayBeforeChecks: 30s
+        # propagation:
+        #   delayBeforeChecks: 30s
 log:
   level: DEBUG

@@ -16,6 +16,7 @@ services:
       gate-tailscale-network:
         ipv4_address: "10.110.4.2"
     environment:
+      TS_ENABLE_METRICS: "true"
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
       TS_USERSPACE: false

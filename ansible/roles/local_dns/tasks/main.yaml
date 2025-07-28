@@ -6,7 +6,7 @@
 
 - name: Update local docker directory name variable
   ansible.builtin.set_fact:
-    docker_proj_name: "{{ [project_name, 'dns'] | join('-') }}"
+    docker_proj_name: "{{ [dns_project_name, 'dns'] | join('-') }}"
 
 - name: Update local docker directory name variable
   ansible.builtin.set_fact:

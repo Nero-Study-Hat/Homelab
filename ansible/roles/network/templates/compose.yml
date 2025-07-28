@@ -22,6 +22,7 @@ services:
         ipv4_address: {{ net.tailscale_ip }}
       {%- endfor +%}
     environment:
+      TS_ENABLE_METRICS: "true"
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
       TS_SOCKET: /var/run/tailscale/tailscaled.sock
@@ -63,6 +64,7 @@ services:
     expose:
       - "80/tcp"
       - "443/tcp"
+      - "9100"
     dns: "{{networks.shared[0].dns_ip}}"
     networks:
       {%- for net in networks.shared +%}

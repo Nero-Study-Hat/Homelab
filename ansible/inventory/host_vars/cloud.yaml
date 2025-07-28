@@ -154,6 +154,13 @@ cloud_monitor_center:
       alloy: "10.110.20.8"
       cadvisor: "10.110.20.9"
   outpost_header: "cloud-outpost"
+  traefik_scrape_addresses:
+    - "10.110.0.2" # network center
+  tailscale_scrape_addresses:
+    - "100.70.0.1" # cloud server - network center
+    - "100.80.1.1" # cloud user gateway
+    - "100.80.21.1" # cloud monitor center
+    - "100.80.31.1" # cloud edgeshark
   domains:
     traefik: "traefik.cloud.nerolab.dev"
     grafana: "grafana.cloud.nerolab.dev"
@@ -165,6 +172,16 @@ cloud_monitor_center:
     upstream_server: "10.0.0.3"
     config: |
       address=/cloud.nerolab.dev/10.110.20.3
+
+# added to dhcp static mappings in opnsense
+cloud_macvlan_monitor_center:
+  name: "macvlan_monitor_center"
+  parent_interface: "eth3"
+  ip: "10.20.1.35"
+  mac_address: "da:91:79:c6:65:b6"
+  ipam_options:
+  - subnet: "10.20.1.32/29"
+    gateway: "10.20.1.33"
 
 cloud_edgeshark:
   name: "edgeshark"

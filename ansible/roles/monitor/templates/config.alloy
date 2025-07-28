@@ -3,6 +3,8 @@ logging {
   format = "logfmt"
 }
 
+// ### LOKI DOCKER LOGS PIPELINE ###
+
 discovery.docker "linux" {
   host = "unix:///var/run/docker.sock"
 }
@@ -56,13 +58,16 @@ loki.write "default" {
       "X-Scope-OrgID" = "{{outpost_header}}",
     }
     batch_wait = "5s"
-    batch_size = "15MiB"
+    batch_size = "15MiB" //FIXME: larger than max loki msg_size
     tls_config {
       insecure_skip_verify = false
     }
   }
 }
 
+// ### PROMETHEUS METRICS PIPELINE ###
+
+// # CADVISOR COLLECTION AND LABELING
 prometheus.exporter.cadvisor "linux_metric" {
   store_container_labels = true
   docker_host = "unix:///var/run/docker.sock"
@@ -113,8 +118,32 @@ discovery.relabel "metrics_integrations_docker" {
 
 prometheus.scrape "scraper" {
   targets         = discovery.relabel.metrics_integrations_docker.output
-  scrape_interval = "60s"
+  scrape_interval = "30s"
   forward_to      = [ prometheus.remote_write.mimir.receiver ]
+}
+
+// # TRAEFIK COLLECTION AND LABELING
+// also affected by tailscale grants
+// main traefik-cloud ip
+prometheus.scrape "traefik" {
+  targets = [
+{% for host in traefik_scrape_addresses %}
+    { __address__ = "{{ host }}:9100" },
+{% endfor %}
+  ]
+  scrape_interval = "30s"
+  forward_to = [ prometheus.remote_write.mimir.receiver ]
+}
+
+// # TAILSCALE COLLECTION AND LABELING
+prometheus.scrape "tailscale" {
+  targets = [
+{% for host in tailscale_scrape_addresses %}
+    { __address__ = "{{ host }}:9002" },
+{% endfor %}
+  ]
+  scrape_interval = "30s"
+  forward_to = [ prometheus.remote_write.mimir.receiver ]
 }
 
 prometheus.remote_write "mimir" {

@@ -48,9 +48,20 @@ macvlan:
   - subnet: ""
     gateway: ""
 
+alloy_macvlan:
+  ip: ""
+  mac_address: ""
+
+traefik_scrape_addresses:
+  - ""
+
+tailscale_scrape_addresses:
+  - ""
+
 ### populated via sops ###
 TRAEFIK_DASHBOARD_CREDENTIALS: ""
 ts_auth_key: ""
+ts_auth_alloy_key: ""
 desec_api_token: ""
 
 mimir_user: ""
