@@ -1,0 +1,139 @@
+services:
+
+  ts-network-center:
+    image: ghcr.io/tailscale/tailscale:stable
+    hostname: ts-network-center
+    container_name: ts-network-center
+    restart: unless-stopped
+    dns: "{{networks.shared[0].dns_ip}}"
+    expose:
+      - "41641/udp"
+    networks:
+      {{ macvlan.name }}:
+        ipv4_address: "{{ macvlan.ip }}"
+        mac_address: "{{ macvlan.mac_address }}"
+
+      {%- for net in networks.shared +%}
+      {{ net.name }}:
+        ipv4_address: {{ net.tailscale_ip }}
+      {%- endfor +%}
+      {%- for net in networks.tailscale_specific +%}
+      {{ net.name }}:
+        ipv4_address: {{ net.tailscale_ip }}
+      {%- endfor +%}
+    environment:
+      TS_ENABLE_METRICS: "true"
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_ROUTES: "{{ (
+        networks.shared | map(attribute='ipam_options') | sum(start=[]) +
+        networks.tailscale_specific | map(attribute='ipam_options') | sum(start=[])
+      ) | map(attribute='subnet') | join(',') }}"
+      TS_ACCEPT_ROUTES: "true"
+      TS_EXTRA_ARGS: "--accept-routes"
+      TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
+    volumes:
+      - ./tailscale/tailscale-data:/var/lib/tailscale:rw
+      - ./tailscale/tailscale:/var/run/tailscale
+    cap_add:
+      - net_admin
+
+  socket-proxy:
+    image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
+    hostname: socketproxy
+    container_name: socketproxy
+    network_mode: "none"
+    read_only: true
+    user: "0:994"
+    volumes:
+      - "/run/docker.sock:/run/docker.sock:ro"
+      - "socket-proxy:/run/proxy" # this socket is run as 1000:1000, not as root
+    restart: "always"
+
+  traefik:
+    image: traefik:v3.4
+    container_name: traefik
+    depends_on:
+      socket-proxy:
+        condition: "service_healthy"
+        restart: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    expose:
+      - "80/tcp"
+      - "443/tcp"
+      - "9100"
+    dns: "{{networks.shared[0].dns_ip}}"
+    networks:
+      {%- for net in networks.shared +%}
+      {{ net.name }}:
+        ipv4_address: {{ net.traefik_ip }}
+      {%- endfor +%}
+      {%- for net in networks.traefik_specific +%}
+      {{ net.name }}:
+        ipv4_address: {{ net.traefik_ip }}
+      {%- endfor +%}
+    environment:
+      DESEC_TOKEN_FILE: /run/secrets/desec_api_token # note using _FILE for docker secrets
+      TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
+    secrets:
+      - desec_api_token
+    env_file: .env # use .env
+    volumes:
+      - "socket-proxy:/var/run" # access docker socket via proxy read-only
+      - /etc/localtime:/etc/localtime:ro
+      - ./traefik/data/traefik.yml:/traefik.yml:ro
+      - ./traefik/data/acme.json:/acme.json
+      # - ./data/config.yml:/config.yml:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'  # Limit to 50% of one CPU core
+          memory: 512M  # Limit to 512MB RAM
+        reservations:
+          cpus: '0.1'  # Reserve 10% of one CPU core
+          memory: 128M  # Reserve 128MB RAM
+    labels:
+      - "traefik.enable=true"
+      - "traefik.zone.main=true"
+      - "traefik.docker.network=traefik_tailscale"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`{{domains.traefik}}`)"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`{{domains.traefik}}`)"
+      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=desec"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main={{domains.main}}"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans={{domains.wildcard}}"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+
+secrets:
+  desec_api_token:
+    file: ./desec_api_token.txt
+
+volumes:
+  socket-proxy:
+
+networks:
+  {{ macvlan.name }}:
+    external: true
+
+  {%- for net in networks.shared +%}
+  {{ net.name }}:
+    external: true
+  {%- endfor +%}
+  {%- for net in networks.traefik_specific +%}
+  {{ net.name }}:
+    external: true
+  {%- endfor +%}
+  {%- for net in networks.tailscale_specific +%}
+  {{ net.name }}:
+    external: true
+  {%- endfor +%}

@@ -2,22 +2,28 @@ services:
 
   ts-gate:
     image: tailscale/tailscale:latest
-    hostname: ts-gate
     container_name: ts-gate
+    hostname: ts-gate
     expose:
-      - "80:80"
-      - "443:443"
+      - "80"
+      - "443"
       - "53/udp"
+      - "41641/udp"
     networks:
+      {{ macvlan.name }}:
+        ipv4_address: "{{ macvlan.ip }}"
+        mac_address: "{{ macvlan.mac_address }}"
       gate-tailscale-network:
-        ipv4_address: {{ tailscale_subnet.tailscale_ip }}
+        ipv4_address: "10.110.4.2"
     environment:
+      TS_ENABLE_METRICS: "true"
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
       TS_USERSPACE: false
       TS_ACCEPT_ROUTES: "true"
-      TS_ADVERTISE_DNS: {{ tailscale_subnet.dns_ip }}
+      TS_ADVERTISE_DNS: "{{ dns.ip }}"
       TS_EXTRA_ARGS: "--accept-routes"
+      TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
     volumes:
       - ./ts-nginx:/var/lib/tailscale
     devices:
@@ -52,5 +58,11 @@ services:
       - ALL
 
 networks:
-  gate-tailscale-network:
+  {{ macvlan.name }}:
     external: true
+  gate-tailscale-network:
+    ipam:
+      config:
+        - subnet: "10.110.4.0/29"
+          gateway: "10.110.4.1"
+    internal: "false"

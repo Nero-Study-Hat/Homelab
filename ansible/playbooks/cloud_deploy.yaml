@@ -24,30 +24,70 @@
     #     TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
     #     ts_auth_key: "{{ sops_secrets.cloud_server_ts_auth_key }}"
     #     desec_api_token: "{{ sops_secrets.desec_api_token }}"
-    #     tailscale_subnet:
-    #       subnet_cidr: "{{ cloud_tailscale_subnet.subnet_cidr }}"
-    #       gateway: "{{ cloud_tailscale_subnet.gateway }}"
-    #       tailscale_ip: "{{ cloud_tailscale_subnet.tailscale_ip }}"
-    #       dns_ip: "{{ cloud_tailscale_subnet.dns_ip }}"
-    #       traefik_ip: "{{ cloud_tailscale_subnet.traefik_ip }}"
-    #       nextcloud_ip: "{{ cloud_tailscale_subnet.nextcloud_ip }}"
-    #       searxng_ip: "{{ cloud_tailscale_subnet.searxng_ip }}"
+    #     docker_dir: "{{cloud_docker_dir}}"
     #     domains:
-    #       traefik: "{{ cloud_traefik_domains.traefik }}"
-    #       main: "{{ cloud_traefik_domains.main }}"
-    #       wildcard: "{{ cloud_traefik_domains.wildcard }}"
+    #       main: "{{ cloud_traefik.domains.main }}"
+    #       wildcard: "{{ cloud_traefik.domains.wildcard }}"
+    #       traefik: "{{ cloud_traefik.domains.traefik }}"
+    #     dns: "{{cloud_traefik.dns}}"
+    #     networks: "{{cloud_networks}}"
+    #     macvlan: "{{cloud_macvlan_network_center}}"
 
-    # - name: Include Local DNS Role - User DNS
+    # - name: Include NGINX Gate Role - User Gateway
     #   include_role:
-    #     name: local_dns
+    #     name: nginx_gate
     #   vars:
     #     docker_dir: "{{cloud_docker_dir}}"
-    #     project_name: "{{cloud_dns.name}}"
-    #     tailscale_ip: "{{cloud_dns.ts_ip}}"
-    #     port_num: "{{cloud_dns.port_num}}"
-    #     dns_records: "{{cloud_dns.records}}"
-    #     upstream_server: "{{cloud_dns.upstream_server}}"
+    #     project_name: "{{gate_name}}"
+    #     traefik_instances: "{{ gate_traefik_instances }}"
+    #     ts_auth_key: "{{ sops_secrets.cloud_gate_server_ts_auth_key }}"
+    #     dns:
+    #       ip: "{{ gate_dns_conf.ip }}"
+    #       upstream_server: "{{ gate_dns_conf.upstream_server }}"
+    #       records: "{{ gate_dns_conf.records }}"
+    #     macvlan: "{{cloud_macvlan_user_gate}}"
 
+    # - name: Include SearXNG Role
+    #   include_role:
+    #     name: searxng
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_searxng.name}}"
+    #     domain: "{{cloud_searxng.domain}}"
+    #     network_backend: "{{ cloud_searxng.network_backend }}"
+
+    # - name: Include Edgeshark Role
+    #   include_role:
+    #     name: edgeshark
+    #   vars:
+    #     ts_auth_key: "{{ sops_secrets.cloud_shark_server_ts_auth_key }}"
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_edgeshark.name}}"
+    #     domains: "{{cloud_edgeshark.domains}}"
+    #     network_backend: "{{ cloud_edgeshark.network_backend }}"
+    #     macvlan: "{{cloud_macvlan_edgeshark}}"
+
+
+# ---
+
+    - name: Include Monitor Center Role - User Gateway
+      include_role:
+        name: monitor
+      vars:
+        ts_auth_key: "{{ sops_secrets.cloud_server_monitor_center_ts_auth_key }}"
+        docker_dir: "{{cloud_docker_dir}}"
+        project_name: "{{cloud_monitor_center.name}}"
+        sub_role: "{{cloud_monitor_center.sub_role}}"
+        shared_network_backend: "{{cloud_monitor_center.network_backend}}"
+        outpost_header: "{{cloud_monitor_center.outpost_header}}"
+        domains: "{{cloud_monitor_center.domains}}"
+        traefik_scrape_addresses: "{{cloud_monitor_center.traefik_scrape_addresses}}"
+        tailscale_scrape_addresses: "{{cloud_monitor_center.tailscale_scrape_addresses}}"
+        dns: "{{cloud_monitor_center.dns}}"
+        macvlan: "{{cloud_macvlan_monitor_center}}"
+
+
+# --- 
     # - name: Include Nextcloud Role
     #   include_role:
     #     name: nextcloud
@@ -58,29 +98,4 @@
     #     mounted_dir: "{{cloud_nextcloud.mounted_dir}}"
     #     mariadb_user_passwd: "{{ sops_secrets.mariadb_user_passwd }}"
     #     mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"
-
-    # - name: Include SearXNG Role
-    #   include_role:
-    #     name: searxng
-    #   vars:
-    #     docker_dir: "{{cloud_docker_dir}}"
-    #     project_name: "{{cloud_searxng.name}}"
-    #     domain: "{{cloud_searxng.domain}}"
-
-    ## USER GATEWAY SETUP ###
-    - name: Include NGINX Gate Role - User Gateway
-      include_role:
-        name: nginx_gate
-      vars:
-        docker_dir: "{{cloud_docker_dir}}"
-        project_name: "{{gate_name}}"
-        traefik_instances: "{{ gate_traefik_instances }}"
-        ts_auth_key: "{{ sops_secrets.cloud_gate_server_ts_auth_key }}"
-        tailscale_subnet:
-          subnet_cidr: "{{ gate_tailscale_subnet.subnet_cidr }}"
-          gateway: "{{ gate_tailscale_subnet.gateway }}"
-          tailscale_ip: "{{ gate_tailscale_subnet.tailscale_ip }}"
-          dns_ip: "{{ gate_tailscale_subnet.dns_ip }}"
-        dns:
-          upstream_server: "{{ gate_dns.upstream_server }}"
-          records: "{{ gate_dns.records }}"
+    #     network_backend: "{{ cloud_nextcloud.network_backend }}"

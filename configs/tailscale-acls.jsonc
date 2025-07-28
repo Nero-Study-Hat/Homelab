@@ -2,43 +2,54 @@
 {
 	// Declare static groups of users. Use autogroups for all users or users with a specific role.
 	"groups": {
-		"group:personal": ["<redacted-admin>"],
-		"group:family":   ["<redacted-family>"],
-		"group:outside":  ["<redacted-outside>"],
+		"group:personal": ["redacted@github"],
+		"group:family":   ["ts.cloud.server@outlook.com"],
+		"group:outside":  ["ts.media.server@outlook.com"],
 	},
 
 	"hosts": {
-		"cloud-net": "172.20.0.0/24",
-		"fog-net":   "172.20.2.0/24",
-		"media-net":   "172.20.1.0/24",
+		"cloud-traefik-net":        "10.110.0.0/29",
+		"cloud-monitor-center-net": "10.110.20.0/28",
 
-		"cloud-dns": "172.20.0.4",
+		"cloud-monitor-center-traefik": "10.110.20.3",
 
-		"traefik-cloud": "172.20.0.3",
-		"traefik-fog":   "172.20.1.3",
-		"traefik-media": "172.20.2.3",
+		"cloud-traefik": "10.110.0.2",
+		"cloud-dns":     "10.110.0.5",
 
-		// test these with docker sidecar mode
-		// normal traefik network block, ts as sidecar
-		"traefik-monitor": "172.20.2.4",
-		"traefik-kasm":    "172.20.2.4",
+		"media-traefik-net":         "10.130.0.0/29",
+		"media-dns-net":             "10.130.1.0/29",
+		"media-monitor-outpost-net": "10.130.21.0/29",
 
-		"cloud-loki": "172.20.0.11",
+		"media-traefik":                 "10.130.0.2",
+		"media-dns":                     "10.130.0.4",
+		"media-traefik-monitor-outpost": "10.130.21.4",
 	},
 
 	// Define the tags which can be applied to devices and by which users.
 	"tagOwners": {
-		"tag:ssh-server":   ["<redacted-admin>"],
-		"tag:cloud-server": ["<redacted-admin>"],
-		"tag:fog-server":   ["<redacted-admin>"],
-		"tag:media-server": ["<redacted-admin>"],
+		"tag:ssh-server":                   ["redacted@github"],
+		"tag:cloud-gate-server":            ["redacted@github"],
+		"tag:cloud-shark-server":           ["redacted@github"],
+		"tag:cloud-server-monitor-center":  ["redacted@github"],
+		"tag:media-server-monitor-outpost": ["redacted@github"],
+		"tag:media-server-monitor-alloy":   ["redacted@github"],
+
+		"tag:cloud-server": ["redacted@github"],
+		"tag:fog-server":   ["redacted@github"],
+		"tag:media-server": ["redacted@github"],
+
+		"tag:redacted-client":   ["ts.cloud.server@outlook.com"],
 	},
 
 	"autoApprovers": {
 		"routes": {
-			"172.20.0.0/24": ["tag:cloud-server"],
-			"172.20.1.0/24": ["tag:fog-server"],
-			"172.20.2.0/24": ["tag:media-server"],
+			"10.110.0.0/29":  ["tag:cloud-server"], // traefik
+			"10.110.1.0/29":  ["tag:cloud-server"], // dns
+			"10.110.20.0/28": ["tag:cloud-server"], // monitor-center
+
+			"10.130.0.0/29":  ["tag:media-server"], // traefik
+			"10.130.1.0/29":  ["tag:media-server"], // dns
+			"10.130.21.0/29": ["tag:media-server"], // monitor-outpost
 		},
 	},
 
@@ -65,6 +76,39 @@
 	//      "node:tsReleaseTrack == 'stable'",
 	//  ],
 	// },
+
+	"derpMap": {
+		"Regions": {
+			// only 1 not null
+			"2":  null,
+			"3":  null,
+			"4":  null,
+			"5":  null,
+			"6":  null,
+			"7":  null,
+			"8":  null,
+			"9":  null,
+			"10": null,
+			"11": null,
+			"12": null,
+			"13": null,
+			"14": null,
+			"15": null,
+			"16": null,
+			"17": null,
+			"18": null,
+			"19": null,
+			"20": null,
+			"21": null,
+			"22": null,
+			"23": null,
+			"24": null,
+			"25": null,
+			"26": null,
+			"27": null,
+			"28": null,
+		},
+	},
 
 	// Define users and devices that can use Tailscale SSH.
 	"ssh": [
@@ -96,12 +140,32 @@
 	//   },
 	// ],
 
-	"randomizeClientPort": true,
+	"randomizeClientPort": false,
 
 	"nodeAttrs": [
 		{
 			"target": ["tag:ssh-server"],
 			"ipPool": ["100.80.0.0/29"],
+		},
+		{
+			"target": ["tag:cloud-gate-server"],
+			"ipPool": ["100.80.1.1/32"],
+		},
+		{
+			"target": ["tag:cloud-shark-server"],
+			"ipPool": ["100.80.31.1/32"],
+		},
+		{
+			"target": ["tag:cloud-server-monitor-center"],
+			"ipPool": ["100.80.21.1/32"],
+		},
+		{
+			"target": ["tag:media-server-monitor-outpost"],
+			"ipPool": ["100.80.22.1/32"],
+		},
+		{
+			"target": ["tag:media-server-monitor-alloy"],
+			"ipPool": ["100.80.23.1/32"],
 		},
 		{
 			"target": ["tag:cloud-server"],
@@ -130,44 +194,116 @@
 		// 	"ip":  [],
 		// },
 
-		// https://ubiq.co/tech-blog/how-to-whitelist-ip-in-nginx/
-		// keep current account setup for easy viewing of
-		// what machines are outside in tailscale web ui
-		// {
-		// 	"src": ["group:clients"],
-		// 	"dst": ["nginx"],
-		// 	"ip":  ["tcp:443"],
-		// },
-		// {
-		// 	"src": ["group:clients", "nginx"],
-		// 	"dst": ["client-dns"],
-		// 	"ip":  ["tcp:443"],
-		// },
+		{
+			"src": [
+				"group:personal",
+				"tag:redacted-client",
+			],
+			"dst": ["tag:cloud-server"],
+			"ip":  ["*"],
+		},
+
+		// direct dev_device <-> edgeshark connection
+		// required for edgeshark and wireshark sniff with it to work
+		{
+			"src": [
+				"group:personal",
+				"tag:cloud-shark-server",
+			],
+			"dst": [
+				"group:personal",
+				"tag:cloud-shark-server",
+			],
+			"ip": ["*"],
+		},
+
+		// user dns point to user gateway
+		{
+			"src": [
+				"group:personal",
+				"tag:redacted-client",
+			],
+			"dst": ["tag:cloud-gate-server"],
+			"ip":  ["udp:53"],
+		},
+
+		// grant outbound capable tailscale devices dns records
+		{
+			"src": [
+				"tag:cloud-server-monitor-center",
+				"tag:media-server-monitor-outpost",
+				"tag:media-server-monitor-alloy",
+				// "tag:cloud-gate-server",
+			],
+			"dst": ["cloud-dns", "media-dns"],
+			"ip":  ["udp:53"],
+		},
+
+		// grants access to cloud monitor center
+		// for traefik and tailscale metrics
+		// plus alloy to traefik pushes
+		{
+			"src": [
+				"tag:cloud-server-monitor-center",
+			],
+			"dst": ["cloud-traefik"],
+			"ip":  ["tcp:80", "tcp:443", "9100"],
+		},
+
+		{
+			"src": ["tag:cloud-server-monitor-center"],
+			"dst": [
+				"tag:cloud-server-monitor-center",
+				"tag:cloud-gate-server",
+				"tag:cloud-server",
+			],
+			// "ip":  ["tcp:80", "tcp:443"], // required for staging testing
+			"ip": ["9002"], // required for staging testing
+		},
+
+		// grants access to media monitor alloy
+		// for traefik and tailscale metrics
+		// plus alloy to traefik pushes
+		{
+			"src": [
+				"tag:media-server-monitor-alloy",
+			],
+			"dst": ["media-traefik"],
+			"ip":  ["tcp:80", "tcp:443", "9100"],
+		},
+
+		{
+			"src": [
+				"tag:media-server-monitor-alloy",
+				"group:personal",
+			],
+			"dst": [
+				"tag:media-server-monitor-outpost",
+				"tag:media-server",
+			],
+			"ip": ["9002"], // required for staging testing
+		},
+
+		{
+			"src": ["tag:media-server-monitor-outpost"],
+			"dst": ["cloud-traefik"],
+			"ip":  ["tcp:80", "tcp:443"], // required for staging testing
+		},
 
 		{
 			"src": [
 				"group:personal",
-				"tag:dan-client",
-				"cloud-net",
-				"fog-net",
-				"media-net",
+				"tag:redacted-client",
 			],
-			"dst": ["cloud-dns"],
-			"ip":  ["*"],
-			// "ip":  ["udp:53"],
-		},
-
-		{
-			"src": ["group:personal"],
-			"dst": ["traefik-cloud", "traefik-fog", "traefik-media"],
+			"dst": ["tag:cloud-gate-server"],
 			// "ip":  ["tcp:443"],
 			"ip": ["tcp:80", "tcp:443"], // required for staging testing
 		},
 
-		// {
-		// 	"src": ["tag:example-client"],
-		// 	"dst": ["traefik-cloud", "traefik-media"],
-		// 	"ip":  ["tcp:443"],
-		// },
+		{
+			"src": ["tag:cloud-gate-server"],
+			"dst": ["cloud-traefik", "media-traefik"],
+			"ip":  ["tcp:80", "tcp:443"], // required for staging testing
+		},
 	],
 }

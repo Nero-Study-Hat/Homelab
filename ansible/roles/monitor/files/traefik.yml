@@ -1,5 +1,5 @@
 api:
-  dashboard: true
+  dashboard: false
 
 entryPoints:
   metrics:
@@ -26,7 +26,7 @@ serversTransport:
 
 providers:
   docker:
-    constraints: "Label(`traefik.zone.main`, `true`)"
+    constraints: "Label(`traefik.zone.outpost`, `true`)"
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
   # file:

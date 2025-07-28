@@ -1,0 +1,68 @@
+docker_dir: ""
+project_name: ""
+
+sub_role: ""
+
+t3_network_backend:
+  name: ""
+  ipam_options:
+  - subnet: ""
+    gateway: ""
+  traefik_ips:
+    tailscale_traefik: "172.80.2.2"
+    alloy: "172.80.2.3"
+
+shared_network_backend:
+  name: ""
+  ipam_options:
+  - subnet: ""
+    gateway: ""
+  ips:
+    tailscale: "172.80.2.2"
+    traefik: "172.80.2.3"
+    dns: ""
+    grafana: ""
+    loki: ""
+    mimir: ""
+    alloy: ""
+
+domains:
+  grafana: ""
+  loki: ""
+  mimir: ""
+  alloy: ""
+
+outpost_header: ""
+
+dns:
+  upstream_server: "10.0.0.3"
+  config: |
+    address=/cloud.nerolab.dev/10.20.1.20
+
+macvlan:
+  name: ""
+  parent_interface: ""
+  ip: ""
+  mac_address: ""
+  ipam_options:
+  - subnet: ""
+    gateway: ""
+
+alloy_macvlan:
+  ip: ""
+  mac_address: ""
+
+traefik_scrape_addresses:
+  - ""
+
+tailscale_scrape_addresses:
+  - ""
+
+### populated via sops ###
+TRAEFIK_DASHBOARD_CREDENTIALS: ""
+ts_auth_key: ""
+ts_auth_alloy_key: ""
+desec_api_token: ""
+
+mimir_user: ""
+mimir_password: ""

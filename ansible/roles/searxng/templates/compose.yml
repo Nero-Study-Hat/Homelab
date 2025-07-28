@@ -1,13 +1,12 @@
 services:
   {{project_name}}:
-    container_name: {{project_name}}
+    container_name: "{{project_name}}"
     image: docker.io/searxng/searxng:latest
     restart: unless-stopped
     networks:
-      tailscale-network:
-        ipv4_address: 172.20.0.7
       {{project_name}}_backend:
-      t3_proxy:
+      {{network_backend.name}}:
+        ipv4_address: "{{network_backend.traefik_ips.searxng}}"
     volumes:
       - ./{{project_name}}:/etc/searxng:rw
     environment:
@@ -23,6 +22,8 @@ services:
       - SETUID
     labels:
       - "traefik.enable=true"
+      - "traefik.zone.main=true"
+      - "traefik.docker.network={{network_backend.name}}"
       - "traefik.http.routers.{{project_name}}.rule=Host(`{{domain}}`)"
       - "traefik.http.routers.{{project_name}}.entrypoints=https"
       - "traefik.http.routers.{{project_name}}.tls=true"
@@ -32,5 +33,5 @@ networks:
   {{project_name}}_backend:
   tailscale-network:
     external: true
-  t3_proxy:
+  {{network_backend.name}}:
     external: true

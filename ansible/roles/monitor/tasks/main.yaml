@@ -1,0 +1,145 @@
+### BOILER PLATE ###
+- name: Creates remote docker projects directory
+  ansible.builtin.file:
+    path: '{{docker_dir}}'
+    state: directory
+
+- name: Update local docker directory name variable
+  ansible.builtin.set_fact:
+    stack_dir: "{{ [docker_dir, project_name] | join('/') }}"
+
+- name: Creates remote project directory
+  file:
+    path: '{{stack_dir}}'
+    state: directory
+
+### MAIN ###
+
+- name: Transfer and convert the docker compose jinja2 template - Center
+  ansible.builtin.template:
+    src: "{{sub_role}}_compose.yml"
+    dest: "{{stack_dir}}/compose.yml"
+
+- name: Creates alloy dir
+  file:
+    path: '{{stack_dir}}/alloy'
+    state: directory
+- name: Transfer and convert the alloy config jinja2 template
+  ansible.builtin.template:
+    src: "config.alloy"
+    dest: "{{stack_dir}}/alloy/config.alloy"
+
+- name: Create desec api_token file
+  ansible.builtin.copy:
+    content: "{{ desec_api_token }}"
+    dest: "{{stack_dir}}/desec_api_token.txt"
+
+- name: Create a docker MACVLAN for tailscale direct connections
+  community.docker.docker_network:
+    name: "{{ macvlan.name }}"
+    ipam_config: "{{ macvlan.ipam_options }}"
+    driver: "macvlan"
+    driver_options:
+      parent: "{{ macvlan.parent_interface }}"
+
+- block: # CENTER
+  - name: Creates remote tailscale directory
+    ansible.builtin.file:
+      path: '{{stack_dir}}/tailscale'
+      state: directory
+  - name: Include Local DNS Role - User DNS
+    include_role:
+      name: local_dns
+    vars:
+      dns_docker_dir: "{{docker_dir}}"
+      dns_project_name: "{{project_name}}"
+      net_name: "{{ shared_network_backend.name }}"
+      dns_ip: "{{shared_network_backend.ips.dns}}"
+      upstream_server: "{{dns.upstream_server}}"
+      config: "{{dns.config}}"
+  - name: Create .env file with ts_authkey
+    ansible.builtin.copy:
+      dest: "{{stack_dir}}/.env"
+      content: |
+        TS_AUTHKEY={{ ts_auth_key }}
+  - name: Creates loki dir
+    file:
+      path: '{{stack_dir}}/loki'
+      state: directory
+  - name: Copy loki-config file
+    ansible.builtin.copy:
+      src: "loki-config.yaml"
+      dest: "{{stack_dir}}/loki/loki-config.yaml"
+  - name: Creates mimir dir
+    file:
+      path: '{{stack_dir}}/mimir'
+      state: directory
+  - name: Copy mimir config file
+    ansible.builtin.copy:
+      src: "mimir.yaml"
+      dest: "{{stack_dir}}/mimir/mimir.yaml"
+  - name: Copy mimir alertmanager config file
+    ansible.builtin.copy:
+      src: "alertmanager-fallback-config.yaml"
+      dest: "{{stack_dir}}/mimir/alertmanager-fallback-config.yaml"
+  when: sub_role == "center"
+
+- block: # OUTPOST
+  - name: Creates remote tailscale directory
+    ansible.builtin.file:
+      path: '{{stack_dir}}/ts_outpost'
+      state: directory
+  - name: Creates remote tailscale directory
+    ansible.builtin.file:
+      path: '{{stack_dir}}/ts_alloy'
+      state: directory
+  - name: Create traefik specific networks
+    community.docker.docker_network:
+      name: "{{ t3_network_backend.name }}"
+      ipam_config: "{{ t3_network_backend.ipam_options }}"
+  - name: Create .env file with traefik dashboard credentials and ts_authkey
+    ansible.builtin.copy:
+      dest: "{{stack_dir}}/.env"
+      content: |
+        TRAEFIK_DASHBOARD_CREDENTIALS={{ TRAEFIK_DASHBOARD_CREDENTIALS }}
+        TS_AUTHKEY={{ ts_auth_key }}
+        TS_ALLOY_AUTHKEY={{ ts_auth_alloy_key }}
+
+  - name: Copy traefik.yml (config) file
+    ansible.builtin.copy:
+      src: "traefik.yml"
+      dest: "{{stack_dir}}/traefik.yml"
+  - name: Create acme.json file
+    ansible.builtin.file:
+      path: "{{stack_dir}}/acme.json"
+      state: "touch"
+      mode: '0600'
+  - name: Create t3_proxy_outpost docker network
+    docker_network:
+      name: 't3_proxy_outpost'
+  when: sub_role == "outpost"
+
+### DEPLOY ###
+- name: Deploy Docker Compose Stack
+  community.docker.docker_compose_v2:
+    project_name: '{{project_name}}'
+    project_src: '{{stack_dir}}'
+    files:
+      - compose.yml
+
+  #TODO: make container name variable and local network
+- name: Delete default ip route
+  community.docker.docker_container_exec:
+    container: 'ts-monitor-{{sub_role}}'
+    command: "ip route delete default"
+    chdir: /
+
+- name: Container get eth device number
+  ansible.builtin.raw: "docker exec ts-monitor-{{sub_role}} ip r | grep {{macvlan.ip}} | awk '{print $3}'"
+  register: eth_num
+
+- name: Add desired default ip route
+  community.docker.docker_container_exec:
+    container: 'ts-monitor-{{sub_role}}'
+    command: "ip route add default via {{macvlan.ipam_options[0].gateway}} dev {{eth_num.stdout}}"
+    chdir: /

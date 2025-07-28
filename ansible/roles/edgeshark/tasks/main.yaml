@@ -26,47 +26,10 @@
     content: |
       TS_AUTHKEY={{ ts_auth_key }}
 
-- name: Creates remote TS-NGINX directory
-  ansible.builtin.file:
-    path: '{{stack_dir}}/ts-nginx'
-    state: directory
-
-- name: Template nginx.conf
-  template:
-    src: nginx.conf.j2
-    dest: '{{stack_dir}}/nginx.conf'
-
-### DNS CONFIG
-
-- name: Creates docker image build directory
+- name: Creates remote tailscale directory
   file:
-    path: '{{stack_dir}}/dnsmasq_image'
+    path: '{{stack_dir}}/ts_shark'
     state: directory
-
-- name: Transfer and convert the dnsmasq.conf jinja2 template
-  ansible.builtin.template:
-    src: "dnsmasq.conf.j2"
-    dest: "{{stack_dir}}/dnsmasq_image/dnsmasq.conf"
-
-- name: Copy Dockerfile
-  ansible.builtin.copy:
-    src: "Dnsmasq_Dockerfile"
-    dest: "{{stack_dir}}/dnsmasq_image/Dockerfile"
-
-- name: Add records to dnsmasq.conf file
-  ansible.builtin.lineinfile:
-    path: "{{stack_dir}}/dnsmasq_image/dnsmasq.conf"
-    line: "{{ dns.records }}"
-
-- name: Build custom dnsmasq image
-  docker_image:
-    build:
-      path: '{{stack_dir}}/dnsmasq_image'
-    name: "custom/dnsmasq"
-    tag: latest
-    source: build
-    force_source: true
-    force_tag: true
 
 - name: Create a docker MACVLAN for tailscale direct connections
   community.docker.docker_network:
@@ -87,16 +50,16 @@
   #TODO: make container name variable and local network
 - name: Delete default ip route
   community.docker.docker_container_exec:
-    container: 'ts-gate'
+    container: 'ts-shark'
     command: "ip route delete default"
     chdir: /
 
 - name: Container get eth device number
-  ansible.builtin.raw: "docker exec ts-gate ip r | grep {{macvlan.ip}} | awk '{print $3}'"
+  ansible.builtin.raw: "docker exec ts-shark ip r | grep {{macvlan.ip}} | awk '{print $3}'"
   register: eth_num
 
 - name: Add desired default ip route
   community.docker.docker_container_exec:
-    container: 'ts-gate'
+    container: 'ts-shark'
     command: "ip route add default via {{macvlan.ipam_options[0].gateway}} dev {{eth_num.stdout}}"
     chdir: /

@@ -1,10 +1,16 @@
 locals {
+    cores = 2
     os_disk_size = "30G"
     # data_disk_size = "4T"
     data_disk_size = "500G"
+    # below IP address must be available in the below bridge
+    # a static dhcp entry is required for the below config
     netconfig0 = "ip=10.20.2.6/24,gw=10.20.2.1"
-    # netconfig1 = "ip=10.0.0.7/24,gw=10.0.0.1"
+    bridge_name = "vmbr102"
     mac_address = "f6:51:2b:b8:63:27"
+    # cloud-init settings
+    cloud_init_name = "Debian12-Tailscale"
+    cloud_init_snippet = "vendor=local:snippets/ansible_user_setup.yml"
 }
 
 terraform {
@@ -45,7 +51,7 @@ resource "proxmox_vm_qemu" "debian12-media" {
     boot = "order=scsi0;"
     automatic_reboot = false
 
-    cores = 2
+    cores = local.cores
     memory = 2048
     balloon = 2048
     scsihw = "virtio-scsi-single"
@@ -56,11 +62,11 @@ resource "proxmox_vm_qemu" "debian12-media" {
 
     # Cloud-Init Pre-Reqs configuration
     os_type = "cloud-init"
-    clone = "Debian12-Tailscale"
+    clone = local.cloud_init_name
 
     # Cloud-Init configuration
     # user is required for running custom cloud init config file
-    cicustom = "vendor=local:snippets/ansible_user_setup.yml"
+    cicustom   = local.cloud_init_snippet
     ciuser     = data.sops_file.sops-secret.data["ci_user"]
     cipassword = data.sops_file.sops-secret.data["ci_password"]
     ipconfig0  = local.netconfig0
@@ -126,7 +132,7 @@ resource "proxmox_vm_qemu" "debian12-media" {
         id = 0
         macaddr = local.mac_address
         model = "virtio"
-        bridge = "vmbr103"
-        queues = 2 # num of cores
+        bridge = local.bridge_name
+        queues = local.cores
     }
 }

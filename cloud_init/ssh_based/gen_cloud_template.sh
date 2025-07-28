@@ -3,6 +3,7 @@
 ### Run Process:
 ### pre-req: run on the proxmox node with root
 ### cmd: ./script.sh "9001"
+### cleanup cmd: rm qcow_image /var/lib/vz/snippets/ansible_user_setup.yml
 
 wget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2
 

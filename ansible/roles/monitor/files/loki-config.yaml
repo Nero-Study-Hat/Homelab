@@ -1,5 +1,5 @@
 ---
-auth_enabled: false
+auth_enabled: true
 
 server:
   http_listen_port: 3100
@@ -25,6 +25,9 @@ schema_config:
       index:
         prefix: index_
         period: 24h
+
+querier:
+  multi_tenant_queries_enabled: true
 
 # ruler:
 #   alertmanager_url: http://localhost:9093

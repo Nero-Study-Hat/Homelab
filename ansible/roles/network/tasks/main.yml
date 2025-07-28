@@ -1,4 +1,5 @@
 ### HANDLE COMPOSE FILE & SECRETS ###
+
 - name: Creates remote docker projects directory
   ansible.builtin.file:
     path: '{{docker_dir}}'
@@ -15,7 +16,7 @@
 
 - name: Transfer and convert the docker compose jinja2 template
   ansible.builtin.template:
-    src: "compose.yml.j2"
+    src: "compose.yml"
     dest: "{{stack_dir}}/compose.yml"
 
 - name: Create .env file with traefik dashboard credentials and ts_authkey
@@ -31,6 +32,7 @@
     dest: "{{stack_dir}}/desec_api_token.txt"
 
 ### HANDLE SUB-PROJECT DIRECTORIES AND CONFIGS ###
+
 - name: Creates remote Tailscale directory
   ansible.builtin.file:
     path: '{{stack_dir}}/tailscale'
@@ -53,16 +55,47 @@
     mode: '0600'
 
 ### HANDLE NETWORKING ###
-- name: Create tailscale-network docker network with custom subnet
-  community.docker.docker_network:
-    name: tailscale-network
-    ipam_config:
-      - subnet: "{{ tailscale_subnet.subnet_cidr }}"
-        gateway: "{{ tailscale_subnet.gateway }}"
 
-- name: Create t3_proxy docker network
-  docker_network:
-    name: t3_proxy
+- name: Create shared networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    ipam_config: "{{ item.ipam_options }}"
+  loop: '{{ networks.shared }}'
+
+- name: Create traefik specific networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    internal: "true"
+    ipam_config: "{{ item.ipam_options }}"
+  loop: '{{ networks.traefik_specific }}'
+
+- name: Create tailscale specific networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    # internal: "true"
+    ipam_config: "{{ item.ipam_options }}"
+  loop: '{{ networks.tailscale_specific  | default([], true) }}'
+
+- name: Create a docker MACVLAN for tailscale direct connections
+  community.docker.docker_network:
+    name: "{{ macvlan.name }}"
+    ipam_config: "{{ macvlan.ipam_options }}"
+    driver: "macvlan"
+    driver_options:
+      parent: "{{ macvlan.parent_interface }}"
+
+### LOCAL DNS SETUP ###
+
+- name: Include Local DNS Role - User DNS
+  include_role:
+    name: local_dns
+  vars:
+    dns_docker_dir: "{{docker_dir}}"
+    dns_project_name: "{{project_name}}"
+    net_name: "{{ networks.shared[0].name }}"
+    dns_ip: "{{networks.shared[0].dns_ip}}"
+    upstream_server: "{{dns.upstream_server}}"
+    config: "{{dns.config}}"
 
 ### DEPLOY ###
 - name: Deploy Docker Compose Stack

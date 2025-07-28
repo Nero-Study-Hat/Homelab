@@ -1,9 +1,11 @@
 locals {
+    cores = 2
     os_disk_size = "30G"
     # data_disk_size = "2T"
     data_disk_size = "500G"
-    netconfig0 = "ip=10.20.1.6/24,gw=10.20.1.1"
-    mac_address = "7a:7b:e2:51:43:90"
+    # cloud-init settings
+    cloud_init_name = "Debian12-Tailscale"
+    cloud_init_snippet = "vendor=local:snippets/ansible_user_setup.yml"
 }
 
 terraform {
@@ -44,7 +46,7 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
     boot = "order=scsi0;"
     automatic_reboot = false
 
-    cores = 2
+    cores = local.cores
     memory = 2048
     balloon = 2048
     scsihw = "virtio-scsi-single"
@@ -55,16 +57,27 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
 
     # Cloud-Init Pre-Reqs configuration
     os_type = "cloud-init"
-    clone = "Debian12-Tailscale"
+    clone = local.cloud_init_name
 
     # Cloud-Init configuration
     # user is required for running custom cloud init config file
-    cicustom = "vendor=local:snippets/ansible_user_setup.yml"
+    cicustom   = local.cloud_init_snippet
     ciuser     = data.sops_file.sops-secret.data["ci_user"]
     cipassword = data.sops_file.sops-secret.data["ci_password"]
-    ipconfig0  = local.netconfig0
+    sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"] #TODO: remove when stable
+    
+    # network config
+    # below IP addresses must be available in the below bridges
+    # static dhcp entries are required for the below config
     nameserver = "1.1.1.1 8.8.8.8"
-    sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"]
+    # vlans
+    ipconfig0  = "ip=10.20.1.10/29,gw=10.20.1.9"
+    ipconfig1  = "ip=10.20.1.18/29,gw=10.20.1.17"
+    ipconfig2  = "ip=10.20.1.26/29,gw=10.20.1.25"
+    ipconfig3  = "ip=10.20.1.34/29,gw=10.20.1.33"
+    # main interface, note: must be last
+    ipconfig4  = "ip=10.20.1.6/29,gw=10.20.1.1"
+
 
 
     serial {
@@ -117,11 +130,53 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
         storage = "local-lvm"
     }
 
+    # for vlan support manually on promox create
+    # a linux vlan and linux bridge using that vlan as bridged port
+    # then use the final linux bridge here
+
+    ## VLAN INTERFACES ##
+    # network center interface
     network {
         id = 0
-        macaddr = local.mac_address
+        macaddr = "be:bb:37:47:6a:84"
+        model = "virtio"
+        bridge = "vmbr102"
+        queues = local.cores # num of cores
+    }
+
+    # user gate interface
+    network {
+        id = 1
+        macaddr = "b6:36:f2:e6:16:65"
+        model = "virtio"
+        bridge = "vmbr103"
+        queues = local.cores # num of cores
+    }
+
+    # edgeshark interface
+    network {
+        id = 2
+        macaddr = "ee:76:24:18:a8:05"
+        model = "virtio"
+        bridge = "vmbr104"
+        queues = local.cores # num of cores
+    }
+
+    # monitor center interface
+    network {
+        id = 3
+        macaddr = "ea:35:e6:41:05:21"
+        model = "virtio"
+        bridge = "vmbr105"
+        queues = local.cores # num of cores
+    }
+
+    # main interface NOTE: last id # to be used as default route
+    network {
+        id = 4
+        macaddr = "7a:7b:e2:51:43:90"
         model = "virtio"
         bridge = "vmbr101"
-        queues = 2 # num of cores
+        queues = local.cores # num of cores
     }
 }

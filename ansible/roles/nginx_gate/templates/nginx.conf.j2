@@ -15,7 +15,21 @@ http {
             allow 100.93.170.126;  # Replace with valid tailnet client IP(s)
             deny all;
 
-            proxy_pass http://172.20.0.3;  # Forward to internal Traefik container
+            proxy_pass http://172.20.0.2;  # Forward to internal Traefik container
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+
+    server {
+        listen 0.0.0.0:80;  # Replace with actual tailscale IP
+        server_name traefik.media.nerolab.dev;
+
+        location / {
+            allow 100.93.170.126;  # Replace with valid tailnet client IP(s)
+            deny all;
+
+            proxy_pass http://172.22.0.2;  # Forward to internal Traefik container
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
         }
