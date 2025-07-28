@@ -74,8 +74,9 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
     ipconfig0  = "ip=10.20.1.10/29,gw=10.20.1.9"
     ipconfig1  = "ip=10.20.1.18/29,gw=10.20.1.17"
     ipconfig2  = "ip=10.20.1.26/29,gw=10.20.1.25"
+    ipconfig3  = "ip=10.20.1.34/29,gw=10.20.1.33"
     # main interface, note: must be last
-    ipconfig3  = "ip=10.20.1.6/29,gw=10.20.1.1"
+    ipconfig4  = "ip=10.20.1.6/29,gw=10.20.1.1"
 
 
 
@@ -161,9 +162,18 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
         queues = local.cores # num of cores
     }
 
-    # main interface NOTE: last id # to be used as default route
+    # monitor center interface
     network {
         id = 3
+        macaddr = "ea:35:e6:41:05:21"
+        model = "virtio"
+        bridge = "vmbr105"
+        queues = local.cores # num of cores
+    }
+
+    # main interface NOTE: last id # to be used as default route
+    network {
+        id = 4
         macaddr = "7a:7b:e2:51:43:90"
         model = "virtio"
         bridge = "vmbr101"

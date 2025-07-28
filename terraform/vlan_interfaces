@@ -48,6 +48,17 @@ iface vmbr104 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
+# vlan 105: C_Monitor_Center
+auto vmbr0.105
+iface vmbr0.105 inet manual
+
+auto vmbr105
+iface vmbr105 inet manual
+        bridge-ports vmbr0.105
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
 
 ### VLAN MEDIA ###
 
@@ -75,7 +86,7 @@ iface vmbr302 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 303: M_Outpost
+# vlan 303: M_Monitor_Outpost
 auto vmbr0.303
 iface vmbr0.303 inet manual
 

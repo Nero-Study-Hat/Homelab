@@ -151,6 +151,9 @@ resource "proxmox_vm_qemu" "debian12-media" {
     }
 
     # edgeshark interface
+    # TODO: edgeshark setup
+    # opnsense work and .tf work here are done
+    # needs tailscale key, set address, and grants to be available to run
     network {
         id = 2
         macaddr = "3e:1c:43:2e:50:5a"
