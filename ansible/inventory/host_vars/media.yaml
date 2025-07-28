@@ -43,6 +43,7 @@ media_traefik:
     upstream_server: "10.0.0.3"
     config: |
       address=/media.nerolab.dev/10.130.0.2
+      address=/monitor.media.nerolab.dev/10.130.21.2
 
 # added to dhcp static mappings in opnsense
 media_macvlan_network_center:
@@ -68,22 +69,26 @@ media_monitor_outpost:
     traefik_ips:
       tailscale_traefik: "10.130.21.2"
       alloy: "10.130.21.3"
-      dns: "10.130.21.4"
   outpost_header: "media-outpost"
+  traefik_scrape_addresses:
+    # don't use tailscale addresses here
+    - "10.130.0.2" # network center 
+    - "10.130.21.2" # monitor outpost
+  tailscale_scrape_addresses:
+    - "100.70.0.3" # media server - network center
+    - "100.80.22.1" # media monitor outpost
+    - "100.80.23.1" # media monitor alloy
   domains:
-    main: "nerolab.dev"
-    wildcard: "*.monitor.nerolab.dev"
-    traefik: "traefik.monitor.nerolab.dev"
-    loki: "loki.monitor.nerolab.dev"
+    main: "media.nerolab.dev"
+    wildcard: "*.monitor.media.nerolab.dev"
+    traefik: "traefik.monitor.media.nerolab.dev"
+    loki: "loki.monitor.media.nerolab.dev"
     loki_forward: "loki.cloud.nerolab.dev"
-  dns:
-    upstream_server: "10.0.0.3"
-    config: |
-      address=/monitor.nerolab.dev/10.130.21.2
-      address=/cloud.nerolab.dev/10.110.20.3
+    mimir: "mimir.monitor.media.nerolab.dev"
+    mimir_forward: "mimir.cloud.nerolab.dev"
 
 # added to dhcp static mappings in opnsense
-media_macvlan_outpost:
+media_macvlan:
   name: "macvlan_outpost"
   parent_interface: "eth1"
   ip: "10.20.3.19"
@@ -92,6 +97,10 @@ media_macvlan_outpost:
   - subnet: "10.20.3.16/29"
     gateway: "10.20.3.17"
 
+# added to dhcp static mappings in opnsense
+media_alloy_macvlan:
+  ip: "10.20.3.20"
+  mac_address: "be:10:0b:74:d7:bb"
 
 ### END SERVICE SPECIFIC VARS ###
 

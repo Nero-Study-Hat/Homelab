@@ -7,9 +7,8 @@ services:
     expose:
       - "80"
       - "443"
-      - "4318"
+      - "9100"
       - "41641/udp"
-    dns: "{{t3_network_backend.traefik_ips.dns}}"
     networks:
       {{ macvlan.name }}:
         ipv4_address: {{ macvlan.ip }}
@@ -17,15 +16,17 @@ services:
       {{t3_network_backend.name}}:
         ipv4_address: {{t3_network_backend.traefik_ips.tailscale_traefik}}
     environment:
+      TS_ENABLE_METRICS: "true"
       TS_SOCKET: /var/run/tailscale/tailscaled.sock
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
       TS_USERSPACE: false
       TS_ACCEPT_ROUTES: "true"
-      TS_EXTRA_ARGS: "--accept-routes"
+      TS_ACCEPT_DNS: "true"
+      TS_EXTRA_ARGS: "--accept-routes --accept-dns"
       TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
     volumes:
-      - ./ts-outpost:/var/lib/tailscale
+      - ./ts_outpost:/var/lib/tailscale
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
@@ -74,21 +75,53 @@ services:
       - "traefik.http.routers.traefik-secure.service=traefik-secure-port"
       - "traefik.http.services.traefik-secure-port.loadbalancer.server.port=443"
 
+  ts-monitor-alloy:
+    image: tailscale/tailscale:latest
+    container_name: ts-monitor-alloy
+    hostname: ts-monitor-alloy
+    expose:
+      - "41641/udp"
+    networks:
+      {{ macvlan.name }}:
+        ipv4_address: {{ alloy_macvlan.ip }}
+        mac_address: {{ alloy_macvlan.mac_address }}
+      {{t3_network_backend.name}}:
+        ipv4_address: {{t3_network_backend.traefik_ips.alloy}}
+    environment:
+      TS_ENABLE_METRICS: "true"
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_AUTHKEY: ${TS_ALLOY_AUTHKEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: false
+      TS_ACCEPT_ROUTES: "true"
+      TS_ACCEPT_DNS: "true"
+      TS_EXTRA_ARGS: "--accept-routes --accept-dns"
+      TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
+    volumes:
+      - ./ts_alloy:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
   alloy:
     image: grafana/alloy:latest
     container_name: alloy
     restart: unless-stopped
+    network_mode: "service:ts-monitor-alloy"
     depends_on:
       socket-proxy-outpost:
         condition: "service_healthy"
         restart: true
+    # additional required for cadvisor
     volumes:
-      - './config.alloy:/etc/alloy/config.alloy'
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - './alloy/config.alloy:/etc/alloy/config.alloy'
       - "socket-proxy:/var/run"
-    dns: "{{t3_network_backend.traefik_ips.dns}}"
-    networks:
-      {{t3_network_backend.name}}:
-        ipv4_address: {{t3_network_backend.traefik_ips.alloy}}
     command:
       - run
       - --storage.path=/var/lib/alloy/data
@@ -97,16 +130,25 @@ services:
       - "traefik.enable=true"
       - "traefik.zone.outpost=true"
       - "traefik.docker.network=monitor_outpost"
-      # Forward log pushes to the trusted Traefik instance from the untrusted Traefik instance
+      # Forward log pushes to the trusted Traefik instance from the untrusted Traefik instance - loki logs
       - "traefik.http.routers.alloy-loki.entrypoints=https"
-      - "traefik.http.routers.alloy-loki.rule=Host(`{{domains.loki}}`) && PathPrefix(`/loki/api/v1/push`)"
+      - "traefik.http.routers.alloy-loki.rule=Host(`{{domains.loki}}`)"
       - "traefik.http.routers.alloy-loki.tls=true"
       - "traefik.http.routers.alloy-loki.tls.certresolver=desec"
-      - "traefik.http.routers.alloy-loki.service=trusted-traefik-forward"
-      - "traefik.http.services.trusted-traefik-forward.loadbalancer.server.url=https://{{domains.loki_forward}}"
-      - "traefik.http.services.trusted-traefik-forward.loadbalancer.passHostHeader=false"
+      - "traefik.http.routers.alloy-loki.service=trusted-traefik-forward-loki"
+      - "traefik.http.services.trusted-traefik-forward-loki.loadbalancer.server.url=https://{{domains.loki_forward}}"
+      - "traefik.http.services.trusted-traefik-forward-loki.loadbalancer.passHostHeader=false"
+      # Forward log pushes to the trusted Traefik instance from the untrusted Traefik instance - mimir metrics
+      - "traefik.http.routers.alloy-mimir.entrypoints=https"
+      - "traefik.http.routers.alloy-mimir.rule=Host(`{{domains.mimir}}`)"
+      - "traefik.http.routers.alloy-mimir.tls=true"
+      - "traefik.http.routers.alloy-mimir.tls.certresolver=desec"
+      - "traefik.http.routers.alloy-mimir.service=trusted-traefik-forward-mimir"
+      - "traefik.http.services.trusted-traefik-forward-mimir.loadbalancer.server.url=https://{{domains.mimir_forward}}"
+      - "traefik.http.services.trusted-traefik-forward-mimir.loadbalancer.passHostHeader=false"
       # Add middleware
       - "traefik.http.routers.alloy-loki.middlewares=add-tenant-header,rate-limit"
+      - "traefik.http.routers.alloy-mimir.middlewares=add-tenant-header,rate-limit"
       - "traefik.http.middlewares.add-tenant-header.headers.customrequestheaders.X-Scope-OrgID={{outpost_header}}"
       - "traefik.http.middlewares.rate-limit.ratelimit.average=100"
       - "traefik.http.middlewares.rate-limit.ratelimit.burst=200"
