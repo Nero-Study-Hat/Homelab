@@ -17,6 +17,8 @@
     #   vars:
     #     swap_file_size_mb: '1024'
 
+    #FIXME: add some wait time here before network role for dns propagation
+
     # - name: Include Network Role
     #   include_role:
     #     name: network
@@ -47,15 +49,6 @@
     #       records: "{{ gate_dns_conf.records }}"
     #     macvlan: "{{cloud_macvlan_user_gate}}"
 
-    # - name: Include SearXNG Role
-    #   include_role:
-    #     name: searxng
-    #   vars:
-    #     docker_dir: "{{cloud_docker_dir}}"
-    #     project_name: "{{cloud_searxng.name}}"
-    #     domain: "{{cloud_searxng.domain}}"
-    #     network_backend: "{{ cloud_searxng.network_backend }}"
-
     # - name: Include Edgeshark Role
     #   include_role:
     #     name: edgeshark
@@ -67,35 +60,38 @@
     #     network_backend: "{{ cloud_edgeshark.network_backend }}"
     #     macvlan: "{{cloud_macvlan_edgeshark}}"
 
+    # - name: Include Monitor Center Role
+    #   include_role:
+    #     name: monitor
+    #   vars:
+    #     ts_auth_key: "{{ sops_secrets.cloud_server_monitor_center_ts_auth_key }}"
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_monitor_center.name}}"
+    #     sub_role: "{{cloud_monitor_center.sub_role}}"
+    #     shared_network_backend: "{{cloud_monitor_center.network_backend}}"
+    #     outpost_header: "{{cloud_monitor_center.outpost_header}}"
+    #     domains: "{{cloud_monitor_center.domains}}"
+    #     traefik_scrape_addresses: "{{cloud_monitor_center.traefik_scrape_addresses}}"
+    #     tailscale_scrape_addresses: "{{cloud_monitor_center.tailscale_scrape_addresses}}"
+    #     dns: "{{cloud_monitor_center.dns}}"
+    #     macvlan: "{{cloud_macvlan_monitor_center}}"
+
+    # - name: Include SearXNG Role
+    #   include_role:
+    #     name: searxng
+    #   vars:
+    #     docker_dir: "{{cloud_docker_dir}}"
+    #     project_name: "{{cloud_searxng.name}}"
+    #     domain: "{{cloud_searxng.domain}}"
+    #     network_backend: "{{ cloud_searxng.network_backend }}"
 
 # ---
 
-    - name: Include Monitor Center Role - User Gateway
+    - name: Include Vikunja Role
       include_role:
-        name: monitor
+        name: vikunja
       vars:
-        ts_auth_key: "{{ sops_secrets.cloud_server_monitor_center_ts_auth_key }}"
         docker_dir: "{{cloud_docker_dir}}"
-        project_name: "{{cloud_monitor_center.name}}"
-        sub_role: "{{cloud_monitor_center.sub_role}}"
-        shared_network_backend: "{{cloud_monitor_center.network_backend}}"
-        outpost_header: "{{cloud_monitor_center.outpost_header}}"
-        domains: "{{cloud_monitor_center.domains}}"
-        traefik_scrape_addresses: "{{cloud_monitor_center.traefik_scrape_addresses}}"
-        tailscale_scrape_addresses: "{{cloud_monitor_center.tailscale_scrape_addresses}}"
-        dns: "{{cloud_monitor_center.dns}}"
-        macvlan: "{{cloud_macvlan_monitor_center}}"
-
-
-# --- 
-    # - name: Include Nextcloud Role
-    #   include_role:
-    #     name: nextcloud
-    #   vars:
-    #     docker_dir: "{{cloud_docker_dir}}"
-    #     project_name: "{{cloud_nextcloud.name}}"
-    #     domain: "{{cloud_nextcloud.domain}}"
-    #     mounted_dir: "{{cloud_nextcloud.mounted_dir}}"
-    #     mariadb_user_passwd: "{{ sops_secrets.mariadb_user_passwd }}"
-    #     mariadb_root_passwd: "{{ sops_secrets.mariadb_root_passwd }}"
-    #     network_backend: "{{ cloud_nextcloud.network_backend }}"
+        project_name: "{{cloud_vikunja.name}}"
+        domain: "{{cloud_vikunja.domain}}"
+        network_backend: "{{ cloud_vikunja.network_backend }}"
