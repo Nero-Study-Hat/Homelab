@@ -33,6 +33,6 @@
         - outpost: 21
         - outpost: 22
     - cloud services: 30-49
-        - nextcloud: 30
+        - vikunja: 30
         - searxng: 31
-        - kasm: 32
+        - expenseowl: 32

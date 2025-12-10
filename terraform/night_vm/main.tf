@@ -33,10 +33,10 @@ provider "proxmox" {
 }
 
 # requires cloudinit template already manually setup on proxmox
-resource "proxmox_vm_qemu" "debian12-cloud" {
+resource "proxmox_vm_qemu" "debian12-night" {
 
-    name = "debian12-cloud"
-    desc = "Cloud Server"
+    name = "debian12-night"
+    desc = "Night Server"
     target_node = "pve"
 
     # Activate QEMU agent for this VM
@@ -64,21 +64,18 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
     cicustom   = local.cloud_init_snippet
     ciuser     = data.sops_file.sops-secret.data["ci_user"]
     cipassword = data.sops_file.sops-secret.data["ci_password"]
-    sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"] #TODO: remove when stable
-    
+    sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"]
+
     # network config
     # below IP addresses must be available in the below bridges
     # static dhcp entries are required for the below config
     nameserver = "1.1.1.1 8.8.8.8"
     # vlans
-    ipconfig0  = "ip=10.20.1.10/29,gw=10.20.1.9"
-    ipconfig1  = "ip=10.20.1.18/29,gw=10.20.1.17"
-    ipconfig2  = "ip=10.20.1.26/29,gw=10.20.1.25"
-    ipconfig3  = "ip=10.20.1.34/29,gw=10.20.1.33"
+    ipconfig0  = "ip=10.20.3.10/29,gw=10.20.3.9"
+    ipconfig1  = "ip=10.20.3.18/29,gw=10.20.3.17"
+    ipconfig2  = "ip=10.20.3.26/29,gw=10.20.3.25"
     # main interface, note: must be last
-    ipconfig4  = "ip=10.20.1.6/29,gw=10.20.1.1"
-
-
+    ipconfig3  = "ip=10.20.3.6/29,gw=10.20.3.1"
 
     serial {
         id = 0
@@ -138,45 +135,39 @@ resource "proxmox_vm_qemu" "debian12-cloud" {
     # network center interface
     network {
         id = 0
-        macaddr = "be:bb:37:47:6a:84"
+        macaddr = "ca:42:3c:61:6d:8f"
         model = "virtio"
-        bridge = "vmbr102"
+        bridge = "vmbr302"
         queues = local.cores # num of cores
     }
 
-    # user gate interface
+    # monitor outpost interface
     network {
         id = 1
-        macaddr = "b6:36:f2:e6:16:65"
+        macaddr = "6a:c9:bd:ad:39:16"
         model = "virtio"
-        bridge = "vmbr103"
+        bridge = "vmbr303"
         queues = local.cores # num of cores
     }
 
     # edgeshark interface
+    # TODO: edgeshark setup
+    # opnsense work and .tf work here are done
+    # needs tailscale key, set address, and grants to be available to run
     network {
         id = 2
-        macaddr = "ee:76:24:18:a8:05"
+        macaddr = "3e:1c:43:2e:50:5a"
         model = "virtio"
-        bridge = "vmbr104"
-        queues = local.cores # num of cores
-    }
-
-    # monitor center interface
-    network {
-        id = 3
-        macaddr = "ea:35:e6:41:05:21"
-        model = "virtio"
-        bridge = "vmbr105"
+        bridge = "vmbr304"
         queues = local.cores # num of cores
     }
 
     # main interface NOTE: last id # to be used as default route
     network {
-        id = 4
-        macaddr = "7a:7b:e2:51:43:90"
+        id = 3
+        macaddr = "e6:20:5f:93:ec:ec"
         model = "virtio"
-        bridge = "vmbr101"
+        bridge = "vmbr301"
         queues = local.cores # num of cores
     }
 }

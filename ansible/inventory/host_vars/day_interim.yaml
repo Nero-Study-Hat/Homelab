@@ -1,0 +1,261 @@
+docker_dir: "/home/ansible/docker"
+
+# Tailscale Config for the below.
+
+# autoApprovers routes
+# "10.110.0.0/29": ["tag:cloud-server"], // traefik
+# "10.110.1.0/29": ["tag:cloud-server"], // dns
+# "10.110.20.0/28": ["tag:cloud-server"], // monitor-center
+
+# hosts
+# "cloud-traefik-net": "10.110.0.0/29",
+# "cloud-dns-net": "10.110.1.0/29",
+# "cloud-monitor-center-net": "10.110.20.0/28",
+
+# "cloud-traefik": "10.110.0.2",
+# "cloud-dns": "10.110.1.4",
+
+
+### NETWORK CENTER ###
+
+# remember to
+# - copy traefik shared ip to dns reverse proxy records
+# - set tailscale acls, autoApprovers, hosts, and grants
+networks:
+  shared:
+  # traefik tailscale
+    - name: "traefik_tailscale"
+      ipam_options:
+      - subnet: "10.110.0.0/29"
+        gateway: "10.110.0.1"
+      traefik_ip: "10.110.0.2"
+      tailscale_ip: "10.110.0.4"
+      dns_ip: "10.110.0.5"
+  # monitor center
+    - name: "{{monitor_center.network_backend.name}}"
+      ipam_options: "{{monitor_center.network_backend.ipam_options}}"
+      traefik_ip: "{{monitor_center.network_backend.ips.traefik}}"
+      tailscale_ip: "{{monitor_center.network_backend.ips.tailscale}}"
+  traefik_specific: # these containers don't have Tailscale DNS and connection-ability
+  # searxng
+    - name: "{{searxng.network_backend.name}}"
+      ipam_options: "{{searxng.network_backend.ipam_options}}"
+      traefik_ip: "{{searxng.network_backend.traefik_ips.traefik}}"
+  # vikunja
+    - name: "{{vikunja.network_backend.name}}"
+      ipam_options: "{{vikunja.network_backend.ipam_options}}"
+      traefik_ip: "{{vikunja.network_backend.traefik_ips.traefik}}"
+  # expenseowl
+    - name: "{{expenseowl.network_backend.name}}"
+      ipam_options: "{{expenseowl.network_backend.ipam_options}}"
+      traefik_ip: "{{expenseowl.network_backend.traefik_ips.traefik}}"
+  # edgeshark
+    - name: "{{edgeshark.network_backend.name}}"
+      ipam_options: "{{edgeshark.network_backend.ipam_options}}"
+      traefik_ip: "{{edgeshark.network_backend.traefik_ips.traefik}}"
+  tailscale_specific: ""
+
+traefik:
+  domains:
+    main: "nerolab.dev"
+    wildcard: "*.cloud.nerolab.dev"
+    traefik: "traefik.cloud.nerolab.dev"
+  dns:
+    upstream_server: "10.0.0.3"
+    config: |
+      address=/cloud.nerolab.dev/10.110.0.2
+
+# added to dhcp static mappings in opnsense
+macvlan_network_center:
+  name: "macvlan_network_center"
+  parent_interface: "eth0"
+  ip: "10.20.1.11"
+  mac_address: "c6:19:a8:7f:0e:39"
+  ipam_options:
+  - subnet: "10.20.1.8/29"
+    gateway: "10.20.1.9"
+
+#### USER GATEWAY ###
+
+gate_name: "day_gate"
+
+gate_dns_conf:
+  ip: "100.80.1.1"
+  upstream_server: "10.0.0.3"
+  records: |
+    address=/cloud.nerolab.dev/100.80.1.1
+    address=/fog.nerolab.dev/100.80.1.1
+    address=/media.nerolab.dev/100.80.1.1
+
+gate_traefik_instances:
+  cloud:
+    traefik_ip: 10.110.0.2
+    domains_list: # cloud
+      - name: traefik.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+      - name: nextcloud.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+      - name: searxng.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+          - 100.122.229.69 # starfief-windows
+      - name: vikunja.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+          - 100.122.229.69 # starfief-windows
+      - name: expenseowl.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+          - 100.122.229.69 # starfief-windows
+      - name: grafana.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+      - name: loki.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+      - name: alloy.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+      - name: edgeshark.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+      - name: cadvisor.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+      - name: mimir.cloud.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+  media:
+    traefik_ip: 10.130.0.2
+    domains_list: # media
+      - name: traefik.media.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+      - name: searxng.media.nerolab.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+          - 100.122.229.69 # starfief-windows
+
+# added to dhcp static mappings in opnsense
+macvlan_user_gate:
+  name: "macvlan_user_gate"
+  parent_interface: "eth1"
+  ip: "10.20.1.19"
+  mac_address: "56:9d:02:b2:98:a4"
+  ipam_options:
+  - subnet: "10.20.1.16/29"
+    gateway: "10.20.1.17"
+
+### MONITOR CENTER ###
+
+monitor_center:
+  name: "monitor_center"
+  sub_role: "center"
+  network_backend:
+    name: "monitor_center"
+    ipam_options:
+    - subnet: "10.110.20.0/28"
+      gateway: "10.110.20.1"
+    ips:
+      tailscale: "10.110.20.2"
+      traefik: "10.110.20.3"
+      dns: "10.110.20.4"
+      grafana: "10.110.20.5"
+      loki: "10.110.20.6"
+      mimir: "10.110.20.7"
+      alloy: "10.110.20.8"
+      cadvisor: "10.110.20.9"
+  outpost_header: "cloud-outpost"
+  traefik_scrape_addresses:
+    - "10.110.0.2" # network center
+  tailscale_scrape_addresses:
+    - "100.70.0.1" # cloud server - network center
+    - "100.80.1.1" # cloud user gateway
+    - "100.80.21.1" # cloud monitor center
+    - "100.80.31.1" # cloud edgeshark
+  domains:
+    traefik: "traefik.cloud.nerolab.dev"
+    grafana: "grafana.cloud.nerolab.dev"
+    loki: "loki.cloud.nerolab.dev"
+    mimir: "mimir.cloud.nerolab.dev"
+    alloy: "alloy.cloud.nerolab.dev"
+    cadvisor: "cadvisor.cloud.nerolab.dev"
+  dns:
+    upstream_server: "10.0.0.3"
+    config: |
+      address=/cloud.nerolab.dev/10.110.20.3
+
+# added to dhcp static mappings in opnsense
+macvlan_monitor_center:
+  name: "macvlan_monitor_center"
+  parent_interface: "eth3"
+  ip: "10.20.1.35"
+  mac_address: "da:91:79:c6:65:b6"
+  ipam_options:
+  - subnet: "10.20.1.32/29"
+    gateway: "10.20.1.33"
+
+edgeshark:
+  name: "edgeshark"
+  domains:
+    edgeshark: "edgeshark.cloud.nerolab.dev"
+    wireshark: "wireshark.cloud.nerolab.dev"
+  network_backend:
+    name: "edgeshark"
+    ipam_options:
+    - subnet: "10.110.2.0/29"
+      gateway: "10.110.2.1"
+    traefik_ips:
+      traefik: "10.110.2.2"
+      ts_shark: "10.110.2.3"
+      wireshark: "10.110.2.4"
+
+# added to dhcp static mappings in opnsense
+macvlan_edgeshark:
+  name: "macvlan_edgeshark"
+  parent_interface: "eth2"
+  ip: "10.20.1.27"
+  mac_address: "a6:d2:73:22:72:d5"
+  ipam_options:
+  - subnet: "10.20.1.24/29"
+    gateway: "10.20.1.25"
+
+### END SERVICE SPECIFIC VARS ###
+
+vikunja:
+  name: "vikunja"
+  domain: "vikunja.cloud.nerolab.dev"
+  network_backend:
+    name: "t3_vikunja"
+    ipam_options:
+    - subnet: "10.110.30.0/29"
+      gateway: "10.110.30.1"
+    traefik_ips:
+      traefik: "10.110.30.3"
+      vikunja: "10.110.30.5"
+
+searxng:
+  name: "searxng"
+  domain: "searxng.cloud.nerolab.dev"
+  network_backend:
+    name: "t3_searxng"
+    ipam_options:
+    - subnet: "10.110.31.0/29"
+      gateway: "10.110.31.1"
+    traefik_ips:
+      traefik: "10.110.31.3"
+      searxng: "10.110.31.5"
+
+expenseowl:
+  name: "expenseowl"
+  domain: "expenseowl.cloud.nerolab.dev"
+  network_backend:
+    name: "t3_expenseowl"
+    ipam_options:
+    - subnet: "10.110.32.0/29"
+      gateway: "10.110.32.1"
+    traefik_ips:
+      traefik: "10.110.32.3"
+      vikunja: "10.110.32.5"

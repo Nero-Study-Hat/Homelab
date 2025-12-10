@@ -38,10 +38,10 @@ provider "proxmox" {
 }
 
 # requires cloudinit template already manually setup on proxmox
-resource "proxmox_vm_qemu" "debian12-media" {
+resource "proxmox_vm_qemu" "debian12-fog" {
 
-    name = "debian12-media"
-    desc = "Semi-Public Media Server"
+    name = "debian12-fog"
+    desc = "Fog Server"
     target_node = "pve"
 
     # Activate QEMU agent for this VM

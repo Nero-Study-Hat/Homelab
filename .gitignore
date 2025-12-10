@@ -40,4 +40,4 @@ terraform.rc
 /ansible/roles_external/
 
 # Ignore nix flake generated .direnv dir
-/.direnv/
+**/.direnv/

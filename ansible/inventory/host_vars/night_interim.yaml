@@ -1,4 +1,4 @@
-media_docker_dir: "/home/ansible/docker"
+docker_dir: "/home/ansible/docker"
 
 # Tailscale Config for the below.
 
@@ -19,7 +19,7 @@ media_docker_dir: "/home/ansible/docker"
 
 ### MAIN VLAN NETWORK STACK
 
-media_networks:
+networks:
   shared:
     - name: "traefik_tailscale"
       ipam_options:
@@ -29,12 +29,12 @@ media_networks:
       tailscale_ip: "10.130.0.3"
       dns_ip: "10.130.0.4"
   traefik_specific: # these containers don't have Tailscale DNS and connection-ability
-    - name: "{{media_searxng.network_backend.name}}"
-      ipam_options: "{{media_searxng.network_backend.ipam_options}}"
-      traefik_ip: "{{media_searxng.network_backend.traefik_ips.traefik}}"
+    - name: "{{searxng.network_backend.name}}"
+      ipam_options: "{{searxng.network_backend.ipam_options}}"
+      traefik_ip: "{{searxng.network_backend.traefik_ips.traefik}}"
   tailscale_specific: ""
 
-media_traefik:
+traefik:
   domains:
     main: "nerolab.dev"
     wildcard: "*.media.nerolab.dev"
@@ -46,7 +46,7 @@ media_traefik:
       address=/monitor.media.nerolab.dev/10.130.21.2
 
 # added to dhcp static mappings in opnsense
-media_macvlan_network_center:
+macvlan_network_center:
   name: "macvlan_network_center"
   parent_interface: "eth0"
   ip: "10.20.3.11"
@@ -58,7 +58,7 @@ media_macvlan_network_center:
 
 ### MONITOR OUTPOST ###
 
-media_monitor_outpost:
+monitor_outpost:
   name: "monitor_outpost"
   sub_role: "outpost"
   network_backend:
@@ -88,7 +88,7 @@ media_monitor_outpost:
     mimir_forward: "mimir.cloud.nerolab.dev"
 
 # added to dhcp static mappings in opnsense
-media_macvlan:
+macvlan:
   name: "macvlan_outpost"
   parent_interface: "eth1"
   ip: "10.20.3.19"
@@ -98,13 +98,13 @@ media_macvlan:
     gateway: "10.20.3.17"
 
 # added to dhcp static mappings in opnsense
-media_alloy_macvlan:
+alloy_macvlan:
   ip: "10.20.3.20"
   mac_address: "be:10:0b:74:d7:bb"
 
 ### END SERVICE SPECIFIC VARS ###
 
-media_searxng:
+searxng:
   name: "searxng"
   domain: "searxng.media.nerolab.dev"
   network_backend:
