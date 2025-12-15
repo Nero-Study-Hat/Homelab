@@ -2,18 +2,18 @@
 - SERVERS: contain all vlans listed below
 
 ### vlans
-- CLOUD
-- C_Network_Center
-- C_User_Gateway
-- C_Monitor_Center
-- C_Edgeshark
+- Day
+- Day_Network_Center
+- Day_User_Gateway
+- Day_Monitor_Center
+- Day_Edgeshark
 
-- FOG
+- Dusk
 
-- MEDIA
-- M_Network_Center
-- M_Monitor_Outpost
-- M_Edgeshark
+- Night
+- Night_Network_Center
+- Night_Monitor_Outpost
+- Night_Edgeshark
 
 ### firewall rules - servers group
 - allow IPv4 UDP in src SERVERS net -> any @ port 53 (DNS)

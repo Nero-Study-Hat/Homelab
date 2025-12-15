@@ -1,6 +1,6 @@
-### VLAN CLOUD ###
+### VLAN DAY ###
 
-# vlan 101: CLOUD
+# vlan 101: Day
 auto vmbr0.101
 iface vmbr0.101 inet manual
 
@@ -12,7 +12,7 @@ iface vmbr101 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 102: C_Network_Center
+# vlan 102: Day_Network_Center
 auto vmbr0.102
 iface vmbr0.102 inet manual
 
@@ -24,7 +24,7 @@ iface vmbr102 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 103: C_User_Gate
+# vlan 103: Day_Edgeshark
 auto vmbr0.103
 iface vmbr0.103 inet manual
 
@@ -36,7 +36,7 @@ iface vmbr103 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 104: C_Edgeshark
+# vlan 104: C_Monitor_Center
 auto vmbr0.104
 iface vmbr0.104 inet manual
 
@@ -48,21 +48,9 @@ iface vmbr104 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 105: C_Monitor_Center
-auto vmbr0.105
-iface vmbr0.105 inet manual
+### VLAN NIGHT ###
 
-auto vmbr105
-iface vmbr105 inet manual
-        bridge-ports vmbr0.105
-        bridge-stp off
-        bridge-fd 0
-        bridge-vlan-aware yes
-        bridge-vids 2-4094
-
-### VLAN MEDIA ###
-
-# vlan 301: MEDIA
+# vlan 301: Night
 auto vmbr0.301
 iface vmbr0.301 inet manual
 
@@ -74,7 +62,7 @@ iface vmbr301 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 102: M_Network_Center
+# vlan 102: Night_Network_Center
 auto vmbr0.302
 iface vmbr0.302 inet manual
 
@@ -86,7 +74,7 @@ iface vmbr302 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 303: M_Monitor_Outpost
+# vlan 303: Night_Edgeshark
 auto vmbr0.303
 iface vmbr0.303 inet manual
 
@@ -98,7 +86,7 @@ iface vmbr303 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 304: M_Edgeshark
+# vlan 304: Night_Monitor_Outpost
 auto vmbr0.304
 iface vmbr0.304 inet manual
 

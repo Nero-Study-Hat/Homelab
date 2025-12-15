@@ -23,9 +23,9 @@ provider "proxmox" {
 }
 
 # requires cloudinit template already manually setup on proxmox
-resource "proxmox_vm_qemu" "debian12-cloud" {
+resource "proxmox_vm_qemu" "debian12-day" {
 
-    name = "debian12-cloud"
+    name = "debian12-day"
     desc = "A test for using terraform and cloudinit"
     target_node = "pve"
 

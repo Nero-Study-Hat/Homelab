@@ -3,18 +3,18 @@ docker_dir: "/home/ansible/docker"
 # Tailscale Config for the below.
 
 # autoApprovers routes
-# "10.130.0.0/29": ["tag:media-server"], // traefik
-# "10.130.1.0/29": ["tag:media-server"], // dns
-# "10.130.21.0/29": ["tag:media-server"], // monitor-outpost
+# "10.130.0.0/29": ["tag:night-server"], // traefik
+# "10.130.1.0/29": ["tag:night-server"], // dns
+# "10.130.21.0/29": ["tag:night-server"], // monitor-outpost
 
 # hosts
-# "media-traefik-net": "10.130.0.0/29",
-# "media-dns-net": "10.130.1.0/29",
-# "media-monitor-outpost-net": "10.130.21.0/29",
+# "night-traefik-net": "10.130.0.0/29",
+# "night-dns-net": "10.130.1.0/29",
+# "night-monitor-outpost-net": "10.130.21.0/29",
 
-# "media-traefik": "10.130.0.2",
-# "media-traefik-monitor-outpost": "10.130.21.4",
-# "media-dns": "10.130.1.4",
+# "night-traefik": "10.130.0.2",
+# "night-traefik-monitor-outpost": "10.130.21.4",
+# "night-dns": "10.130.1.4",
 
 
 ### MAIN VLAN NETWORK STACK
@@ -36,14 +36,14 @@ networks:
 
 traefik:
   domains:
-    main: "nerolab.dev"
-    wildcard: "*.media.nerolab.dev"
-    traefik: "traefik.media.nerolab.dev"
+    main: .wiresndreams.dev"
+    wildcard: "*.night.wiresndreams.dev"
+    traefik: "traefik.night.wiresndreams.dev"
   dns:
     upstream_server: "10.0.0.3"
     config: |
-      address=/media.nerolab.dev/10.130.0.2
-      address=/monitor.media.nerolab.dev/10.130.21.2
+      address=/night.wiresndreams.dev/10.130.0.2
+      address=/monitor.night.wiresndreams.dev/10.130.21.2
 
 # added to dhcp static mappings in opnsense
 macvlan_network_center:
@@ -69,23 +69,23 @@ monitor_outpost:
     traefik_ips:
       tailscale_traefik: "10.130.21.2"
       alloy: "10.130.21.3"
-  outpost_header: "media-outpost"
+  outpost_header: "night-outpost"
   traefik_scrape_addresses:
     # don't use tailscale addresses here
     - "10.130.0.2" # network center 
     - "10.130.21.2" # monitor outpost
   tailscale_scrape_addresses:
-    - "100.70.0.3" # media server - network center
-    - "100.80.22.1" # media monitor outpost
-    - "100.80.23.1" # media monitor alloy
+    - "100.70.0.3" # night server - network center
+    - "100.80.22.1" # night monitor outpost
+    - "100.80.23.1" # night monitor alloy
   domains:
-    main: "media.nerolab.dev"
-    wildcard: "*.monitor.media.nerolab.dev"
-    traefik: "traefik.monitor.media.nerolab.dev"
-    loki: "loki.monitor.media.nerolab.dev"
-    loki_forward: "loki.cloud.nerolab.dev"
-    mimir: "mimir.monitor.media.nerolab.dev"
-    mimir_forward: "mimir.cloud.nerolab.dev"
+    main: "night.wiresndreams.dev"
+    wildcard: "*.monitor.night.wiresndreams.dev"
+    traefik: "traefik.monitor.night.wiresndreams.dev"
+    loki: "loki.monitor.night.wiresndreams.dev"
+    loki_forward: "loki.day.wiresndreams.dev"
+    mimir: "mimir.monitor.night.wiresndreams.dev"
+    mimir_forward: "mimir.day.wiresndreams.dev"
 
 # added to dhcp static mappings in opnsense
 macvlan:
@@ -106,7 +106,7 @@ alloy_macvlan:
 
 searxng:
   name: "searxng"
-  domain: "searxng.media.nerolab.dev"
+  domain: "searxng.night.wiresndreams.dev"
   network_backend:
     name: "t3_searxng"
     ipam_options:

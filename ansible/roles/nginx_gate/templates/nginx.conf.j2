@@ -5,11 +5,11 @@ events {
 }
 
 # http block is for testing with acme staging, there is a redirect on traefik to https for when needed
-# traefik.cloud.nerolab.dev
+# traefik.day.wiresndreams.dev
 http {
     server {
         listen 0.0.0.0:80;  # Replace with actual tailscale IP
-        server_name traefik.cloud.nerolab.dev;
+        server_name traefik.day.wiresndreams.dev;
 
         location / {
             allow 100.93.170.126;  # Replace with valid tailnet client IP(s)
@@ -23,7 +23,7 @@ http {
 
     server {
         listen 0.0.0.0:80;  # Replace with actual tailscale IP
-        server_name traefik.media.nerolab.dev;
+        server_name traefik.night.wiresndreams.dev;
 
         location / {
             allow 100.93.170.126;  # Replace with valid tailnet client IP(s)

@@ -35,7 +35,7 @@ provider "proxmox" {
 # requires cloudinit template already manually setup on proxmox
 resource "proxmox_vm_qemu" "debian12-day" {
 
-    name = "debian12-cloud"
+    name = "debian12-day"
     desc = "Day Server"
     target_node = "pve"
 
@@ -144,36 +144,27 @@ resource "proxmox_vm_qemu" "debian12-day" {
         queues = local.cores # num of cores
     }
 
-    # user gate interface
+    # edgeshark interface
     network {
         id = 1
-        macaddr = "b6:36:f2:e6:16:65"
+        macaddr = "ee:76:24:18:a8:05"
         model = "virtio"
         bridge = "vmbr103"
         queues = local.cores # num of cores
     }
 
-    # edgeshark interface
+    # monitor outpost interface
     network {
         id = 2
-        macaddr = "ee:76:24:18:a8:05"
+        macaddr = "ea:35:e6:41:05:21"
         model = "virtio"
         bridge = "vmbr104"
         queues = local.cores # num of cores
     }
 
-    # monitor center interface
-    network {
-        id = 3
-        macaddr = "ea:35:e6:41:05:21"
-        model = "virtio"
-        bridge = "vmbr105"
-        queues = local.cores # num of cores
-    }
-
     # main interface NOTE: last id # to be used as default route
     network {
-        id = 4
+        id = 3
         macaddr = "7a:7b:e2:51:43:90"
         model = "virtio"
         bridge = "vmbr101"

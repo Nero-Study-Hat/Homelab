@@ -3,53 +3,53 @@
 	// Declare static groups of users. Use autogroups for all users or users with a specific role.
 	"groups": {
 		"group:personal": ["redacted@github"],
-		"group:family":   ["ts.cloud.server@outlook.com"],
-		"group:outside":  ["ts.media.server@outlook.com"],
+		"group:family":   ["ts.day.server@outlook.com"],
+		"group:outside":  ["ts.night.server@outlook.com"],
 	},
 
 	"hosts": {
-		"cloud-traefik-net":        "10.110.0.0/29",
-		"cloud-monitor-center-net": "10.110.20.0/28",
+		"day-traefik-net":        "10.110.0.0/29",
+		"day-monitor-center-net": "10.110.20.0/28",
 
-		"cloud-monitor-center-traefik": "10.110.20.3",
+		"day-monitor-center-traefik": "10.110.20.3",
 
-		"cloud-traefik": "10.110.0.2",
-		"cloud-dns":     "10.110.0.5",
+		"day-traefik": "10.110.0.2",
+		"day-dns":     "10.110.0.5",
 
-		"media-traefik-net":         "10.130.0.0/29",
-		"media-dns-net":             "10.130.1.0/29",
-		"media-monitor-outpost-net": "10.130.21.0/29",
+		"night-traefik-net":         "10.130.0.0/29",
+		"night-dns-net":             "10.130.1.0/29",
+		"night-monitor-outpost-net": "10.130.21.0/29",
 
-		"media-traefik":                 "10.130.0.2",
-		"media-dns":                     "10.130.0.4",
-		"media-traefik-monitor-outpost": "10.130.21.4",
+		"night-traefik":                 "10.130.0.2",
+		"night-dns":                     "10.130.0.4",
+		"night-traefik-monitor-outpost": "10.130.21.4",
 	},
 
 	// Define the tags which can be applied to devices and by which users.
 	"tagOwners": {
 		"tag:ssh-server":                   ["redacted@github"],
-		"tag:cloud-gate-server":            ["redacted@github"],
-		"tag:cloud-shark-server":           ["redacted@github"],
-		"tag:cloud-server-monitor-center":  ["redacted@github"],
-		"tag:media-server-monitor-outpost": ["redacted@github"],
-		"tag:media-server-monitor-alloy":   ["redacted@github"],
+		"tag:day-gate-server":            ["redacted@github"],
+		"tag:day-shark-server":           ["redacted@github"],
+		"tag:day-server-monitor-center":  ["redacted@github"],
+		"tag:night-server-monitor-outpost": ["redacted@github"],
+		"tag:night-server-monitor-alloy":   ["redacted@github"],
 
-		"tag:cloud-server": ["redacted@github"],
-		"tag:fog-server":   ["redacted@github"],
-		"tag:media-server": ["redacted@github"],
+		"tag:day-server": ["redacted@github"],
+		"tag:dusk-server":   ["redacted@github"],
+		"tag:night-server": ["redacted@github"],
 
-		"tag:redacted-client":   ["ts.cloud.server@outlook.com"],
+		"tag:redacted-client":   ["ts.day.server@outlook.com"],
 	},
 
 	"autoApprovers": {
 		"routes": {
-			"10.110.0.0/29":  ["tag:cloud-server"], // traefik
-			"10.110.1.0/29":  ["tag:cloud-server"], // dns
-			"10.110.20.0/28": ["tag:cloud-server"], // monitor-center
+			"10.110.0.0/29":  ["tag:day-server"], // traefik
+			"10.110.1.0/29":  ["tag:day-server"], // dns
+			"10.110.20.0/28": ["tag:day-server"], // monitor-center
 
-			"10.130.0.0/29":  ["tag:media-server"], // traefik
-			"10.130.1.0/29":  ["tag:media-server"], // dns
-			"10.130.21.0/29": ["tag:media-server"], // monitor-outpost
+			"10.130.0.0/29":  ["tag:night-server"], // traefik
+			"10.130.1.0/29":  ["tag:night-server"], // dns
+			"10.130.21.0/29": ["tag:night-server"], // monitor-outpost
 		},
 	},
 
@@ -148,35 +148,35 @@
 			"ipPool": ["100.80.0.0/29"],
 		},
 		{
-			"target": ["tag:cloud-gate-server"],
+			"target": ["tag:day-gate-server"],
 			"ipPool": ["100.80.1.1/32"],
 		},
 		{
-			"target": ["tag:cloud-shark-server"],
+			"target": ["tag:day-shark-server"],
 			"ipPool": ["100.80.31.1/32"],
 		},
 		{
-			"target": ["tag:cloud-server-monitor-center"],
+			"target": ["tag:day-server-monitor-center"],
 			"ipPool": ["100.80.21.1/32"],
 		},
 		{
-			"target": ["tag:media-server-monitor-outpost"],
+			"target": ["tag:night-server-monitor-outpost"],
 			"ipPool": ["100.80.22.1/32"],
 		},
 		{
-			"target": ["tag:media-server-monitor-alloy"],
+			"target": ["tag:night-server-monitor-alloy"],
 			"ipPool": ["100.80.23.1/32"],
 		},
 		{
-			"target": ["tag:cloud-server"],
+			"target": ["tag:day-server"],
 			"ipPool": ["100.70.0.1/32"],
 		},
 		{
-			"target": ["tag:fog-server"],
+			"target": ["tag:dusk-server"],
 			"ipPool": ["100.70.0.2/32"],
 		},
 		{
-			"target": ["tag:media-server"],
+			"target": ["tag:night-server"],
 			"ipPool": ["100.70.0.3/32"],
 		},
 	],
@@ -199,7 +199,7 @@
 				"group:personal",
 				"tag:redacted-client",
 			],
-			"dst": ["tag:cloud-server"],
+			"dst": ["tag:day-server"],
 			"ip":  ["*"],
 		},
 
@@ -208,11 +208,11 @@
 		{
 			"src": [
 				"group:personal",
-				"tag:cloud-shark-server",
+				"tag:day-shark-server",
 			],
 			"dst": [
 				"group:personal",
-				"tag:cloud-shark-server",
+				"tag:day-shark-server",
 			],
 			"ip": ["*"],
 		},
@@ -223,70 +223,70 @@
 				"group:personal",
 				"tag:redacted-client",
 			],
-			"dst": ["tag:cloud-gate-server"],
+			"dst": ["tag:day-gate-server"],
 			"ip":  ["udp:53"],
 		},
 
 		// grant outbound capable tailscale devices dns records
 		{
 			"src": [
-				"tag:cloud-server-monitor-center",
-				"tag:media-server-monitor-outpost",
-				"tag:media-server-monitor-alloy",
-				// "tag:cloud-gate-server",
+				"tag:day-server-monitor-center",
+				"tag:night-server-monitor-outpost",
+				"tag:night-server-monitor-alloy",
+				// "tag:day-gate-server",
 			],
-			"dst": ["cloud-dns", "media-dns"],
+			"dst": ["day-dns", "night-dns"],
 			"ip":  ["udp:53"],
 		},
 
-		// grants access to cloud monitor center
+		// grants access to day monitor center
 		// for traefik and tailscale metrics
 		// plus alloy to traefik pushes
 		{
 			"src": [
-				"tag:cloud-server-monitor-center",
+				"tag:day-server-monitor-center",
 			],
-			"dst": ["cloud-traefik"],
+			"dst": ["day-traefik"],
 			"ip":  ["tcp:80", "tcp:443", "9100"],
 		},
 
 		{
-			"src": ["tag:cloud-server-monitor-center"],
+			"src": ["tag:day-server-monitor-center"],
 			"dst": [
-				"tag:cloud-server-monitor-center",
-				"tag:cloud-gate-server",
-				"tag:cloud-server",
+				"tag:day-server-monitor-center",
+				"tag:day-gate-server",
+				"tag:day-server",
 			],
 			// "ip":  ["tcp:80", "tcp:443"], // required for staging testing
 			"ip": ["9002"], // required for staging testing
 		},
 
-		// grants access to media monitor alloy
+		// grants access to night monitor alloy
 		// for traefik and tailscale metrics
 		// plus alloy to traefik pushes
 		{
 			"src": [
-				"tag:media-server-monitor-alloy",
+				"tag:night-server-monitor-alloy",
 			],
-			"dst": ["media-traefik"],
+			"dst": ["night-traefik"],
 			"ip":  ["tcp:80", "tcp:443", "9100"],
 		},
 
 		{
 			"src": [
-				"tag:media-server-monitor-alloy",
+				"tag:night-server-monitor-alloy",
 				"group:personal",
 			],
 			"dst": [
-				"tag:media-server-monitor-outpost",
-				"tag:media-server",
+				"tag:night-server-monitor-outpost",
+				"tag:night-server",
 			],
 			"ip": ["9002"], // required for staging testing
 		},
 
 		{
-			"src": ["tag:media-server-monitor-outpost"],
-			"dst": ["cloud-traefik"],
+			"src": ["tag:night-server-monitor-outpost"],
+			"dst": ["day-traefik"],
 			"ip":  ["tcp:80", "tcp:443"], // required for staging testing
 		},
 
@@ -295,14 +295,14 @@
 				"group:personal",
 				"tag:redacted-client",
 			],
-			"dst": ["tag:cloud-gate-server"],
+			"dst": ["tag:day-gate-server"],
 			// "ip":  ["tcp:443"],
 			"ip": ["tcp:80", "tcp:443"], // required for staging testing
 		},
 
 		{
-			"src": ["tag:cloud-gate-server"],
-			"dst": ["cloud-traefik", "media-traefik"],
+			"src": ["tag:day-gate-server"],
+			"dst": ["day-traefik", "night-traefik"],
 			"ip":  ["tcp:80", "tcp:443"], // required for staging testing
 		},
 	],

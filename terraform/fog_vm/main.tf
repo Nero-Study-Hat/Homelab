@@ -3,11 +3,6 @@ locals {
     os_disk_size = "30G"
     # data_disk_size = "4T"
     data_disk_size = "500G"
-    # below IP address must be available in the below bridge
-    # a static dhcp entry is required for the below config
-    netconfig0 = "ip=10.20.2.6/24,gw=10.20.2.1"
-    bridge_name = "vmbr102"
-    mac_address = "f6:51:2b:b8:63:27"
     # cloud-init settings
     cloud_init_name = "Debian12-Tailscale"
     cloud_init_snippet = "vendor=local:snippets/ansible_user_setup.yml"
@@ -38,9 +33,9 @@ provider "proxmox" {
 }
 
 # requires cloudinit template already manually setup on proxmox
-resource "proxmox_vm_qemu" "debian12-fog" {
+resource "proxmox_vm_qemu" "debian12-dusk" {
 
-    name = "debian12-fog"
+    name = "debian12-dusk"
     desc = "Fog Server"
     target_node = "pve"
 
@@ -69,7 +64,7 @@ resource "proxmox_vm_qemu" "debian12-fog" {
     cicustom   = local.cloud_init_snippet
     ciuser     = data.sops_file.sops-secret.data["ci_user"]
     cipassword = data.sops_file.sops-secret.data["ci_password"]
-    ipconfig0  = local.netconfig0
+    ipconfig0  = "ip=10.20.2.6/24,gw=10.20.2.1"
     # ipconfig1  = local.netconfig1
     nameserver = "1.1.1.1 8.8.8.8"
     sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"]
@@ -125,14 +120,54 @@ resource "proxmox_vm_qemu" "debian12-fog" {
         storage = "local-lvm"
     }
 
+
     # for vlan support manually on promox create
     # a linux vlan and linux bridge using that vlan as bridged port
     # then use the final linux bridge here
+
+    ## VLAN INTERFACES ##
+    # network center interface
     network {
         id = 0
-        macaddr = local.mac_address
+        macaddr = ""
         model = "virtio"
-        bridge = local.bridge_name
+        bridge = "vmbr202"
+        queues = local.cores # num of cores
+    }
+
+    # user gate interface
+    network {
+        id = 1
+        macaddr = "b6:36:f2:e6:16:65"
+        model = "virtio"
+        bridge = "vmbr203"
+        queues = local.cores # num of cores
+    }
+
+    # edgeshark interface
+    network {
+        id = 2
+        macaddr = ""
+        model = "virtio"
+        bridge = "vmbr204"
+        queues = local.cores # num of cores
+    }
+
+    # monitor center interface
+    network {
+        id = 3
+        macaddr = ""
+        model = "virtio"
+        bridge = "vmbr205"
+        queues = local.cores # num of cores
+    }
+
+    # main interface NOTE: last id # to be used as default route
+    network {
+        id = 4
+        macaddr = "f6:51:2b:b8:63:27"
+        model = "virtio"
+        bridge = "vmbr201"
         queues = local.cores
     }
 }

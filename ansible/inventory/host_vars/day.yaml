@@ -3,17 +3,17 @@ docker_dir: "/home/ansible/docker"
 # Tailscale Config for the below.
 
 # autoApprovers routes
-# "10.110.0.0/29": ["tag:cloud-server"], // traefik
-# "10.110.1.0/29": ["tag:cloud-server"], // dns
-# "10.110.20.0/28": ["tag:cloud-server"], // monitor-center
+# "10.110.0.0/29": ["tag:day-server"], // traefik
+# "10.110.1.0/29": ["tag:day-server"], // dns
+# "10.110.20.0/28": ["tag:day-server"], // monitor-center
 
 # hosts
-# "cloud-traefik-net": "10.110.0.0/29",
-# "cloud-dns-net": "10.110.1.0/29",
-# "cloud-monitor-center-net": "10.110.20.0/28",
+# "day-traefik-net": "10.110.0.0/29",
+# "day-dns-net": "10.110.1.0/29",
+# "day-monitor-center-net": "10.110.20.0/28",
 
-# "cloud-traefik": "10.110.0.2",
-# "cloud-dns": "10.110.1.4",
+# "day-traefik": "10.110.0.2",
+# "day-dns": "10.110.1.4",
 
 
 ### NETWORK CENTER ###
@@ -57,13 +57,13 @@ networks:
 
 traefik:
   domains:
-    main: "nerolab.dev"
-    wildcard: "*.cloud.nerolab.dev"
-    traefik: "traefik.cloud.nerolab.dev"
+    main: .wiresndreams.dev"
+    wildcard: "*.day.wiresndreams.dev"
+    traefik: "traefik.day.wiresndreams.dev"
   dns:
     upstream_server: "10.0.0.3"
     config: |
-      address=/cloud.nerolab.dev/10.110.0.2
+      address=/day.wiresndreams.dev/10.110.0.2
 
 # added to dhcp static mappings in opnsense
 macvlan_network_center:
@@ -83,57 +83,57 @@ gate_dns_conf:
   ip: "100.80.1.1"
   upstream_server: "10.0.0.3"
   records: |
-    address=/cloud.nerolab.dev/100.80.1.1
-    address=/fog.nerolab.dev/100.80.1.1
-    address=/media.nerolab.dev/100.80.1.1
+    address=/day.wiresndreams.dev/100.80.1.1
+    address=/dusk.wiresndreams.dev/100.80.1.1
+    address=/night.wiresndreams.dev/100.80.1.1
 
 gate_traefik_instances:
-  cloud:
+  day:
     traefik_ip: 10.110.0.2
-    domains_list: # cloud
-      - name: traefik.cloud.nerolab.dev
+    domains_list: # day
+      - name: traefik.day.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
-      - name: nextcloud.cloud.nerolab.dev
+      - name: nextcloud.day.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
-      - name: searxng.cloud.nerolab.dev
-        allowed_tailscale_client_ips:
-          - 100.93.170.126 # stardom
-          - 100.122.229.69 # starfief-windows
-      - name: vikunja.cloud.nerolab.dev
+      - name: searxng.day.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
           - 100.122.229.69 # starfief-windows
-      - name: expenseowl.cloud.nerolab.dev
+      - name: vikunja.day.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
           - 100.122.229.69 # starfief-windows
-      - name: grafana.cloud.nerolab.dev
+      - name: expenseowl.day.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
-      - name: loki.cloud.nerolab.dev
+          - 100.122.229.69 # starfief-windows
+      - name: grafana.day.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
-      - name: alloy.cloud.nerolab.dev
+      - name: loki.day.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
-      - name: edgeshark.cloud.nerolab.dev
+      - name: alloy.day.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
-      - name: cadvisor.cloud.nerolab.dev
+      - name: edgeshark.day.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
-      - name: mimir.cloud.nerolab.dev
+      - name: cadvisor.day.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
-  media:
+      - name: mimir.day.wiresndreams.dev
+        allowed_tailscale_client_ips:
+          - 100.93.170.126 # stardom
+  night:
     traefik_ip: 10.130.0.2
-    domains_list: # media
-      - name: traefik.media.nerolab.dev
+    domains_list: # night
+      - name: traefik.night.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
-      - name: searxng.media.nerolab.dev
+      - name: searxng.night.wiresndreams.dev
         allowed_tailscale_client_ips:
           - 100.93.170.126 # stardom
           - 100.122.229.69 # starfief-windows
@@ -167,25 +167,25 @@ monitor_center:
       mimir: "10.110.20.7"
       alloy: "10.110.20.8"
       cadvisor: "10.110.20.9"
-  outpost_header: "cloud-outpost"
+  outpost_header: "day-outpost"
   traefik_scrape_addresses:
     - "10.110.0.2" # network center
   tailscale_scrape_addresses:
-    - "100.70.0.1" # cloud server - network center
-    - "100.80.1.1" # cloud user gateway
-    - "100.80.21.1" # cloud monitor center
-    - "100.80.31.1" # cloud edgeshark
+    - "100.70.0.1" # day server - network center
+    - "100.80.1.1" # day user gateway
+    - "100.80.21.1" # day monitor center
+    - "100.80.31.1" # day edgeshark
   domains:
-    traefik: "traefik.cloud.nerolab.dev"
-    grafana: "grafana.cloud.nerolab.dev"
-    loki: "loki.cloud.nerolab.dev"
-    mimir: "mimir.cloud.nerolab.dev"
-    alloy: "alloy.cloud.nerolab.dev"
-    cadvisor: "cadvisor.cloud.nerolab.dev"
+    traefik: "traefik.day.wiresndreams.dev"
+    grafana: "grafana.day.wiresndreams.dev"
+    loki: "loki.day.wiresndreams.dev"
+    mimir: "mimir.day.wiresndreams.dev"
+    alloy: "alloy.day.wiresndreams.dev"
+    cadvisor: "cadvisor.day.wiresndreams.dev"
   dns:
     upstream_server: "10.0.0.3"
     config: |
-      address=/cloud.nerolab.dev/10.110.20.3
+      address=/day.wiresndreams.dev/10.110.20.3
 
 # added to dhcp static mappings in opnsense
 macvlan_monitor_center:
@@ -200,8 +200,8 @@ macvlan_monitor_center:
 edgeshark:
   name: "edgeshark"
   domains:
-    edgeshark: "edgeshark.cloud.nerolab.dev"
-    wireshark: "wireshark.cloud.nerolab.dev"
+    edgeshark: "edgeshark.day.wiresndreams.dev"
+    wireshark: "wireshark.day.wiresndreams.dev"
   network_backend:
     name: "edgeshark"
     ipam_options:
@@ -226,7 +226,7 @@ macvlan_edgeshark:
 
 vikunja:
   name: "vikunja"
-  domain: "vikunja.cloud.nerolab.dev"
+  domain: "vikunja.day.wiresndreams.dev"
   network_backend:
     name: "t3_vikunja"
     ipam_options:
@@ -238,7 +238,7 @@ vikunja:
 
 searxng:
   name: "searxng"
-  domain: "searxng.cloud.nerolab.dev"
+  domain: "searxng.day.wiresndreams.dev"
   network_backend:
     name: "t3_searxng"
     ipam_options:
@@ -250,7 +250,7 @@ searxng:
 
 expenseowl:
   name: "expenseowl"
-  domain: "expenseowl.cloud.nerolab.dev"
+  domain: "expenseowl.day.wiresndreams.dev"
   network_backend:
     name: "t3_expenseowl"
     ipam_options:

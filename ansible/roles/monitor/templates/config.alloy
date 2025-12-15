@@ -124,7 +124,7 @@ prometheus.scrape "scraper" {
 
 // # TRAEFIK COLLECTION AND LABELING
 // also affected by tailscale grants
-// main traefik-cloud ip
+// main traefik-day ip
 prometheus.scrape "traefik" {
   targets = [
 {% for host in traefik_scrape_addresses %}

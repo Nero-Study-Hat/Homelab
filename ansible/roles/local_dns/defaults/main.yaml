@@ -4,4 +4,4 @@ net_name: ""
 dns_ip: "172.25.2.3"
 upstream_server: "10.0.0.3"
 config: |
-  address=/cloud.nerolab.dev/10.20.1.20
+  address=/day.wiresndreams.dev/10.20.1.20

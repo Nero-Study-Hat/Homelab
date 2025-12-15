@@ -1,4 +1,4 @@
-- name: Deploy to cloud host
+- name: Deploy to day host
   hosts: day_interim
   gather_facts: true
 
@@ -24,7 +24,7 @@
     #     name: network
     #   vars:
     #     TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
-    #     ts_auth_key: "{{ sops_secrets.cloud_server_ts_auth_key }}"
+    #     ts_auth_key: "{{ sops_secrets.day_server_ts_auth_key }}"
     #     desec_api_token: "{{ sops_secrets.desec_api_token }}"
     #     docker_dir: "{{docker_dir}}"
     #     domains:
@@ -42,7 +42,7 @@
     #     docker_dir: "{{docker_dir}}"
     #     project_name: "{{gate_name}}"
     #     traefik_instances: "{{ gate_traefik_instances }}"
-    #     ts_auth_key: "{{ sops_secrets.cloud_gate_server_ts_auth_key }}"
+    #     ts_auth_key: "{{ sops_secrets.day_gate_server_ts_auth_key }}"
     #     dns:
     #       ip: "{{ gate_dns_conf.ip }}"
     #       upstream_server: "{{ gate_dns_conf.upstream_server }}"
@@ -53,7 +53,7 @@
     #   include_role:
     #     name: edgeshark
     #   vars:
-    #     ts_auth_key: "{{ sops_secrets.cloud_shark_server_ts_auth_key }}"
+    #     ts_auth_key: "{{ sops_secrets.day_shark_server_ts_auth_key }}"
     #     docker_dir: "{{docker_dir}}"
     #     project_name: "{{edgeshark.name}}"
     #     domains: "{{edgeshark.domains}}"
@@ -64,7 +64,7 @@
     #   include_role:
     #     name: monitor
     #   vars:
-    #     ts_auth_key: "{{ sops_secrets.cloud_server_monitor_center_ts_auth_key }}"
+    #     ts_auth_key: "{{ sops_secrets.day_server_monitor_center_ts_auth_key }}"
     #     docker_dir: "{{docker_dir}}"
     #     project_name: "{{monitor_center.name}}"
     #     sub_role: "{{monitor_center.sub_role}}"

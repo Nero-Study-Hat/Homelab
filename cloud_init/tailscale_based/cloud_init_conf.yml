@@ -1,4 +1,4 @@
-#cloud-config
+#day-config
 ssh_pwauth: false
 
 users:

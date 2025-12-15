@@ -2,8 +2,8 @@ docker_dir: "/home/ansible/docker"
 project_name: "edgeshark"
 
 domains:
-  edgeshark: "edgeshark.cloud.nerolab.dev"
-  wireshark: "wireshark.cloud.nerolab.dev"
+  edgeshark: "edgeshark.day.wiresndreams.dev"
+  wireshark: "wireshark.day.wiresndreams.dev"
 
 ts_auth_key: ""
 

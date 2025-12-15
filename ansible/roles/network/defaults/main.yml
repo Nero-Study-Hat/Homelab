@@ -6,9 +6,9 @@ ts_auth_key: ""
 desec_api_token: ""
 
 domains:
-  traefik: "traefik.cloud.nerolab.dev"
-  main: "nerolab.dev"
-  wildcard: "*.cloud.nerolab.dev"
+  traefik: "traefik.day.wiresndreams.dev"
+  main: .wiresndreams.dev"
+  wildcard: "*.day.wiresndreams.dev"
 
 macvlan:
   name: ""
@@ -44,4 +44,4 @@ networks:
 dns:
   upstream_server: "10.0.0.3"
   config: |
-    address=/cloud.nerolab.dev/10.20.1.20
+    address=/day.wiresndreams.dev/10.20.1.20

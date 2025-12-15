@@ -3,14 +3,14 @@
     - 10.100-255.255.255 reserved for custom docker addresses
 - 10.<vlan-number>.<backend-number>.address-range
 - backends - macvlan networks
-    - cloud: 1
+    - day: 1
         - server: 0-7
         - network center: 8-15
         - user gateway: 16-23
         - edgeshark: 24-31
         - monitor center: 32-39
-    - fog: 2
-    - media: 3
+    - dusk: 2
+    - night: 3
         - server: 0-7
         - network center: 8-15
         - monitor outpost: 16-23
@@ -18,9 +18,9 @@
 - duplicates are intentional where a service requires multiple networks
 - vlan & special group numbers
     - special interim server: 100
-    - cloud: 110
-    - fog: 120
-    - media: 130
+    - day: 110
+    - dusk: 120
+    - night: 130
 - backends - docker network subnets
     - network services: 0-19
         - traefik_tailscale: 0
@@ -32,7 +32,7 @@
         - center: 20
         - outpost: 21
         - outpost: 22
-    - cloud services: 30-49
+    - day services: 30-49
         - vikunja: 30
         - searxng: 31
         - expenseowl: 32

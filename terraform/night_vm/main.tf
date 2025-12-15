@@ -141,22 +141,22 @@ resource "proxmox_vm_qemu" "debian12-night" {
         queues = local.cores # num of cores
     }
 
-    # monitor outpost interface
-    network {
-        id = 1
-        macaddr = "6a:c9:bd:ad:39:16"
-        model = "virtio"
-        bridge = "vmbr303"
-        queues = local.cores # num of cores
-    }
-
     # edgeshark interface
     # TODO: edgeshark setup
     # opnsense work and .tf work here are done
     # needs tailscale key, set address, and grants to be available to run
     network {
-        id = 2
+        id = 1
         macaddr = "3e:1c:43:2e:50:5a"
+        model = "virtio"
+        bridge = "vmbr303"
+        queues = local.cores # num of cores
+    }
+
+    # monitor outpost interface
+    network {
+        id = 2
+        macaddr = "6a:c9:bd:ad:39:16"
         model = "virtio"
         bridge = "vmbr304"
         queues = local.cores # num of cores
