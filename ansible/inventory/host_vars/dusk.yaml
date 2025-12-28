@@ -1,0 +1,169 @@
+
+host_docker_dir: "/home/ansible/docker"
+#### USER GATEWAY ###
+
+gate_name: "dusk_gate"
+
+gate_dns_conf:
+  ip: "100.80.1.1"
+  upstream_server: "10.0.0.3"
+  records: |
+    address=/day.wiresndreams.dev/100.80.1.1
+    address=/dusk.wiresndreams.dev/100.80.1.1
+    address=/night.wiresndreams.dev/100.80.1.1
+
+gate_traefik_instances:
+  day:
+    traefik_ip: 10.110.0.2
+    domains_list: # day
+    - name: vikunja.day.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+    - name: searxng.day.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+    - name: traefik.monitor.day.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+    - name: traefik.day.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+  dusk:
+    traefik_ip: 10.120.0.2
+    domains_list: # dusk
+    - name: grafana.dusk.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+    - name: loki.dusk.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+    - name: mimir.dusk.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+    - name: cadvisor.dusk.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+    - name: alloy.dusk.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+    - name: traefik.dusk.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+  night:
+    traefik_ip: 10.130.0.2
+    domains_list: # night
+    - name: traefik.monitor.night.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+    - name: traefik.night.wiresndreams.dev
+      allowed_tailscale_client_ips:
+        - 100.93.170.126 # stardom
+
+# added to dhcp static mappings in opnsense
+macvlan_user_gate:
+  name: "macvlan_user_gate"
+  parent_interface: "eth1"
+  ip: "10.20.2.19"
+  mac_address: "56:9d:02:b2:98:a4"
+  ipam_options:
+  - subnet: "10.20.2.16/29"
+    gateway: "10.20.2.17"
+
+### NETWORK CENTER ###
+
+# remember to
+# - copy traefik shared ip to dns reverse proxy records
+# - set tailscale acls, autoApprovers, hosts, and grants
+host_networks:
+  shared:
+  # monitor_center
+    - name: "{{monitor_center.network_backend.name}}"
+      ipam_options: "{{monitor_center.network_backend.ipam_options}}"
+      traefik_ip: "{{monitor_center.network_backend.ips.traefik}}"
+      tailscale_ip: "{{monitor_center.network_backend.ips.tailscale}}"
+  # network_center
+    - name: "{{network_center.network_backend.name}}"
+      ipam_options: "{{network_center.network_backend.ipam_options}}"
+      traefik_ip: "{{network_center.network_backend.ips.traefik}}"
+      tailscale_ip: "{{network_center.network_backend.ips.tailscale}}"
+  traefik_specific: # these containers don't have Tailscale DNS and connection-ability
+  tailscale_specific: # these containers are not reachable via Traefik
+
+### TRAEFIK SERVICE SPECIFIC VARS ###
+
+network_center:
+  network_backend:
+    name: "traefik_tailscale"
+    ipam_options:
+    - subnet: "10.120.0.0/29"
+      gateway: "10.120.0.1"
+    ips:
+      traefik: "10.120.0.2"
+      tailscale: "10.120.0.4"
+      dns: "10.120.0.5"
+  domains:
+    main: "wiresndreams.dev"
+    wildcard: "*.dusk.wiresndreams.dev"
+    traefik: "traefik.dusk.wiresndreams.dev"
+  dns:
+    upstream_server: "10.0.0.3"
+    config: |
+      address=/dusk.wiresndreams.dev/10.120.0.2
+
+# added to dhcp static mappings in opnsense
+macvlan_network_center:
+  name: "macvlan_network_center"
+  parent_interface: "eth0"
+  ip: "10.20.2.11"
+  mac_address: "da:f3:16:64:f3:30"
+  ipam_options:
+  - subnet: "10.20.2.8/29"
+    gateway: "10.20.2.9"
+
+### MONITOR CENTER ###
+
+monitor_center:
+  name: "monitor_center"
+  network_backend:
+    name: "monitor_center"
+    ipam_options:
+    - subnet: "10.120.20.0/28"
+      gateway: "10.120.20.1"
+    ips:
+      tailscale: "10.120.20.2"
+      traefik: "10.120.20.3"
+      dns: "10.120.20.4"
+      grafana: "10.120.20.5"
+      loki: "10.120.20.6"
+      mimir: "10.120.20.7"
+      alloy: "10.120.20.8"
+      cadvisor: "10.120.20.9"
+  outpost_header: "dusk-outpost"
+  traefik_scrape_addresses:
+    - "10.120.0.2" # network center
+  tailscale_scrape_addresses:
+    - "100.70.0.2" # dusk server - network center
+    - "100.80.1.1" # dusk server - user gateway
+    - "100.80.20.3" # dusk server - monitor center alloy
+    # - "100.80.31.1" # dusk edgeshark
+  domains:
+    traefik: "traefik.dusk.wiresndreams.dev"
+    grafana: "grafana.dusk.wiresndreams.dev"
+    loki: "loki.dusk.wiresndreams.dev"
+    mimir: "mimir.dusk.wiresndreams.dev"
+    alloy: "alloy.dusk.wiresndreams.dev"
+    cadvisor: "cadvisor.dusk.wiresndreams.dev"
+  dns:
+    upstream_server: "10.0.0.3"
+    config: |
+      address=/dusk.wiresndreams.dev/10.120.20.3
+
+# added to dhcp static mappings in opnsense
+macvlan_monitor_center:
+  name: "macvlan_monitor_center"
+  parent_interface: "eth3"
+  ip: "10.20.2.35"
+  mac_address: "26:b9:e5:80:b3:c3"
+  ipam_options:
+  - subnet: "10.20.2.32/29"
+    gateway: "10.20.2.33"

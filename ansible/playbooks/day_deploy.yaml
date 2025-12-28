@@ -1,5 +1,5 @@
 - name: Deploy to day host
-  hosts: day_interim
+  hosts: day
   gather_facts: true
 
   tasks:
@@ -11,96 +11,87 @@
                             # on load (this is the default)
 
 
-    # - name: Include Debian-Server Role
-    #   include_role:
-    #     name: debian_server
-    #   vars:
-    #     swap_file_size_mb: '1024'
+    - name: Include Debian-Server Role
+      include_role:
+        name: debian_server
+      vars:
+        swap_file_size_mb: '1024'
 
-    #FIXME: add some wait time here before network role for dns propagation
+    # when re-running the playbook this task will be commented out
+    - name: Pause for 1 minute for dns propagation to finish before running network role
+      ansible.builtin.pause:
+        minutes: 1
 
-    # - name: Include Network Role
-    #   include_role:
-    #     name: network
-    #   vars:
-    #     TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
-    #     ts_auth_key: "{{ sops_secrets.day_server_ts_auth_key }}"
-    #     desec_api_token: "{{ sops_secrets.desec_api_token }}"
-    #     docker_dir: "{{docker_dir}}"
-    #     domains:
-    #       main: "{{ traefik.domains.main }}"
-    #       wildcard: "{{ traefik.domains.wildcard }}"
-    #       traefik: "{{ traefik.domains.traefik }}"
-    #     dns: "{{traefik.dns}}"
-    #     networks: "{{networks}}"
-    #     macvlan: "{{macvlan_network_center}}"
-
-    # - name: Include NGINX Gate Role - User Gateway
-    #   include_role:
-    #     name: nginx_gate
-    #   vars:
-    #     docker_dir: "{{docker_dir}}"
-    #     project_name: "{{gate_name}}"
-    #     traefik_instances: "{{ gate_traefik_instances }}"
-    #     ts_auth_key: "{{ sops_secrets.day_gate_server_ts_auth_key }}"
-    #     dns:
-    #       ip: "{{ gate_dns_conf.ip }}"
-    #       upstream_server: "{{ gate_dns_conf.upstream_server }}"
-    #       records: "{{ gate_dns_conf.records }}"
-    #     macvlan: "{{macvlan_user_gate}}"
+    - name: Include Network Role
+      include_role:
+        name: network_center
+      vars:
+        TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
+        ts_auth_key: "{{ sops_secrets.day_server_ts_auth_key }}"
+        desec_api_token: "{{ sops_secrets.desec_api_token }}"
+        docker_dir: "{{host_docker_dir}}"
+        domains:
+          main: "{{ traefik.domains.main }}"
+          wildcard: "{{ traefik.domains.wildcard }}"
+          traefik: "{{ traefik.domains.traefik }}"
+        dns: "{{traefik.dns}}"
+        networks: "{{networks}}"
+        macvlan: "{{macvlan_network_center}}"
 
     # - name: Include Edgeshark Role
     #   include_role:
     #     name: edgeshark
     #   vars:
     #     ts_auth_key: "{{ sops_secrets.day_shark_server_ts_auth_key }}"
-    #     docker_dir: "{{docker_dir}}"
+    #     docker_dir: "{{host_docker_dir}}"
     #     project_name: "{{edgeshark.name}}"
     #     domains: "{{edgeshark.domains}}"
     #     network_backend: "{{ edgeshark.network_backend }}"
     #     macvlan: "{{macvlan_edgeshark}}"
 
-    # - name: Include Monitor Center Role
+    # - name: Include Monitor Outpost Role
     #   include_role:
-    #     name: monitor
+    #     name: monitor_outpost
     #   vars:
-    #     ts_auth_key: "{{ sops_secrets.day_server_monitor_center_ts_auth_key }}"
-    #     docker_dir: "{{docker_dir}}"
-    #     project_name: "{{monitor_center.name}}"
-    #     sub_role: "{{monitor_center.sub_role}}"
-    #     shared_network_backend: "{{monitor_center.network_backend}}"
-    #     outpost_header: "{{monitor_center.outpost_header}}"
-    #     domains: "{{monitor_center.domains}}"
-    #     traefik_scrape_addresses: "{{monitor_center.traefik_scrape_addresses}}"
-    #     tailscale_scrape_addresses: "{{monitor_center.tailscale_scrape_addresses}}"
-    #     dns: "{{monitor_center.dns}}"
+    #     TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
+    #     ts_auth_key: "{{ sops_secrets.day_server_monitor_outpost_ts_auth_key }}"
+    #     ts_auth_alloy_key: "{{ sops_secrets.day_server_monitor_alloy_ts_auth_key }}"
+    #     desec_api_token: "{{ sops_secrets.desec_api_token }}"
+    #     docker_dir: "{{host_docker_dir}}"
+    #     project_name: "{{monitor_outpost.name}}"
+    #     t3_network_backend: "{{monitor_outpost.network_backend}}"
+    #     outpost_header: "{{monitor_outpost.outpost_header}}"
+    #     domains: "{{monitor_outpost.domains}}"
+    #     traefik_scrape_addresses: "{{monitor_outpost.traefik_scrape_addresses}}"
+    #     tailscale_scrape_addresses: "{{monitor_outpost.tailscale_scrape_addresses}}"
     #     macvlan: "{{macvlan_monitor_center}}"
+    #     alloy_macvlan: "{{alloy_macvlan}}"
 
-    # - name: Include SearXNG Role
-    #   include_role:
-    #     name: searxng
-    #   vars:
-    #     docker_dir: "{{docker_dir}}"
-    #     project_name: "{{searxng.name}}"
-    #     domain: "{{searxng.domain}}"
-    #     network_backend: "{{ searxng.network_backend }}"
+    - name: Include SearXNG Role
+      include_role:
+        name: searxng
+      vars:
+        docker_dir: "{{host_docker_dir}}"
+        project_name: "{{searxng.name}}"
+        domain: "{{searxng.domain}}"
+        network_backend: "{{ searxng.network_backend }}"
 
-    # - name: Include Vikunja Role
-    #   include_role:
-    #     name: vikunja
-    #   vars:
-    #     docker_dir: "{{docker_dir}}"
-    #     project_name: "{{vikunja.name}}"
-    #     domain: "{{vikunja.domain}}"
-    #     network_backend: "{{ vikunja.network_backend }}"
+    - name: Include Vikunja Role
+      include_role:
+        name: vikunja
+      vars:
+        docker_dir: "{{host_docker_dir}}"
+        project_name: "{{vikunja.name}}"
+        domain: "{{vikunja.domain}}"
+        network_backend: "{{ vikunja.network_backend }}"
 
 # ---
 
-    - name: Include ExpenseOwl Role
-      include_role:
-        name: expenseowl
-      vars:
-        docker_dir: "{{docker_dir}}"
-        project_name: "{{expenseowl.name}}"
-        domain: "{{expenseowl.domain}}"
-        network_backend: "{{ expenseowl.network_backend }}"
+    # - name: Include ExpenseOwl Role
+    #   include_role:
+    #     name: expenseowl
+    #   vars:
+    #     docker_dir: "{{host_docker_dir}}"
+    #     project_name: "{{expenseowl.name}}"
+    #     domain: "{{expenseowl.domain}}"
+    #     network_backend: "{{ expenseowl.network_backend }}"

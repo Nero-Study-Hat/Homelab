@@ -10,43 +10,42 @@
         expressions: ignore  # explicitly do not evaluate expressions
                             # on load (this is the default)
 
-    # - name: Include Debian-Server Role
-    #   include_role:
-    #     name: debian_server
-    #   vars:
-    #     swap_file_size_mb: '1024'
-
-    # - name: Include Network Role
-    #   include_role:
-    #     name: network
-    #   vars:
-    #     TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
-    #     ts_auth_key: "{{ sops_secrets.night_server_ts_auth_key }}"
-    #     desec_api_token: "{{ sops_secrets.desec_api_token }}"
-    #     docker_dir: "{{night_docker_dir}}"
-    #     domains:
-    #       main: "{{ night_traefik.domains.main }}"
-    #       wildcard: "{{ night_traefik.domains.wildcard }}"
-    #       traefik: "{{ night_traefik.domains.traefik }}"
-    #     dns: "{{night_traefik.dns}}"
-    #     networks: "{{night_networks}}"
-    #     macvlan: "{{night_macvlan_network_center}}"
-
-    - name: Include Monitor Outpost Role
+    - name: Include Debian-Server Role
       include_role:
-        name: monitor
+        name: debian_server
+      vars:
+        swap_file_size_mb: '1024'
+
+    - name: Include Network Role
+      include_role:
+        name: network_center
       vars:
         TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
-        ts_auth_key: "{{ sops_secrets.night_server_monitor_outpost_ts_auth_key }}"
-        ts_auth_alloy_key: "{{ sops_secrets.night_server_monitor_alloy_ts_auth_key }}"
+        ts_auth_key: "{{ sops_secrets.night_server_ts_auth_key }}"
         desec_api_token: "{{ sops_secrets.desec_api_token }}"
-        docker_dir: "{{night_docker_dir}}"
-        project_name: "{{night_monitor_outpost.name}}"
-        sub_role: "{{night_monitor_outpost.sub_role}}"
-        t3_network_backend: "{{ night_monitor_outpost.network_backend }}"
-        outpost_header: "{{night_monitor_outpost.outpost_header}}"
-        domains: "{{night_monitor_outpost.domains}}"
-        traefik_scrape_addresses: "{{night_monitor_outpost.traefik_scrape_addresses}}"
-        tailscale_scrape_addresses: "{{night_monitor_outpost.tailscale_scrape_addresses}}"
-        alloy_macvlan: "{{night_alloy_macvlan}}"
-        macvlan: "{{night_macvlan}}"
+        docker_dir: "{{host_docker_dir}}"
+        domains:
+          main: "{{ traefik.domains.main }}"
+          wildcard: "{{ traefik.domains.wildcard }}"
+          traefik: "{{ traefik.domains.traefik }}"
+        dns: "{{traefik.dns}}"
+        networks: "{{networks}}"
+        macvlan: "{{macvlan_network_center}}"
+
+    # - name: Include Monitor Outpost Role
+    #   include_role:
+    #     name: monitor
+    #   vars:
+    #     TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
+    #     ts_auth_key: "{{ sops_secrets.night_server_monitor_outpost_ts_auth_key }}"
+    #     ts_auth_alloy_key: "{{ sops_secrets.night_server_monitor_alloy_ts_auth_key }}"
+    #     desec_api_token: "{{ sops_secrets.desec_api_token }}"
+    #     docker_dir: "{{host_docker_dir}}"
+    #     project_name: "{{monitor_outpost.name}}"
+    #     t3_network_backend: "{{ monitor_outpost.network_backend }}"
+    #     outpost_header: "{{monitor_outpost.outpost_header}}"
+    #     domains: "{{monitor_outpost.domains}}"
+    #     traefik_scrape_addresses: "{{monitor_outpost.traefik_scrape_addresses}}"
+    #     tailscale_scrape_addresses: "{{monitor_outpost.tailscale_scrape_addresses}}"
+    #     alloy_macvlan: "{{alloy_macvlan}}"
+    #     macvlan: "{{macvlan_monitor_outpost}}"

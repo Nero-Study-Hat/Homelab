@@ -1,0 +1,85 @@
+- name: Deploy to dusk host
+  hosts: dusk
+  gather_facts: true
+
+  tasks:
+    - name: Load Sops Secrets
+      community.sops.load_vars:
+        file: "{{ playbook_dir }}/../../secrets/secrets.yaml"
+        name: sops_secrets
+        expressions: ignore  # explicitly do not evaluate expressions
+                            # on load (this is the default)
+
+
+    # - name: Include Debian-Server Role
+    #   include_role:
+    #     name: debian_server
+    #   vars:
+    #     swap_file_size_mb: '1024'
+
+
+    # - name: Pause for 1 minute for dns propagation to finish before running network role
+    #   ansible.builtin.pause:
+    #     minutes: 1
+
+    # - name: Include Network Role
+    #   include_role:
+    #     name: network_center
+    #   vars:
+    #     docker_dir: "{{host_docker_dir}}"
+    #     project_name: "network_center"
+    #     network_backend: "{{ network_center.network_backend }}"
+    #     TRAEFIK_DASHBOARD_CREDENTIALS: "{{ sops_secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}"
+    #     ts_auth_key: "{{ sops_secrets.dusk_server_ts_auth_key }}"
+    #     desec_api_token: "{{ sops_secrets.desec_api_token }}"
+    #     domains:
+    #       main: "{{ network_center.domains.main }}"
+    #       wildcard: "{{ network_center.domains.wildcard }}"
+    #       traefik: "{{ network_center.domains.traefik }}"
+    #     dns: "{{network_center.dns}}"
+    #     networks: "{{host_networks}}"
+    #     macvlan: "{{macvlan_network_center}}"
+
+    # - name: Include NGINX Gate Role - User Gateway
+    #   include_role:
+    #     name: nginx_gate
+    #   vars:
+    #     docker_dir: "{{host_docker_dir}}"
+    #     project_name: "nginx_gate"
+    #     traefik_instances: "{{ gate_traefik_instances }}"
+    #     ts_auth_key: "{{ sops_secrets.dusk_gate_server_ts_auth_key }}"
+    #     dns:
+    #       ip: "{{ gate_dns_conf.ip }}"
+    #       upstream_server: "{{ gate_dns_conf.upstream_server }}"
+    #       records: "{{ gate_dns_conf.records }}"
+    #     macvlan: "{{macvlan_user_gate}}"
+
+
+
+
+
+    # - name: Include Edgeshark Role
+    #   include_role:
+    #     name: edgeshark
+    #   vars:
+    #     ts_auth_key: "{{ sops_secrets.day_shark_server_ts_auth_key }}"
+    #     docker_dir: "{{host_docker_dir}}"
+    #     project_name: "{{edgeshark.name}}"
+    #     domains: "{{edgeshark.domains}}"
+    #     network_backend: "{{ edgeshark.network_backend }}"
+    #     macvlan: "{{macvlan_edgeshark}}"
+
+    - name: Include Monitor Center Role
+      include_role:
+        name: monitor_center
+      vars:
+        ts_auth_key: "{{ sops_secrets.dusk_server_monitor_center_ts_auth_key }}"
+        docker_dir: "{{host_docker_dir}}"
+        project_name: "{{monitor_center.name}}"
+        shared_network_backend: "{{monitor_center.network_backend}}"
+        outpost_header: "{{monitor_center.outpost_header}}"
+        domains: "{{monitor_center.domains}}"
+        traefik_scrape_addresses: "{{monitor_center.traefik_scrape_addresses}}"
+        tailscale_scrape_addresses: "{{monitor_center.tailscale_scrape_addresses}}"
+        dns: "{{monitor_center.dns}}"
+        macvlan: "{{macvlan_monitor_center}}"
