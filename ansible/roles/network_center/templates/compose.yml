@@ -5,7 +5,7 @@ services:
     hostname: ts-network-center
     container_name: ts-network-center
     restart: unless-stopped
-    dns: "{{networks.shared[0].dns_ip}}"
+    dns: "{{network_backend.ips.dns}}"
     expose:
       - "41641/udp"
     networks:
@@ -13,11 +13,11 @@ services:
         ipv4_address: "{{ macvlan.ip }}"
         mac_address: "{{ macvlan.mac_address }}"
 
-      {%- for net in networks.shared +%}
+      {%- for net in networks.shared | default([], true) +%}
       {{ net.name }}:
         ipv4_address: {{ net.tailscale_ip }}
       {%- endfor +%}
-      {%- for net in networks.tailscale_specific +%}
+      {%- for net in networks.tailscale_specific | default([], true) +%}
       {{ net.name }}:
         ipv4_address: {{ net.tailscale_ip }}
       {%- endfor +%}
@@ -40,7 +40,7 @@ services:
       - net_admin
 
   socket-proxy:
-    image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
+    image: "11notes/socket-proxy:2.1.6@sha256:2f4e605a5441b31389a95ef942af45927e8df4df4e974cfa271a388799d4f87b"
     hostname: socketproxy
     container_name: socketproxy
     network_mode: "none"
@@ -52,7 +52,7 @@ services:
     restart: "always"
 
   traefik:
-    image: traefik:v3.4
+    image: traefik:v3.6
     container_name: traefik
     depends_on:
       socket-proxy:
@@ -65,13 +65,13 @@ services:
       - "80/tcp"
       - "443/tcp"
       - "9100"
-    dns: "{{networks.shared[0].dns_ip}}"
+    dns: "{{network_backend.ips.dns}}"
     networks:
-      {%- for net in networks.shared +%}
+      {%- for net in networks.shared | default([], true) +%}
       {{ net.name }}:
         ipv4_address: {{ net.traefik_ip }}
       {%- endfor +%}
-      {%- for net in networks.traefik_specific +%}
+      {%- for net in networks.traefik_specific | default([], true) +%}
       {{ net.name }}:
         ipv4_address: {{ net.traefik_ip }}
       {%- endfor +%}
@@ -124,16 +124,15 @@ volumes:
 networks:
   {{ macvlan.name }}:
     external: true
-
-  {%- for net in networks.shared +%}
+  {%- for net in networks.shared | default([], true) +%}
   {{ net.name }}:
     external: true
   {%- endfor +%}
-  {%- for net in networks.traefik_specific +%}
+  {%- for net in networks.traefik_specific | default([], true) +%}
   {{ net.name }}:
     external: true
   {%- endfor +%}
-  {%- for net in networks.tailscale_specific +%}
+  {%- for net in networks.tailscale_specific | default([], true) +%}
   {{ net.name }}:
     external: true
   {%- endfor +%}

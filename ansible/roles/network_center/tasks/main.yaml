@@ -1,5 +1,4 @@
-### HANDLE COMPOSE FILE & SECRETS ###
-
+### BOILER PLATE ###
 - name: Creates remote docker projects directory
   ansible.builtin.file:
     path: '{{docker_dir}}'
@@ -10,7 +9,7 @@
     stack_dir: "{{ [docker_dir, project_name] | join('/') }}"
 
 - name: Creates remote project directory
-  file:
+  ansible.builtin.file:
     path: '{{stack_dir}}'
     state: directory
 
@@ -18,6 +17,24 @@
   ansible.builtin.template:
     src: "compose.yml"
     dest: "{{stack_dir}}/compose.yml"
+
+### MAIN ###
+- name: Creates remote project directory
+  ansible.builtin.file:
+    path: '{{stack_dir}}/tailscale'
+    state: directory
+
+- name: Creates remote project directory
+  ansible.builtin.file:
+    path: '{{stack_dir}}/traefik/data'
+    state: directory
+
+- name: Copy a file to a remote loc (and render if template)
+  ansible.builtin.copy:
+    src: "traefik.yml"
+    dest: "{{stack_dir}}/traefik/data/traefik.yml"
+
+### HANDLE SECRETS WORK ###
 
 - name: Create .env file with traefik dashboard credentials and ts_authkey
   ansible.builtin.copy:
@@ -31,23 +48,6 @@
     content: "{{ desec_api_token }}"
     dest: "{{stack_dir}}/desec_api_token.txt"
 
-### HANDLE SUB-PROJECT DIRECTORIES AND CONFIGS ###
-
-- name: Creates remote Tailscale directory
-  ansible.builtin.file:
-    path: '{{stack_dir}}/tailscale'
-    state: directory
-
-- name: Creates remote Traefik directory
-  ansible.builtin.file:
-    path: '{{stack_dir}}/traefik/data'
-    state: directory
-
-- name: Copy traefik.yml (config) file
-  ansible.builtin.copy:
-    src: "traefik.yml"
-    dest: "{{stack_dir}}/traefik/data/traefik.yml"
-
 - name: Create acme.json file
   ansible.builtin.file:
     path: "{{stack_dir}}/traefik/data/acme.json"
@@ -60,21 +60,25 @@
   community.docker.docker_network:
     name: "{{ item.name }}"
     ipam_config: "{{ item.ipam_options }}"
-  loop: '{{ networks.shared }}'
+  loop: "{{ networks.shared | default([], true) }}"
+  when: networks.shared is not none
+  
 
 - name: Create traefik specific networks
   community.docker.docker_network:
     name: "{{ item.name }}"
     internal: "true"
     ipam_config: "{{ item.ipam_options }}"
-  loop: '{{ networks.traefik_specific }}'
+  loop: "{{ networks.traefik_specific | default([], true) }}"
+  when: networks.traefik_specific is not none
 
 - name: Create tailscale specific networks
   community.docker.docker_network:
     name: "{{ item.name }}"
     # internal: "true"
     ipam_config: "{{ item.ipam_options }}"
-  loop: '{{ networks.tailscale_specific  | default([], true) }}'
+  loop: "{{ networks.tailscale_specific | default([], true) }}"
+  when: networks.tailscale_specific is not none
 
 - name: Create a docker MACVLAN for tailscale direct connections
   community.docker.docker_network:
@@ -92,8 +96,8 @@
   vars:
     dns_docker_dir: "{{docker_dir}}"
     dns_project_name: "{{project_name}}"
-    net_name: "{{ networks.shared[0].name }}"
-    dns_ip: "{{networks.shared[0].dns_ip}}"
+    net_name: "{{ network_backend.name }}"
+    dns_ip: "{{network_backend.ips.dns}}"
     upstream_server: "{{dns.upstream_server}}"
     config: "{{dns.config}}"
 
@@ -103,4 +107,6 @@
     project_name: '{{project_name}}'
     project_src: '{{stack_dir}}'
     files:
-      - compose.yml
+    - compose.yml
+
+
