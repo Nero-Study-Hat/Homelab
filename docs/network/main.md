@@ -1,4 +1,6 @@
-> [!note] What this document is and is not for.
+> [!important]
+> ### ***What this document is and is not for.***
+> 
 > This document is meant to provide an accurate in-depth read of my network architecture and configuration state.
 > 
 > Reasoning behind decisions made in reaching this state is kept in this document.
@@ -24,9 +26,12 @@ All VLANs below use the 802.1q protocol.
 For firewall rules all VLANs inherit the default OPNSense rules and floating rules.
 
 Default OPNSense
+
 ![Default OPNSense Firewall Rules](pictures/default_opnsense_firewall_rules.png)
 
-> [!note] Explanation of OPNSense default rules.
+> [!tip]
+>
+> ***Explanation of OPNSense default rules.***
 > - Default deny / state violation rule: if another rule allowing the traffic is not found, block the traffic
 > 	- https://www.zenarmor.com/docs/network-security-tutorials/how-to-configure-opnsense-firewall-rules#what-is-opnsense-firewall-rule-order-and-direction-how-does-opnsense-process-the-rules
 > ---
@@ -63,26 +68,28 @@ All server VLANs are part of the SERVERS group giving them the below firewall ru
 
 ## VLAN Subnets & Assignments
 
-> [!note] Network Naming Schema Explained
+> [!tip]
+> ***Network Naming Schema Explained***
+> 
 > networks backends: `10.20.<macvlan-number>.<address-range>`
-	- day: 1
-	    - server: 0-6
-	    - network center: 8-14
-	    - undecided: 16-22
-	    - edgeshark: 24-30
-	    - monitor outpost: 32-38
-	- dusk: 2
-	    - server: 0-6
-	    - network center: 8-14
-	    - user gateway: 16-22
-	    - edgeshark: 24-30
-	    - monitor center: 32-38
-	- night: 3
-	    - server: 0-6
-	    - network center: 8-14
-	    - undecided: 16-22
-	    - edgeshark: 24-30
-	    - monitor outpost: 32-38
+>- day: 1
+>	- server: 0-6
+>	- network center: 8-14
+>	- undecided: 16-22
+>	- edgeshark: 24-30
+>	- monitor outpost: 32-38
+> - dusk: 2
+>	- server: 0-6
+>	- network center: 8-14
+>	- user gateway: 16-22
+>	- edgeshark: 24-30
+>	- monitor center: 32-38
+> - night: 3
+>	- server: 0-6
+>	- network center: 8-14
+>	- undecided: 16-22
+>	- edgeshark: 24-30
+>	- monitor outpost: 32-38
 
 ### Subnet Details
 Those in use below.
@@ -106,8 +113,11 @@ Those in use below.
 
 #### Assignments Details
 
-> [!note] Static DHCP Mappings for Host VMs
-> used by main.tf files for Terraform to generate interfaces
+
+> [!note] 
+> ***Static DHCP Mappings for Host VMs***
+>
+> Used by `main.tf` files **for Terraform** to **generate interfaces**.
 
 | VLAN Name             | MAC Address       | IP Address |
 | --------------------- | ----------------- | ---------- |
@@ -125,8 +135,10 @@ Those in use below.
 | Night_Edgeshark       | 3e:1c:43:2e:50:5a | 10.20.3.26 |
 | Night_Monitor_Outpost | 6a:c9:bd:ad:39:16 | 10.20.3.34 |
 
-> [!note] Static DHCP Mappings for Containers
-> used in host_vars Ansible files to generate Docker MACVLANs
+> [!note]
+> ***Static DHCP Mappings for Containers***
+> 
+> Used in **host_vars Ansible files** to **generate Docker MACVLANs**.
 
 | VLAN Name             | Host Name          | Sidecars Containers | Mac Address       | IP Address |
 | --------------------- | ------------------ | ------------------- | ----------------- | ---------- |
@@ -146,34 +158,36 @@ Those in use below.
 
 ## Docker Networks
 
-> [!note] Network Naming Schema Explained
+> [!note]
+> ***Network Naming Schema Explained***
+> 
 > networks backends: `10.<vlan-number>.<backend-number>.address-range`
 > duplicates are intentional where a service requires multiple networks
 > macvlans obey naming scheme above for vlans
-	- vlan & special group numbers
-	    - special interim server: 100
-	    - day: 110
-	    - dusk: 120
-	    - night: 130
-	- backends - docker network subnets
-	    - network services: 0-19
-	        - traefik_tailscale: 0
-	        - dns: 1 (fix later: no longer in use)
-	        - edgeshark: 2
-	        - edgeshark: 3 (fix later: should be removed in future)
-	        - gate: 4 (fix later: hard coded into compose)
-	    - other operational services: 20-29
-	        - monitor center/outpost: 20
-	    - end services: 30-49
-	        - commafeed: 30
-	        - searxng: 31
-	        - expenseowl: 32
-	        - homepage: 33
-	        - vikunja: 34
-	        - jellyfin: 35
+> - vlan & special group numbers
+> 	- special interim server: 100
+> 	- day: 110
+> 	- dusk: 120
+> 	- night: 130
+> - backends - docker network subnets
+> 	- network services: 0-19
+> 		- traefik_tailscale: 0
+> 		- dns: 1 (fix later: no longer in use)
+> 		- edgeshark: 2
+> 		- edgeshark: 3 (fix later: should be removed in future)
+> 		- gate: 4 (fix later: hard coded into compose)
+> 	- other operational services: 20-29
+> 		- monitor center/outpost: 20
+> 	- end services: 30-49
+> 		- commafeed: 30
+> 		- searxng: 31
+> 		- expenseowl: 32
+> 		- homepage: 33
+> 		- vikunja: 34
+> 		- jellyfin: 35
 
 ### Table of all docker networks currently in use.
-> [!note] 
+> [!tip] 
 > - using `#` instead of `{}` because this way table formats correctly
 > - `#` is filled based on Network Naming Schema
 
@@ -190,11 +204,11 @@ Those in use below.
 | dusk         | monitor_center         | Bridge  | 10.120.20.0/28        | 10.120.20.1     | 2 - 6           |
 | dusk         | macvlan_monitor_center | Macvlan | 10.20.2.32/29         | 10.20.2.33      | 34 - 38         |
 
-> [!error] Bug to fix
+> [!caution]
 > Docker bridge network `gate-tailscale-network` is hard coded in the Docker Compose file with the subnet `10.110.4.0/29` which is using the VLAN # for Day even though it is in Dusk. This was missed when moving the service role and needs to be updated.
 
 ##### Host addresses in use within the above Docker Networks.
-> [!note] 
+> [!tip] 
 > - host addresses refers to the last number in the address here
 > - the order of `Containers` and `IP Host Addresses` matches to pair each entry together
 > - leaving Macvlan networks out of this since those assignments are documented in the above VLAN Assignments section
@@ -208,7 +222,7 @@ Those in use below.
 | dusk         | gate-tailscale-network | tailscale_nginx_dnsmasq                                                      | 2                                    |
 | dusk         | monitor_center         | tailscale<br>traefik<br>dns<br>grafana<br>loki<br>mimir<br>alloy<br>cadvisor | 2<br>3<br>4<br>5<br>6<br>7<br>8<br>9 |
 
-> [!warning] later work needed
+> [!warning]
 > - need to investigate if Tailscale Grants are pointing to the traefik instance in `monitor_center` network rather than `traefik_tailscale`
 > - need to investigate why `traefik_tailscale` network skips a host address number and correct if unnecessary or document if so
 > - should rename `alloy` network var to `tailscale_alloy` for the `monitor_outpost` network
@@ -239,7 +253,7 @@ Those in use below.
 
 ### Tags
 
-> [!note] 
+> [!tip] 
 > - IP Addresses are set by the nodeAttrs block in the Tailscale Access Controls config.
 > - IP Pool is used for assigned addresses to a given target, the target being a tag in my case
 
@@ -258,7 +272,7 @@ Those in use below.
 | night-server-monitor-alloy   | tailscale container +<br>alloy sidecar                                      | monitor_outpost                           | "100.80.20.5/32"         |
 | me-client                    | n/a                                                                         | n/a                                       | n/a                      |
 
-> [!warning] later work needed
+> [!warning]
 > - `day-shark-server` needs to be matched by tags for dusk and night, all with up to date nodeAttr IP Pool assignments
 > - make IP Pool assignments for the network-center tags
 
@@ -286,7 +300,7 @@ Those in use below.
 | night-traefik-net         | 10.130.0.0/29  | night<br>traefik_tailscale      | true                    | night-server-network-center |
 | night-monitor-outpost-net | 10.130.20.0/29 | night<br>monitor_outpost        | true                    | night-server-network-center |
 
-> [!warning] Later work needed.
+> [!warning]
 > - Autoapprovers contains the below which does not have a `host` entry or in turn any `Grants` entries.
 > 	- "10.120.0.0/29":  ["tag:dusk-server-network-center"], // traefik
 > - investigate why network-center tag is used for Autoapproving monitor routes and fix if need be
@@ -318,7 +332,7 @@ Those in use below.
 | tag:me-client         | tag:dusk-gate-server             | dusk<br>gate-tailscale-network            | tcp:80, tcp:443         |
 | tag: day-shark-server | group:personal                   | n/a                                       | \*:*                    |
 
-> [!warning] Later work needed.
+> [!warning]
 > Need to join grants for destination:`tag:dusk-gate-server`.
 
 ### Extra-VLAN Container to Container
@@ -333,7 +347,7 @@ Those in use below.
 | tag:dusk-gate-server             | host address: day-traefik<br>   | dusk<br>monitor_outpost  | day<br>tailscale_traefik    | tcp:80, tcp:443         |
 | tag:dusk-gate-server             | host address: night-traefik<br> | dusk                     | night                       | tcp:80, tcp:443         |
 
-> [!warning] Later work needed.
+> [!warning]
 > - Need to add grants for the day-monitor tags headed to monitor-center.
 > - Investigate the udp:53 grants.
 > - Why does `tag:night-server-monitor-traefik` reach out to `host address:dusk-traefik` instead of a new `host address:dusk-monitor-traefik` with a separate Traefik instance there.
@@ -354,7 +368,7 @@ Those in use below.
 | tag:night-server-monitor-alloy   | tag:night-server-network-center  | monitor_outpost        | traefik_tailscale      | *:9002                   |
 | tag:dusk-gate-server             | host address: dusk-traefik       | gate-tailscale-network | traefik_tailscale      | tcp:80, tcp:443          |
 
-> [!warning] Later work needed.
+> [!warning]
 > - Investigate why no grants point to dusk-dns either here in Intra-VLAN grants and Extra-VLAN.
 > - Investigate why the monitor-alloy tag can go to the `traefik_tailscale` network with more than `*:9100`.
 > - `tag:day-server-monitor-alloy` needs grants allowing Intra-VLAN scraping.
@@ -387,7 +401,7 @@ To find them use (ctrl+f "TS_AUTHKEY: " case sensitive whole word) in this repo.
 | edgeshark       | packetflix (sidecar): requires outbound capability (back and forth of inbound outbound traffic) to function |
 | nginx_gate      | nginx (sidecar): to forward traffic to the appropiate traefik container                                     |
 
-> [!warning] Later work needed.
+> [!warning]
 > Investigate the capability purpose of `dnsmasq container (sidecar)`. Test later with existing sidecar setup and advertised subnet setup.
 
 ## Direct Connections
