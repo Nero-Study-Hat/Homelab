@@ -1,7 +1,0 @@
-dns_docker_dir: "/home/ansible/docker"
-dns_project_name: "monitor-center" # project attached too
-net_name: ""
-dns_ip: "172.25.2.3"
-upstream_server: "10.0.0.3"
-config: |
-  address=/day.wiresndreams.dev/10.20.1.20
