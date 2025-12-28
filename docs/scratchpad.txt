@@ -1,3 +1,0 @@
-indentation multi line ansible vars
-# {%- filter indent(width=2, first=false) +%}
-# {%- endfilter +%}

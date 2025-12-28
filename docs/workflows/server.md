@@ -6,16 +6,11 @@ cd "${project_dir}/terraform"
 terraform plan
 terra-apply # manually must confirm here
 
-cd "${project_dir}/ansible/plays"
-
-ansible-playbook -i ../inventory.yaml swap_setup
-ansible-playbook -i ../inventory.yaml docker-install.yaml
-
-ansible-playbook -i ../inventory.yaml traefik-setup.yaml
-
 sudo tailscale set --accept-routes=true
 
-ansible-playbook -i ../inventory.yaml nextcloud-setup.yaml
+cd "${project_dir}/ansible"
+ansible-playbook -i inventory/hosts.yaml playbooks/dusk_deploy.yaml
+
 
 # for cloudinit-tailscale machine dns
 # https://serverfault.com/a/1165173
@@ -23,7 +18,12 @@ ansible-playbook -i ../inventory.yaml nextcloud-setup.yaml
 docker stop $(docker ps -a -q)
 docker system prune -a
 docker volume prune -a
+docker network prune -f
 rm -r docker/
+
+docker system prune
+docker volume prune
+docker network prune
 
 # remove any stopped containers and all unused images
 # docker stop 
