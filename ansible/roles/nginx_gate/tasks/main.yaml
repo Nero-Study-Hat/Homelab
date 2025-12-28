@@ -9,7 +9,7 @@
     stack_dir: "{{ [docker_dir, project_name] | join('/') }}"
 
 - name: Creates remote project directory
-  file:
+  ansible.builtin.file:
     path: '{{stack_dir}}'
     state: directory
 
@@ -19,6 +19,32 @@
     dest: "{{stack_dir}}/compose.yml"
 
 ### MAIN ###
+- name: Creates remote project directory
+  ansible.builtin.file:
+    path: '{{stack_dir}}/ts-nginx'
+    state: directory
+
+- name: Creates remote project directory
+  ansible.builtin.file:
+    path: '{{stack_dir}}/dnsmasq_image'
+    state: directory
+
+- name: Copy a file to a remote loc (and render if template)
+  ansible.builtin.template:
+    src: "nginx.conf.j2"
+    dest: "{{stack_dir}}/./nginx.conf"
+
+- name: Copy a file to a remote loc (and render if template)
+  ansible.builtin.template:
+    src: "dnsmasq.conf.j2"
+    dest: "{{stack_dir}}/dnsmasq_image/dnsmasq.conf"
+
+- name: Copy a file to a remote loc (and render if template)
+  ansible.builtin.copy:
+    src: "Dnsmasq_Dockerfile"
+    dest: "{{stack_dir}}/dnsmasq_image/Dockerfile"
+
+### MAIN ###
 
 - name: Create .env file with ts_authkey
   ansible.builtin.copy:
@@ -26,32 +52,7 @@
     content: |
       TS_AUTHKEY={{ ts_auth_key }}
 
-- name: Creates remote TS-NGINX directory
-  ansible.builtin.file:
-    path: '{{stack_dir}}/ts-nginx'
-    state: directory
-
-- name: Template nginx.conf
-  template:
-    src: nginx.conf.j2
-    dest: '{{stack_dir}}/nginx.conf'
-
 ### DNS CONFIG
-
-- name: Creates docker image build directory
-  file:
-    path: '{{stack_dir}}/dnsmasq_image'
-    state: directory
-
-- name: Transfer and convert the dnsmasq.conf jinja2 template
-  ansible.builtin.template:
-    src: "dnsmasq.conf.j2"
-    dest: "{{stack_dir}}/dnsmasq_image/dnsmasq.conf"
-
-- name: Copy Dockerfile
-  ansible.builtin.copy:
-    src: "Dnsmasq_Dockerfile"
-    dest: "{{stack_dir}}/dnsmasq_image/Dockerfile"
 
 - name: Add records to dnsmasq.conf file
   ansible.builtin.lineinfile:
@@ -82,9 +83,10 @@
     project_name: '{{project_name}}'
     project_src: '{{stack_dir}}'
     files:
-      - compose.yml
+    - compose.yml
 
-  #TODO: make container name variable and local network
+
+#TODO: make container name variable and local network
 - name: Delete default ip route
   community.docker.docker_container_exec:
     container: 'ts-gate'
@@ -100,3 +102,4 @@
     container: 'ts-gate'
     command: "ip route add default via {{macvlan.ipam_options[0].gateway}} dev {{eth_num.stdout}}"
     chdir: /
+

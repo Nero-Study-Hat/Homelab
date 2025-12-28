@@ -9,7 +9,7 @@
     stack_dir: "{{ [docker_dir, project_name] | join('/') }}"
 
 - name: Creates remote project directory
-  file:
+  ansible.builtin.file:
     path: '{{stack_dir}}'
     state: directory
 
@@ -19,11 +19,12 @@
     dest: "{{stack_dir}}/compose.yml"
 
 ### MAIN ###
-
 ### DEPLOY ###
 - name: Deploy Docker Compose Stack
   community.docker.docker_compose_v2:
     project_name: '{{project_name}}'
     project_src: '{{stack_dir}}'
     files:
-      - compose.yml
+    - compose.yml
+
+

@@ -9,7 +9,7 @@
     stack_dir: "{{ [docker_dir, project_name] | join('/') }}"
 
 - name: Creates remote project directory
-  file:
+  ansible.builtin.file:
     path: '{{stack_dir}}'
     state: directory
 
@@ -19,18 +19,15 @@
     dest: "{{stack_dir}}/compose.yml"
 
 ### MAIN ###
-
-- name: Creates the file directory
-  file:
+- name: Creates remote project directory
+  ansible.builtin.file:
     path: '{{stack_dir}}/files'
     state: directory
-    owner: '1000'
 
-- name: Creates the database directory
-  file:
+- name: Creates remote project directory
+  ansible.builtin.file:
     path: '{{stack_dir}}/db'
     state: directory
-    owner: '1000'
 
 ### DEPLOY ###
 - name: Deploy Docker Compose Stack
@@ -38,4 +35,6 @@
     project_name: '{{project_name}}'
     project_src: '{{stack_dir}}'
     files:
-      - compose.yml
+    - compose.yml
+
+
