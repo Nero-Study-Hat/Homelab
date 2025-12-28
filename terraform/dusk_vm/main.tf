@@ -1,6 +1,6 @@
 locals {
-    cores = 2
-    os_disk_size = "30G"
+    cores = 3
+    os_disk_size = "50G"
     # data_disk_size = "4T"
     data_disk_size = "500G"
     # cloud-init settings
@@ -64,10 +64,24 @@ resource "proxmox_vm_qemu" "debian12-dusk" {
     cicustom   = local.cloud_init_snippet
     ciuser     = data.sops_file.sops-secret.data["ci_user"]
     cipassword = data.sops_file.sops-secret.data["ci_password"]
-    ipconfig0  = "ip=10.20.2.6/24,gw=10.20.2.1"
-    # ipconfig1  = local.netconfig1
+    sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"] #TODO: remove when stable
+    
+    # network config
+    # below IP addresses must be available in the below bridges
+    # static dhcp entries are required for the below config
     nameserver = "1.1.1.1 8.8.8.8"
-    sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"]
+    # vlans
+    # Dusk_Network_Center
+    ipconfig0  = "ip=10.20.2.10/29,gw=10.20.2.9"
+    # Dusk_Gate
+    ipconfig1  = "ip=10.20.2.18/29,gw=10.20.2.17"
+    # Dusk_Edgeshark
+    ipconfig2  = "ip=10.20.2.26/29,gw=10.20.2.25"
+    # Dusk_Monitor_Center
+    ipconfig3  = "ip=10.20.2.34/29,gw=10.20.2.33"
+    # Dusk
+    # main interface, note: must be last
+    ipconfig4  = "ip=10.20.2.6/29,gw=10.20.2.1"
 
 
     serial {
@@ -129,7 +143,7 @@ resource "proxmox_vm_qemu" "debian12-dusk" {
     # network center interface
     network {
         id = 0
-        macaddr = ""
+        macaddr = "0a:1a:19:4f:3d:a0"
         model = "virtio"
         bridge = "vmbr202"
         queues = local.cores # num of cores
@@ -147,7 +161,7 @@ resource "proxmox_vm_qemu" "debian12-dusk" {
     # edgeshark interface
     network {
         id = 2
-        macaddr = ""
+        macaddr = "c6:3c:cd:de:22:0a"
         model = "virtio"
         bridge = "vmbr204"
         queues = local.cores # num of cores
@@ -156,7 +170,7 @@ resource "proxmox_vm_qemu" "debian12-dusk" {
     # monitor center interface
     network {
         id = 3
-        macaddr = ""
+        macaddr = "ee:05:14:9c:4f:08"
         model = "virtio"
         bridge = "vmbr205"
         queues = local.cores # num of cores

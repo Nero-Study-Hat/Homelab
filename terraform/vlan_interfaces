@@ -36,13 +36,75 @@ iface vmbr103 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 104: C_Monitor_Center
+# vlan 104: Day_Monitor_Outpost
 auto vmbr0.104
 iface vmbr0.104 inet manual
 
 auto vmbr104
 iface vmbr104 inet manual
         bridge-ports vmbr0.104
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+### VLAN DUSK ###
+
+# vlan 201: Dusk
+auto vmbr0.201
+iface vmbr0.201 inet manual
+
+auto vmbr201
+iface vmbr201 inet manual
+        bridge-ports vmbr0.201
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 202: Dusk_Network_Center
+auto vmbr0.202
+iface vmbr0.202 inet manual
+
+auto vmbr202
+iface vmbr202 inet manual
+        bridge-ports vmbr0.202
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 203: Dusk_User_Gateway
+auto vmbr0.203
+iface vmbr0.203 inet manual
+
+auto vmbr203
+iface vmbr203 inet manual
+        bridge-ports vmbr0.203
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 204: Dusk_Edgeshark
+auto vmbr0.204
+iface vmbr0.204 inet manual
+
+auto vmbr204
+iface vmbr204 inet manual
+        bridge-ports vmbr0.204
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 205: Dusk_Monitor_Center
+auto vmbr0.205
+iface vmbr0.205 inet manual
+
+auto vmbr205
+iface vmbr205 inet manual
+        bridge-ports vmbr0.205
         bridge-stp off
         bridge-fd 0
         bridge-vlan-aware yes

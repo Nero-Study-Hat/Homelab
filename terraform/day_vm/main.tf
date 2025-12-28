@@ -1,6 +1,6 @@
 locals {
     cores = 2
-    os_disk_size = "30G"
+    os_disk_size = "50G"
     # data_disk_size = "2T"
     data_disk_size = "500G"
     # cloud-init settings
@@ -71,12 +71,15 @@ resource "proxmox_vm_qemu" "debian12-day" {
     # static dhcp entries are required for the below config
     nameserver = "1.1.1.1 8.8.8.8"
     # vlans
+    # Day_Network_Center
     ipconfig0  = "ip=10.20.1.10/29,gw=10.20.1.9"
-    ipconfig1  = "ip=10.20.1.18/29,gw=10.20.1.17"
-    ipconfig2  = "ip=10.20.1.26/29,gw=10.20.1.25"
-    ipconfig3  = "ip=10.20.1.34/29,gw=10.20.1.33"
+    # Day_Edgeshark
+    ipconfig1  = "ip=10.20.1.26/29,gw=10.20.1.25"
+    # Day_Monitor_Outpost
+    ipconfig2  = "ip=10.20.1.34/29,gw=10.20.1.33"
+    # Day
     # main interface, note: must be last
-    ipconfig4  = "ip=10.20.1.6/29,gw=10.20.1.1"
+    ipconfig3  = "ip=10.20.1.6/29,gw=10.20.1.1"
 
 
 

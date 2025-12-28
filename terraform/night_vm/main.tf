@@ -1,6 +1,6 @@
 locals {
-    cores = 2
-    os_disk_size = "30G"
+    cores = 3
+    os_disk_size = "50G"
     # data_disk_size = "2T"
     data_disk_size = "500G"
     # cloud-init settings
@@ -64,16 +64,20 @@ resource "proxmox_vm_qemu" "debian12-night" {
     cicustom   = local.cloud_init_snippet
     ciuser     = data.sops_file.sops-secret.data["ci_user"]
     cipassword = data.sops_file.sops-secret.data["ci_password"]
-    sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"]
+    sshkeys    = data.sops_file.sops-secret.data["auth_sshkey"] #TODO: remove when stable
 
     # network config
     # below IP addresses must be available in the below bridges
     # static dhcp entries are required for the below config
     nameserver = "1.1.1.1 8.8.8.8"
     # vlans
+    # Night_Network_Center
     ipconfig0  = "ip=10.20.3.10/29,gw=10.20.3.9"
-    ipconfig1  = "ip=10.20.3.18/29,gw=10.20.3.17"
-    ipconfig2  = "ip=10.20.3.26/29,gw=10.20.3.25"
+    # Night_Edgeshark
+    ipconfig1  = "ip=10.20.3.26/29,gw=10.20.3.25"
+    # Night_Monitor_Outpost
+    ipconfig2  = "ip=10.20.3.34/29,gw=10.20.3.33"
+    # Night
     # main interface, note: must be last
     ipconfig3  = "ip=10.20.3.6/29,gw=10.20.3.1"
 
