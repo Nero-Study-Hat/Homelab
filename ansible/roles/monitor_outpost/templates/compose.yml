@@ -11,8 +11,8 @@ services:
       - "41641/udp"
     networks:
       {{ macvlan.name }}:
-        ipv4_address: {{ macvlan.ip }}
-        mac_address: {{ macvlan.mac_address }}
+        ipv4_address: "{{ macvlan.ip }}"
+        mac_address: "{{ macvlan.mac_address }}"
       {{t3_network_backend.name}}:
         ipv4_address: {{t3_network_backend.traefik_ips.tailscale_traefik}}
     environment:
@@ -34,7 +34,7 @@ services:
     restart: unless-stopped
 
   traefik-outpost:
-    image: traefik:v3.4
+    image: traefik:v3.6
     container_name: traefik-outpost
     depends_on:
       socket-proxy-outpost:
@@ -83,8 +83,8 @@ services:
       - "41641/udp"
     networks:
       {{ macvlan.name }}:
-        ipv4_address: {{ alloy_macvlan.ip }}
-        mac_address: {{ alloy_macvlan.mac_address }}
+        ipv4_address: "{{ alloy_macvlan.ip }}"
+        mac_address: "{{ alloy_macvlan.mac_address }}"
       {{t3_network_backend.name}}:
         ipv4_address: {{t3_network_backend.traefik_ips.alloy}}
     environment:
@@ -162,7 +162,7 @@ services:
   #   tty: true
 
   socket-proxy-outpost:
-    image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
+    image: "11notes/socket-proxy:2.1.6@sha256:2f4e605a5441b31389a95ef942af45927e8df4df4e974cfa271a388799d4f87b"
     container_name: socket-proxy-outpost
     network_mode: "none"
     restart: "always"
@@ -182,5 +182,5 @@ volumes:
 networks:
   {{ macvlan.name }}:
     external: true
-  {{t3_network_backend.name}}:
+  "{{t3_network_backend.name}}":
      external: true

@@ -8,11 +8,11 @@ services:
     restart: unless-stopped
     volumes:
       - grafana_data:/var/lib/grafana
-    dns: {{shared_network_backend.ips.dns}}
+    dns: "{{shared_network_backend.ips.dns}}"
     networks:
       monitoring_backend:
       {{shared_network_backend.name}}:
-        ipv4_address: {{shared_network_backend.ips.grafana}}
+        ipv4_address: "{{shared_network_backend.ips.grafana}}"
     depends_on:
       - loki
     labels:
@@ -33,11 +33,11 @@ services:
     hostname: mimir
     image: grafana/mimir:latest
     command: ["-config.file=/etc/mimir.yaml"]
-    dns: {{shared_network_backend.ips.dns}}
+    dns: "{{shared_network_backend.ips.dns}}"
     networks:
       monitoring_backend:
       {{shared_network_backend.name}}:
-        ipv4_address: {{shared_network_backend.ips.mimir}}
+        ipv4_address: "{{shared_network_backend.ips.mimir}}"
     volumes:
       - ./mimir/mimir.yaml:/etc/mimir.yaml
       - ./mimir/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml
@@ -60,11 +60,11 @@ services:
     volumes:
       - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
       - loki_data:/loki:rw
-    dns: {{shared_network_backend.ips.dns}}
+    dns: "{{shared_network_backend.ips.dns}}"
     networks:
       monitoring_backend:
       {{shared_network_backend.name}}:
-        ipv4_address: {{shared_network_backend.ips.loki}}
+        ipv4_address: "{{shared_network_backend.ips.loki}}"
     labels:
       - "traefik.enable=true"
       - "traefik.zone.main=true"
@@ -77,7 +77,7 @@ services:
       - "traefik.http.services.loki.loadbalancer.server.port=3100"
 
   socket-proxy-alloy:
-    image: "11notes/socket-proxy:2.1.1@sha256:6914fa5e6c57bdc0be40554ed720f87a0dc639d87654d77beffa14c1b85b1448"
+    image: "11notes/socket-proxy:2.1.6@sha256:2f4e605a5441b31389a95ef942af45927e8df4df4e974cfa271a388799d4f87b"
     container_name: socket-proxy-alloy
     restart: "always"
     read_only: true
@@ -95,8 +95,8 @@ services:
       - "41641/udp"
     networks:
       {{ macvlan.name }}:
-        ipv4_address: {{ macvlan.ip }}
-        mac_address: {{ macvlan.mac_address }}
+        ipv4_address: "{{ macvlan.ip }}"
+        mac_address: "{{ macvlan.mac_address }}"
       monitoring_backend:
       {{shared_network_backend.name}}:
         ipv4_address: {{shared_network_backend.ips.alloy}}
@@ -160,11 +160,11 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
-    dns: {{shared_network_backend.ips.dns}}
+    dns: "{{shared_network_backend.ips.dns}}"
     networks:
       monitoring_backend:
       {{shared_network_backend.name}}:
-        ipv4_address: {{shared_network_backend.ips.cadvisor}}
+        ipv4_address: "{{shared_network_backend.ips.cadvisor}}"
     # Mounts necessary directories for cAdvisor to access container runtime information.
     volumes:
       - "/:/rootfs:ro"
@@ -193,5 +193,5 @@ networks:
     external: true
   monitoring_backend:
     internal: true
-  {{shared_network_backend.name}}:
+  "{{shared_network_backend.name}}":
     external: true
