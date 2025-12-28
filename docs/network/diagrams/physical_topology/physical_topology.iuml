@@ -1,0 +1,58 @@
+@startuml Physical Topology
+!define RECTANGLE class
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+package "Network Topology" {
+  component "Home Modem" as modem
+  
+  package "Proxmox Hypervisor" as proxmox {
+    component "OPNSense Router\n(VM)" as opnsense
+    component "Other Proxmox VMs" as vms
+  }
+  
+  component "Managed Switch" as netgear
+  
+package "Personal LAN" as personalLan {
+  component "Unmanaged Switch" as hp1
+  component "Unmanaged Switch" as hp2
+  component "Gaming Console" as console
+  component "Client PC 1" as pc1
+}
+
+component "                         " as spacer #transparent
+
+package "Family LAN" as familyLan {
+  component "Router" as cisco
+  component "HP Printer" as printer
+  component "Client PC 2" as pc2
+  component "Client Laptop 1" as laptop1
+  component "Client Laptop 2" as laptop2
+  component "Client Laptop 3" as laptop3
+}
+
+personalLan -[hidden]-> spacer
+spacer -[hidden]-> familyLan
+
+  
+  modem --> proxmox
+  proxmox --> opnsense
+  opnsense --> vms
+  opnsense --> netgear
+  
+  netgear --> hp1
+  netgear --> cisco
+  
+  hp1 --> hp2
+  
+  hp2 --> pc1
+  hp2 --> console
+  
+  cisco --> printer : wired
+  cisco --> pc2 : wired
+  cisco --> laptop1 : wired
+  cisco --> laptop2 : wifi
+  cisco --> laptop3 : wifi
+}
+@enduml

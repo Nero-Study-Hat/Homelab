@@ -1,0 +1,126 @@
+flowchart LR
+
+%% =========================
+%% GROUPS
+%% =========================
+subgraph GROUPS["Groups"]
+  personal["group: personal"]
+end
+
+%% =========================
+%% TAGGED COMPONENTS
+%% =========================
+subgraph TAGS["Tagged Nodes (Tailscale Tags)"]
+  ssh["tag: ssh-server"]
+  dayShark["tag: day-shark-server"]
+  dayNetCtr["tag: day-server-network-center"]
+  duskNetCtr["tag: dusk-server-network-center"]
+  nightNetCtr["tag: night-server-network-center"]
+  duskGate["tag: dusk-gate-server"]
+
+  dayMonTraefik["tag: day-server-monitor-traefik"]
+  dayMonAlloy["tag: day-server-monitor-alloy"]
+  duskMonAlloy["tag: dusk-server-monitor-alloy"]
+  nightMonTraefik["tag: night-server-monitor-traefik"]
+  nightMonAlloy["tag: night-server-monitor-alloy"]
+
+  meClient["tag: me-client"]
+end
+
+%% =========================
+%% HOST ADDRESSES
+%% =========================
+subgraph HOSTS["Host Addresses"]
+  dayTraefik["day-traefik"]
+  dayDNS["day-dns"]
+
+  duskTraefik["dusk-traefik"]
+  duskDNS["dusk-dns"]
+
+  nightTraefik["night-traefik"]
+  nightDNS["night-dns"]
+end
+
+%% =========================
+%% CONNECTIONS
+%% =========================
+
+%% group: personal (BLUE)
+personal -->|SSH 22| ssh
+personal -->|all| dayNetCtr
+personal -->|all| dayShark
+personal -->|udp 53| duskGate
+personal -->|9002| nightMonTraefik
+personal -->|9002| nightNetCtr
+personal -->|tcp 80,443| duskGate
+
+%% tag: me-client (GREEN)
+meClient -->|all| dayNetCtr
+meClient -->|udp 53| duskGate
+meClient -->|tcp 80,443| duskGate
+
+%% tag: day-shark-server (PURPLE)
+dayShark -->|all| personal
+
+%% day-server-monitor-traefik (ORANGE)
+dayMonTraefik -->|udp 53| dayDNS
+dayMonTraefik -->|udp 53| nightDNS
+
+%% day-server-monitor-alloy (GOLD)
+dayMonAlloy -->|udp 53| dayDNS
+dayMonAlloy -->|udp 53| nightDNS
+
+%% dusk-server-monitor-alloy (BROWN)
+duskMonAlloy -->|udp 53| dayDNS
+duskMonAlloy -->|udp 53| nightDNS
+duskMonAlloy -->|tcp 80,443; 9100| duskTraefik
+duskMonAlloy -->|9002| duskGate
+duskMonAlloy -->|9002| duskNetCtr
+
+%% night-server-monitor-traefik (RED)
+nightMonTraefik -->|udp 53| dayDNS
+nightMonTraefik -->|udp 53| nightDNS
+nightMonTraefik -->|tcp 80,443| duskTraefik
+
+%% night-server-monitor-alloy (DARK RED)
+nightMonAlloy -->|udp 53| dayDNS
+nightMonAlloy -->|udp 53| nightDNS
+nightMonAlloy -->|tcp 80,443; 9100| nightTraefik
+nightMonAlloy -->|9002| nightMonTraefik
+nightMonAlloy -->|9002| nightNetCtr
+
+%% dusk-gate-server (DARK GRAY)
+duskGate -->|tcp 80,443| dayTraefik
+duskGate -->|tcp 80,443| duskTraefik
+duskGate -->|tcp 80,443| nightTraefik
+
+%% =========================
+%% LINK STYLES (STRICT ORDER)
+%% =========================
+
+%% personal
+linkStyle 0,1,2,3,4,5,6 stroke:#1f77b4,stroke-width:2px
+
+%% me-client
+linkStyle 7,8,9 stroke:#2ca02c,stroke-width:2px
+
+%% day-shark-server
+linkStyle 10 stroke:#9467bd,stroke-width:2px
+
+%% day-server-monitor-traefik
+linkStyle 11,12 stroke:#ff7f0e,stroke-width:2px
+
+%% day-server-monitor-alloy
+linkStyle 13,14 stroke:#e6ab02,stroke-width:2px
+
+%% dusk-server-monitor-alloy
+linkStyle 15,16,17,18,19 stroke:#8c564b,stroke-width:2px
+
+%% night-server-monitor-traefik
+linkStyle 20,21,22 stroke:#d62728,stroke-width:2px
+
+%% night-server-monitor-alloy
+linkStyle 23,24,25,26,27 stroke:#7f0000,stroke-width:2px
+
+%% dusk-gate-server
+linkStyle 28,29,30 stroke:#444444,stroke-width:2px

@@ -1,0 +1,86 @@
+@startuml VLANS and Subnets
+top to bottom direction
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+package "Day VLAN" as day_vlan {
+  component "Debian 12 Host\n(Day)" as day_host
+
+  package "Docker Networks Group" as day_docker {
+    component "traefik_tailscale\nbridge subnet" as day_traefik
+    component "edgeshark bridge 1\nsubnet" as day_edge1
+    component "edgeshark bridge 2\nsubnet" as day_edge2
+    component "monitor bridge\nsubnet" as day_monitor
+    component "searxng bridge\nsubnet" as day_searxng
+    component "vikunja bridge\nsubnet" as day_vikunja
+    component "expenseowl bridge\nsubnet" as day_expense
+    component "NAS bridge\nsubnet" as day_nas
+    component "passwordpusher bridge\nsubnet" as day_pass
+    component "neko bridge\nsubnet" as day_neko
+    component "homepage bridge\nsubnet" as day_home
+  }
+
+  day_host --> day_docker
+}
+
+package "Dusk VLAN" as dusk_vlan {
+  component "Debian 12 Host\n(Dusk)" as dusk_host
+
+  package "Docker Networks Group" as dusk_docker {
+    component "traefik_tailscale\nbridge subnet" as dusk_traefik
+    component "nginx_gate bridge\nsubnet" as dusk_nginx
+    component "edgeshark bridge 1\nsubnet" as dusk_edge1
+    component "edgeshark bridge 2\nsubnet" as dusk_edge2
+    component "monitor bridge\nsubnet" as dusk_monitor
+    component "commafeed bridge\nsubnet" as dusk_comma
+    component "rssbridge bridge\nsubnet" as dusk_rss
+    component "tagspaces bridge\nsubnet" as dusk_tag
+    component "syncthing bridge\nsubnet" as dusk_sync
+    component "jellyfin bridge\nsubnet" as dusk_jelly
+    component "pinchflat bridge\nsubnet" as dusk_pinch
+  }
+
+  dusk_host --> dusk_docker
+}
+
+package "Night VLAN" as night_vlan {
+  component "Debian 12 Host\n(Night)" as night_host
+
+  package "Docker Networks Group" as night_docker {
+    component "traefik_tailscale\nbridge subnet" as night_traefik
+    component "edgeshark bridge 1\nsubnet" as night_edge1
+    component "edgeshark bridge 2\nsubnet" as night_edge2
+    component "monitor bridge\nsubnet" as night_monitor
+    component "kasm workspaces\nbridge subnet" as night_kasm
+  }
+
+  night_host --> night_docker
+}
+
+' --- Per-VLAN Tailscale clouds ---
+cloud "Tailscale"   as ts_day
+cloud "Tailscale"  as ts_dusk
+cloud "Tailscale" as ts_night
+
+' --- Layout anchors ---
+day_vlan   -[hidden]-> ts_day
+dusk_vlan  -[hidden]-> ts_dusk
+night_vlan -[hidden]-> ts_night
+
+' --- Tailscale connectivity only where applicable ---
+day_traefik --> ts_day : network center\nmacvlan
+day_edge1   --> ts_day : edgeshark\nmacvlan
+day_monitor --> ts_day : monitor outpost\nmacvlan
+
+dusk_traefik --> ts_dusk : network center\nmacvlan
+dusk_nginx   --> ts_dusk : user gateway\nmacvlan
+dusk_edge1   --> ts_dusk : edgeshark\nmacvlan
+dusk_monitor --> ts_dusk : monitor center\nmacvlan
+
+night_traefik --> ts_night : network center\nmacvlan
+night_edge1   --> ts_night : edgeshark\nmacvlan
+night_monitor --> ts_night : monitor outpost\nmacvlan
+
+@enduml
