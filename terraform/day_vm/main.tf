@@ -12,11 +12,11 @@ terraform {
   required_providers {
     sops = {
         source = "carlpett/sops"
-        version = "1.1.1"
+        version = "1.3.0"
     }
     proxmox = {
       source  = "Telmate/proxmox"
-      version = "3.0.1-rc6"
+      version = "3.0.2-rc07"
     }
   }
 }
@@ -36,7 +36,7 @@ provider "proxmox" {
 resource "proxmox_vm_qemu" "debian12-day" {
 
     name = "debian12-day"
-    desc = "Day Server"
+    description = "Day Server"
     target_node = "pve"
 
     # Activate QEMU agent for this VM
@@ -46,14 +46,18 @@ resource "proxmox_vm_qemu" "debian12-day" {
     boot = "order=scsi0;"
     automatic_reboot = false
 
-    cores = local.cores
+    cpu {
+        cores = local.cores
+    }
     memory = 2048
     balloon = 2048
     scsihw = "virtio-scsi-single"
 
     # start immidiately with proxmox node
-    onboot = true
-    startup = "order=2"
+    start_at_node_boot = true
+    startup_shutdown {
+        order = 2
+    }
 
     # Cloud-Init Pre-Reqs configuration
     os_type = "cloud-init"
@@ -137,6 +141,10 @@ resource "proxmox_vm_qemu" "debian12-day" {
     # a linux vlan and linux bridge using that vlan as bridged port
     # then use the final linux bridge here
 
+    # IMPORTANT
+    # make sure the bridge number correspond with the vlan tag in OPNSense
+    # not just that the interface exists on proxmox 
+
     ## VLAN INTERFACES ##
     # network center interface
     network {
@@ -152,7 +160,7 @@ resource "proxmox_vm_qemu" "debian12-day" {
         id = 1
         macaddr = "ee:76:24:18:a8:05"
         model = "virtio"
-        bridge = "vmbr103"
+        bridge = "vmbr104"
         queues = local.cores # num of cores
     }
 
@@ -161,7 +169,7 @@ resource "proxmox_vm_qemu" "debian12-day" {
         id = 2
         macaddr = "ea:35:e6:41:05:21"
         model = "virtio"
-        bridge = "vmbr104"
+        bridge = "vmbr105"
         queues = local.cores # num of cores
     }
 

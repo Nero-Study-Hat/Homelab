@@ -24,25 +24,25 @@ iface vmbr102 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 103: Day_Edgeshark
-auto vmbr0.103
-iface vmbr0.103 inet manual
-
-auto vmbr103
-iface vmbr103 inet manual
-        bridge-ports vmbr0.103
-        bridge-stp off
-        bridge-fd 0
-        bridge-vlan-aware yes
-        bridge-vids 2-4094
-
-# vlan 104: Day_Monitor_Outpost
+# vlan 104: Day_Edgeshark
 auto vmbr0.104
 iface vmbr0.104 inet manual
 
 auto vmbr104
 iface vmbr104 inet manual
         bridge-ports vmbr0.104
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 105: Day_Monitor_Outpost
+auto vmbr0.105
+iface vmbr0.105 inet manual
+
+auto vmbr105
+iface vmbr105 inet manual
+        bridge-ports vmbr0.105
         bridge-stp off
         bridge-fd 0
         bridge-vlan-aware yes
@@ -136,25 +136,25 @@ iface vmbr302 inet manual
         bridge-vlan-aware yes
         bridge-vids 2-4094
 
-# vlan 303: Night_Edgeshark
-auto vmbr0.303
-iface vmbr0.303 inet manual
-
-auto vmbr303
-iface vmbr303 inet manual
-        bridge-ports vmbr0.303
-        bridge-stp off
-        bridge-fd 0
-        bridge-vlan-aware yes
-        bridge-vids 2-4094
-
-# vlan 304: Night_Monitor_Outpost
+# vlan 304: Night_Edgeshark
 auto vmbr0.304
 iface vmbr0.304 inet manual
 
 auto vmbr304
 iface vmbr304 inet manual
         bridge-ports vmbr0.304
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+# vlan 305: Night_Monitor_Outpost
+auto vmbr0.305
+iface vmbr0.305 inet manual
+
+auto vmbr305
+iface vmbr305 inet manual
+        bridge-ports vmbr0.305
         bridge-stp off
         bridge-fd 0
         bridge-vlan-aware yes

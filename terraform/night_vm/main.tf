@@ -12,11 +12,11 @@ terraform {
   required_providers {
     sops = {
         source = "carlpett/sops"
-        version = "1.1.1"
+        version = "1.3.0"
     }
     proxmox = {
       source  = "Telmate/proxmox"
-      version = "3.0.1-rc6"
+      version = "3.0.2-rc07"
     }
   }
 }
@@ -36,7 +36,7 @@ provider "proxmox" {
 resource "proxmox_vm_qemu" "debian12-night" {
 
     name = "debian12-night"
-    desc = "Night Server"
+    description = "Night Server"
     target_node = "pve"
 
     # Activate QEMU agent for this VM
@@ -46,14 +46,18 @@ resource "proxmox_vm_qemu" "debian12-night" {
     boot = "order=scsi0;"
     automatic_reboot = false
 
-    cores = local.cores
+    cpu {
+        cores = local.cores
+    }
     memory = 2048
     balloon = 2048
     scsihw = "virtio-scsi-single"
 
     # start immidiately with proxmox node
-    onboot = true
-    startup = "order=2"
+    start_at_node_boot = true
+    startup_shutdown {
+        order = 2
+    }
 
     # Cloud-Init Pre-Reqs configuration
     os_type = "cloud-init"
@@ -153,7 +157,7 @@ resource "proxmox_vm_qemu" "debian12-night" {
         id = 1
         macaddr = "3e:1c:43:2e:50:5a"
         model = "virtio"
-        bridge = "vmbr303"
+        bridge = "vmbr304"
         queues = local.cores # num of cores
     }
 
@@ -162,7 +166,7 @@ resource "proxmox_vm_qemu" "debian12-night" {
         id = 2
         macaddr = "6a:c9:bd:ad:39:16"
         model = "virtio"
-        bridge = "vmbr304"
+        bridge = "vmbr305"
         queues = local.cores # num of cores
     }
 
