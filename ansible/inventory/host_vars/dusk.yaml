@@ -18,46 +18,46 @@ gate_traefik_instances:
     domains_list: # day
     - name: vikunja.day.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
     - name: searxng.day.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
     - name: traefik.monitor.day.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
     - name: traefik.day.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
   dusk:
     traefik_ip: 10.120.0.2
     domains_list: # dusk
     - name: grafana.dusk.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
     - name: loki.dusk.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
     - name: mimir.dusk.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
     - name: cadvisor.dusk.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
     - name: alloy.dusk.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
     - name: traefik.dusk.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
   night:
     traefik_ip: 10.130.0.2
     domains_list: # night
     - name: traefik.monitor.night.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
     - name: traefik.night.wiresndreams.dev
       allowed_tailscale_client_ips:
-        - 100.93.170.126 # stardom
+        - 100.121.237.28 # stardom
 
 # added to dhcp static mappings in opnsense
 macvlan_user_gate:
@@ -69,6 +69,12 @@ macvlan_user_gate:
   - subnet: "10.20.2.16/29"
     gateway: "10.20.2.17"
 
+gate_network_backend:
+  name: "gate-tailscale-network"
+  ip: "10.120.4.2"
+  ipam_options:
+  - subnet: "10.120.4.0/29"
+    gateway: "10.120.4.1"
 ### NETWORK CENTER ###
 
 # remember to
