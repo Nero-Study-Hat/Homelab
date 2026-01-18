@@ -46,6 +46,12 @@
 
 ### MAIN ###
 
+#TODO: check if this task is required
+- name: Create network backend
+  community.docker.docker_network:
+    name: "{{network_backend.name}}"
+    ipam_config: "{{network_backend.ipam_options}}"
+
 - name: Create .env file with ts_authkey
   ansible.builtin.copy:
     dest: "{{stack_dir}}/.env"

@@ -13,8 +13,8 @@ services:
       {{ macvlan.name }}:
         ipv4_address: "{{ macvlan.ip }}"
         mac_address: "{{ macvlan.mac_address }}"
-      gate-tailscale-network:
-        ipv4_address: "10.110.4.2"
+      {{ network_backend.name }}:
+        ipv4_address: "{{ network_backend.ip }}"
     environment:
       TS_ENABLE_METRICS: "true"
       TS_AUTHKEY: ${TS_AUTHKEY}
@@ -60,9 +60,5 @@ services:
 networks:
   {{ macvlan.name }}:
     external: true
-  gate-tailscale-network:
-    ipam:
-      config:
-        - subnet: "10.110.4.0/29"
-          gateway: "10.110.4.1"
-    internal: "false"
+  "{{network_backend.name}}":
+    external: true
