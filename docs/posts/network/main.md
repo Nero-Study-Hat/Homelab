@@ -1,5 +1,7 @@
+# Network Setup
+
 > [!important]
-> ### ***What this document is and is not for.***
+> #### ***What this document is and is not for.***
 > 
 > This document is meant to provide an accurate in-depth read of my network architecture and configuration state.
 > 
@@ -11,62 +13,33 @@
 > 
 > An overview of traffic flow through my network as a whole is kept in this document.
 > - [Traffic Flow](./traffic_flow.md)
+
 ---
 
-# OPNSense: Firewall, VLANS, Subnets
+## OPNSense Configuration
 
-| VLANs & Subnets  |
-| ---------------- |
+| VLANs & Subnets                                                       |
+| --------------------------------------------------------------------- |
 | ![VLANs and Subnet](diagrams/vlans_and_subnets/vlans_and_subnets.png) |
 
-## Firewall
-
-All VLANs below use the 802.1q protocol.
-
-For firewall rules all VLANs inherit the default OPNSense rules and floating rules.
-
-Default OPNSense
-
-![Default OPNSense Firewall Rules](pictures/default_opnsense_firewall_rules.png)
-
-> [!tip]
->
-> ***Explanation of OPNSense default rules.***
-> - Default deny / state violation rule: if another rule allowing the traffic is not found, block the traffic
-> 	- https://www.zenarmor.com/docs/network-security-tutorials/how-to-configure-opnsense-firewall-rules#what-is-opnsense-firewall-rule-order-and-direction-how-does-opnsense-process-the-rules
-> ---
-> - IPv6 RFC4890 requirements (ICMP): default secure allow IPv6 usage
-> 	- https://www.reddit.com/r/opnsense/comments/uyaute/ipv6_wan_rules_for_icmp/
-> 	- https://homenetworkguy.com/how-to/configure-ipv6-opnsense-with-isp-such-as-comcast-xfinity/
-> - block all targeting port 0
->     - https://networkengineering.stackexchange.com/questions/11234/tcp-port-0-reserved-for-what-purpose
->     - https://www.lifewire.com/port-0-in-tcp-and-udp-818145
-> - virusprot overload table: protection against brute force attacks
-> ---
-> - carp: recieves CARP packets and provides dedicated IP address for multiple networks
->     - this feature is meant for supporting a fail-over router
->     - https://docs.opnsense.org/manual/how-tos/carp.html
-> ---
-> - allow access to DHCP server: links to DHCP config, even if all outgoing traffic is specially managed, this will allow outgoing traffic to the DHCP server without requiring specific VLAN level allow rules
-> ---
-> - anti-lockout: allow access to router from any LAN address
->    - https://docs.opnsense.org/manual/firewall_settings.html#disable-anti-lockout
-> ---
-> - let out anything from firewall host itself (force gw): force use of set gateway for specific interfaces
+> [!warning] 
+> Some of the service network listed here are planned but not currently active. See the below list for planned to go up very soon but are not yet active services.
+> - expenseowl
+> - NAS
+> - passwordpusher
+> - neko
+> - homepage
+> - commafeed
+> - rssbridge
+> - tagspaces
+> - synthing
+> - jellyfin
+> - pinchflat
+> - kasm workspaces
 > 
-> ![Default Gateway Rule](pictures/default_gateway_firewall_rule.png)
+> They are planned to be fully working one - two weeks.
 
-
-Floating
-
-![Floating Firewall Rules](pictures/floating_firewall_rules.png)
-
-
-All server VLANs are part of the SERVERS group giving them the below firewall rules. None of them have unique rules yet.
-
-![SERVERS Group Firewall Rules](pictures/servers_group_firewall_rules.png)
-
-## VLAN Subnets & Assignments
+### VLAN Subnets & Assignments
 
 > [!tip]
 > ***Network Naming Schema Explained***
@@ -90,8 +63,10 @@ All server VLANs are part of the SERVERS group giving them the below firewall ru
 >	- undecided: 16-22
 >	- edgeshark: 24-30
 >	- monitor outpost: 32-38
+> - web_dev: 4
+>	- server: 0-6
 
-### Subnet Details
+#### Subnet Details
 Those in use below.
 
 | Name                  | Tag | Subnet Address (CIDR) | Default Gateway | Available Range |
@@ -109,10 +84,9 @@ Those in use below.
 | Night_Network_Center  | 302 | 10.20.3.8/29          | 10.20.3.9       | 10 - 14         |
 | Night_Edgeshark       | 304 | 10.20.3.24/29         | 10.20.3.25      | 26 - 30         |
 | Night_Monitor_Outpost | 305 | 10.20.3.32/29         | 10.20.3.33      | 34 - 38         |
+| Web_Dev               | 401 | 10.20.4.0/29          | 10.20.4.1       | 2 - 6           |
 
-
-#### Assignments Details
-
+##### Assignments Details
 
 > [!note] 
 > ***Static DHCP Mappings for Host VMs***
@@ -134,6 +108,7 @@ Those in use below.
 | Night_Network_Center  | ca:42:3c:61:6d:8f | 10.20.3.10 |
 | Night_Edgeshark       | 3e:1c:43:2e:50:5a | 10.20.3.26 |
 | Night_Monitor_Outpost | 6a:c9:bd:ad:39:16 | 10.20.3.34 |
+| Web_Dev               | a2:30:57:48:b8:92 | 10.20.4.6  |
 
 > [!note]
 > ***Static DHCP Mappings for Containers***
@@ -155,8 +130,7 @@ Those in use below.
 | Night_Monitor_Outpost | ts-monitor-outpost | traefik             | 1a:7b:14:b8:0f:5d | 10.20.3.35 |
 | Night_Monitor_Outpost | ts-monitor-alloy   | alloy               | 2a:d4:1a:0f:09:40 | 10.20.3.36 |
 
-
-## Docker Networks
+## Docker Configuration
 
 > [!note]
 > ***Network Naming Schema Explained***
@@ -165,7 +139,7 @@ Those in use below.
 > duplicates are intentional where a service requires multiple networks
 > macvlans obey naming scheme above for vlans
 > - vlan & special group numbers
-> 	- special interim server: 100
+> 	- web-dev: 100
 > 	- day: 110
 > 	- dusk: 120
 > 	- night: 130
@@ -178,6 +152,7 @@ Those in use below.
 > 		- gate: 4 (fix later: hard coded into compose)
 > 	- other operational services: 20-29
 > 		- monitor center/outpost: 20
+> 		- nginx_file_server: 21
 > 	- end services: 30-49
 > 		- commafeed: 30
 > 		- searxng: 31
@@ -185,8 +160,11 @@ Those in use below.
 > 		- homepage: 33
 > 		- vikunja: 34
 > 		- jellyfin: 35
+> 		- passwordpusher: 36
+> 		- neko: 37
+> 		- homepage: 38
 
-### Table of all docker networks currently in use.
+#### Table of all docker networks currently in use.
 > [!tip] 
 > - using `#` instead of `{}` because this way table formats correctly
 > - `#` is filled based on Network Naming Schema
@@ -204,39 +182,29 @@ Those in use below.
 | dusk         | monitor_center         | Bridge  | 10.120.20.0/28        | 10.120.20.1     | 2 - 6           |
 | dusk         | macvlan_monitor_center | Macvlan | 10.20.2.32/29         | 10.20.2.33      | 34 - 38         |
 
-> [!caution]
-> Docker bridge network `gate-tailscale-network` is hard coded in the Docker Compose file with the subnet `10.110.4.0/29` which is using the VLAN # for Day even though it is in Dusk. This was missed when moving the service role and needs to be updated.
-
 ##### Host addresses in use within the above Docker Networks.
 > [!tip] 
 > - host addresses refers to the last number in the address here
 > - the order of `Containers` and `IP Host Addresses` matches to pair each entry together
 > - leaving Macvlan networks out of this since those assignments are documented in the above VLAN Assignments section
+> 
+> Keep in mind the traefik container in many of these represents the `traefik_tailscale` network traefik container that has an additional interface in the given network with the given address.
+> - **Containers that have multiple network interfaces will be `highlighted`.**
 
-| Host(s)      | Network Name           | Containers                                                                   | IP Host Addresses                    |
-| ------------ | ---------------------- | ---------------------------------------------------------------------------- | ------------------------------------ |
-| All          | traefik_tailscale      | traefik<br>tailscale<br>dnsmasq                                              | 2<br>4<br>5                          |
-| day<br>night | monitor_outpost        | tailscale_traefik<br>alloy                                                   | 2<br>3                               |
-| day          | t3_searxng             | traefik<br>searxng                                                           | 3<br>5                               |
-| day          | t3_vikunja             | traefik<br>vikunja                                                           | 3<br>5                               |
-| dusk         | gate-tailscale-network | tailscale_nginx_dnsmasq                                                      | 2                                    |
-| dusk         | monitor_center         | tailscale<br>traefik<br>dns<br>grafana<br>loki<br>mimir<br>alloy<br>cadvisor | 2<br>3<br>4<br>5<br>6<br>7<br>8<br>9 |
-
-> [!warning]
-> - need to investigate if Tailscale Grants are pointing to the traefik instance in `monitor_center` network rather than `traefik_tailscale`
-> - need to investigate why `traefik_tailscale` network skips a host address number and correct if unnecessary or document if so
-> - should rename `alloy` network var to `tailscale_alloy` for the `monitor_outpost` network
-> - need to move up the host addresses for end service t3 networks `t3_searxng` and `t3_vikunja`
+| Host(s)      | Network Name           | Containers                                                                       | IP Host Addresses                    |
+| ------------ | ---------------------- | -------------------------------------------------------------------------------- | ------------------------------------ |
+| All          | traefik_tailscale      | `traefik`<br>`tailscale`<br>dnsmasq                                              | 2<br>4<br>5                          |
+| day<br>night | monitor_outpost        | `traefik`<br>tailscale_traefik<br>tailscale_alloy<br>cadvisor<br>dnsmasq         | 2<br>3<br>4<br>5<br>6                |
+| day          | t3_searxng             | `traefik`<br>searxng                                                             | 3<br>5                               |
+| day          | t3_vikunja             | `traefik`<br>vikunja                                                             | 3<br>5                               |
+| dusk         | gate-tailscale-network | tailscale_nginx_dnsmasq                                                          | 2                                    |
+| dusk         | monitor_center         | `tailscale`<br>`traefik`<br>dns<br>grafana<br>loki<br>mimir<br>alloy<br>cadvisor | 2<br>3<br>4<br>5<br>6<br>7<br>8<br>9 |
 
 ---
 
-# Tailscale: Overlay VPN
+## Tailscale: Groups, Tags, Hosts
 
-| Tailscale Mesh           |
-| ------------------------ |
-| ![Tailscale Mesh](diagrams/tailscale_mesh/tailscale_mesh.png) |
-
-## Groups
+### Groups
 
 | Group Name | Users                         |
 | ---------- | ----------------------------- |
@@ -249,9 +217,9 @@ Those in use below.
 > - the homelab is not setup to support more people than me securely yet
 > - because of the above I am currently the only user of my Homelab
 
-## Tags & Hosts
+### Tags & Hosts
 
-### Tags
+#### Tags
 
 > [!tip] 
 > - IP Addresses are set by the nodeAttrs block in the Tailscale Access Controls config.
@@ -259,7 +227,7 @@ Those in use below.
 
 | Tag Name                     | Hosts Applied To                                                            | Device Network(s)                         | IP Pool                  |
 | ---------------------------- | --------------------------------------------------------------------------- | ----------------------------------------- | ------------------------ |
-| ssh-server                   | Each Proxmox VM                                                             | VLANs: Day,Dusk,Night                     | "100.80.0.0/29"          |
+| ssh-server                   | Each Homelab Proxmox VM                                                     | VLANs: Day,Dusk,Night                     | "100.80.0.0/29"          |
 | day-shark-server             | does not exist currently<br><br>tailscale container +<br>packetflix sidecar | does not exist currently<br><br>edgeshark | "100.80.31.1/32"         |
 | day-server-network-center    | tailscale container                                                         | traefik_tailscale                         | does not exist currently |
 | dusk-server-network-center   | tailscale container                                                         | traefik_tailscale                         | does not exist currently |
@@ -271,12 +239,13 @@ Those in use below.
 | night-server-monitor-traefik | tailscale container +<br>traefik sidecar                                    | monitor_outpost                           | "100.80.20.4/32"         |
 | night-server-monitor-alloy   | tailscale container +<br>alloy sidecar                                      | monitor_outpost                           | "100.80.20.5/32"         |
 | me-client                    | n/a                                                                         | n/a                                       | n/a                      |
+| webvm-server                 | Web Dev Proxmox VM                                                          | VLAN: Web_Dev                             | "100.90.0.0/32"          |
 
 > [!warning]
 > - `day-shark-server` needs to be matched by tags for dusk and night, all with up to date nodeAttr IP Pool assignments
 > - make IP Pool assignments for the network-center tags
 
-### Host Addresses
+#### Host Addresses
 
 | Host Name                     | IP Address  | Container_Network | Container_Name |
 | ----------------------------- | ----------- | ----------------- | -------------- |
@@ -290,33 +259,35 @@ Those in use below.
 | night-dns                     | 10.130.0.5  | traefik_tailscale | dnsmasq        |
 | night-monitor-outpost-traefik | 10.130.20.2 | monitor_outpost   | traefik        |
 
-### Host Networks
+#### Host Networks
+Note: these are not used in grants currently but handy to have access to
 
 | Host Name                 | Subnet         | Host<br>Matching Docker_Network | Autoapproved True/Fasle | Tag<br>Associated           |
 | ------------------------- | -------------- | ------------------------------- | ----------------------- | --------------------------- |
 | day-traefik-net           | 10.110.0.0/29  | day<br>traefik_tailscale        | true                    | day-server-network-center   |
 | day-monitor-outpost-net   | 10.110.20.0/29 | day<br>monitor_outpost          | true                    | day-server-network-center   |
+| dusk-traefik-net          | 10.120.0.0/29  | dusk<br>traefik_tailscale       | true                    | dusk-server-network-center  |
 | dusk-monitor-center-net   | 10.120.20.0/28 | dusk<br>monitor_center          | true                    | dusk-server-network-center  |
 | night-traefik-net         | 10.130.0.0/29  | night<br>traefik_tailscale      | true                    | night-server-network-center |
 | night-monitor-outpost-net | 10.130.20.0/29 | night<br>monitor_outpost        | true                    | night-server-network-center |
 
-> [!warning]
-> - Autoapprovers contains the below which does not have a `host` entry or in turn any `Grants` entries.
-> 	- "10.120.0.0/29":  ["tag:dusk-server-network-center"], // traefik
-> - investigate why network-center tag is used for Autoapproving monitor routes and fix if need be
+> [!tip]
+> The `{host}-network-center` tag is used for all of these routes. This is because the compose that includes the Tailscale instance with this tag has jinja templating for populating all the routes automatically from the host variable I provide. 
 
+### SSH
 
-## SSH
-> [!note] 
-> This rule allows my personal devices only to be used for sshing into all my Proxmox VMs with any user on them.
+| Source         | Destination      | Users                       |
+| -------------- | ---------------- | --------------------------- |
+| group:personal | tag:ssh-server   | "autogroup:nonroot", "root" |
+| group:personal | tag:webvm-server | "autogroup:nonroot", "root" |
 
-| Source         | Destination    | Users                       |
-| -------------- | -------------- | --------------------------- |
-| group:personal | tag:ssh-server | "autogroup:nonroot", "root" |
+## Tailscale: Grants & Traffic Flow
 
-## Grants
+| Tailscale Mesh                                                |
+| ------------------------------------------------------------- |
+| ![Tailscale Mesh](diagrams/tailscale_mesh/tailscale_mesh.png) |
 
-### User Related
+#### User Related
 
 | Source                | Destination                      | Host<br>Destination Network               | Protocols:Ports Allowed |
 | --------------------- | -------------------------------- | ----------------------------------------- | ----------------------- |
@@ -331,28 +302,34 @@ Those in use below.
 | tag:me-client         | tag:dusk-gate-server             | dusk<br>gate-tailscale-network            | udp:53                  |
 | tag:me-client         | tag:dusk-gate-server             | dusk<br>gate-tailscale-network            | tcp:80, tcp:443         |
 | tag: day-shark-server | group:personal                   | n/a                                       | \*:*                    |
+| group:personal        | tag:webvm-server                 | VLAN: Web_Dev                             | \*:22, tcp:80, tcp:443  |
 
 > [!warning]
 > Need to join grants for destination:`tag:dusk-gate-server`.
 
-### Extra-VLAN Container to Container
+#### Extra-VLAN Container to Container
 
-| Source                           | Destination                     | Host<br>Source Network   | Host<br>Destination Network | Protocols:Ports Allowed |
-| -------------------------------- | ------------------------------- | ------------------------ | --------------------------- | ----------------------- |
-| tag:day-server-monitor-traefik   | host address: night-dns         | day<br>monitor_outpost   | night<br>tailscale_traefik  | udp:53                  |
-| tag:day-server-monitor-alloy     | host address: night-dns         | day<br>monitor_outpost   | night<br>tailscale_traefik  | udp:53                  |
-| tag:night-server-monitor-traefik | host address:day-dns            | night<br>monitor_outpost |                             | udp:53                  |
-| tag:night-server-monitor-traefik | host address:dusk-traefik       | night<br>monitor_outpost | night<br>tailscale_traefik  | tcp:80, tcp:443         |
-| tag:night-server-monitor-alloy   | host address:day-dns            | night<br>monitor_outpost | day<br>tailscale_traefik    | udp:53                  |
-| tag:dusk-gate-server             | host address: day-traefik<br>   | dusk<br>monitor_outpost  | day<br>tailscale_traefik    | tcp:80, tcp:443         |
-| tag:dusk-gate-server             | host address: night-traefik<br> | dusk                     | night                       | tcp:80, tcp:443         |
+| Source                           | Destination                                           | Host<br>Source Network   | Host<br>Destination Network                                 | Protocols:Ports Allowed |
+| -------------------------------- | ----------------------------------------------------- | ------------------------ | ----------------------------------------------------------- | ----------------------- |
+| tag:day-server-monitor-traefik   | host address: night-dns                               | day<br>monitor_outpost   | night<br>traefik_tailscale                                  | udp:53                  |
+| tag:day-server-monitor-traefik   | host address:dusk-traefik                             | day<br>monitor_outpost   | dusk<br>traefik_tailscale                                   | tcp:80, tcp:443         |
+| tag:day-server-monitor-alloy     | host address: night-dns<br><br>host address: dusk-dns | day<br>monitor_outpost   | night<br>traefik_tailscale<br><br>dusk<br>traefik_tailscale | udp:53                  |
+| tag:dusk-server-monitor-alloy    | host address: day-dns<br><br>host address: night-dns  | dusk<br>monitor_center   | day<br>traefik_tailscale<br><br>night<br>traefik_tailscale  | udp:53                  |
+| tag:night-server-monitor-traefik | host address: day-dns<br><br>host address: dusk-dns   | night<br>monitor_outpost | day<br>traefik_tailscale<br><br>dusk<br>traefik_tailscale   | udp:53                  |
+| tag:night-server-monitor-traefik | host address:dusk-traefik                             | night<br>monitor_outpost | dusk<br>traefik_tailscale                                   | tcp:80, tcp:443         |
+| tag:night-server-monitor-alloy   | host address:day-dns                                  | night<br>monitor_outpost | day<br>traefik_tailscale                                    | udp:53                  |
+| tag:dusk-gate-server             | host address: day-traefik<br>                         | dusk<br>monitor_outpost  | day<br>traefik_tailscale                                    | tcp:80, tcp:443         |
+| tag:dusk-gate-server             | host address: night-traefik<br>                       | dusk                     | night                                                       | tcp:80, tcp:443         |
 
 > [!warning]
-> - Need to add grants for the day-monitor tags headed to monitor-center.
 > - Investigate the udp:53 grants.
-> - Why does `tag:night-server-monitor-traefik` reach out to `host address:dusk-traefik` instead of a new `host address:dusk-monitor-traefik` with a separate Traefik instance there.
 
-### Intra-VLAN Container to Container
+> [!tip] 
+> Q: Why does `tag:night-server-monitor-traefik` reach out to `host address:dusk-traefik` instead of a new `host address:dusk-monitor-traefik` with a separate Traefik instance there.
+> 
+> A: Because this would require an additional Traefik which feels like it provides little benefit for me in terms of security. I still will probably set this additional instance up when my threat model goes up as I start locking down the Homelab.
+
+#### Intra-VLAN Container to Container
 
 | Source                           | Destination                      | Source Network         | Destination Network    | Protocols:Ports Allowed  |
 | -------------------------------- | -------------------------------- | ---------------------- | ---------------------- | ------------------------ |
@@ -360,6 +337,7 @@ Those in use below.
 | tag:day-server-monitor-alloy     | host address:day-dns             | monitor_outpost        | traefik_tailscale      | udp:53                   |
 | tag:dusk-server-monitor-alloy    | host address: dusk-traefik       | monitor_center         | traefik_tailscale      | tcp:80, tcp:443, \*:9100 |
 | tag:dusk-server-monitor-alloy    | tag:dusk-gate-server             | monitor_center         | gate-tailscale-network | *:9002                   |
+| tag:dusk-server-monitor-alloy    | host address: dusk-dns           | monitor_center         | traefik_tailscale      | udp:53                   |
 | tag:dusk-server-monitor-alloy    | tag:dusk-server-network-center   | monitor_center         | traefik_tailscale      | *:9002                   |
 | tag:night-server-monitor-traefik | host address: night-dns          | monitor_outpost        | traefik_tailscale      | udp:53                   |
 | tag:night-server-monitor-alloy   | host address: night-dns          | monitor_outpost        | traefik_tailscale      | udp:53                   |
@@ -374,13 +352,13 @@ Those in use below.
 > - `tag:day-server-monitor-alloy` needs grants allowing Intra-VLAN scraping.
 > - Investigate why `tag:night-server-monitor-alloy` is using Tailscale to go to another container in its own Docker Network.
 
-## Keys
+### Keys
 
 Total keys used: 10
 
 Note: A role can have multiple keys and in turn multiple tags (tag per key) only when there are multiple tailscale containers in that role.
 
-#### Containers with ts_auth_key.
+##### Containers with ts_auth_key.
 
 | Ansible Role Name | Key Details                              | Tailscale Sidecar Details                                                                             |
 | ----------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -392,7 +370,7 @@ Note: A role can have multiple keys and in turn multiple tags (tag per key) only
 
 To find them use (ctrl+f "TS_AUTHKEY: " case sensitive whole word) in this repo. It will show all docker composes where a Tailscale key is used.
 
-## Outbound-Capable Tailscale Containers
+### Outbound-Capable Tailscale Containers
 
 | Container Name  | Capability Purpose                                                                                          |
 | --------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -404,7 +382,7 @@ To find them use (ctrl+f "TS_AUTHKEY: " case sensitive whole word) in this repo.
 > [!warning]
 > Investigate the capability purpose of `dnsmasq container (sidecar)`. Test later with existing sidecar setup and advertised subnet setup.
 
-## Direct Connections
+### Direct Connections
 
 Every Tailscale container has a Macvlan interface for supporting direct connections.
 
@@ -420,17 +398,41 @@ Minuses
 
 ---
 
-# DNS
+## DNS
 
-TODO: dns write up ...
+### Docker DNS with Dnsmasq & Upstream Pihole
+
+Every docker bridge network I made has a Dnsmasq instance in it meant for providing private DNS records for the containers in that network to use.
+
+Almost always the private records block in the Dnsmasq config will only contain a wildcard for the local Traefik address in that network which will receive and forward all traffic using its host rules for DNS handling.
+
+All non-private-container related DNS queries will be referred upstream to a Pihole instance I am self hosting.
+
+> [!warning] 
+> In the future this Pihole instance will need to move from where it currently is as an LXC on my Proxmox machine to being in an established VM to save resources. When this change is made the only Pihole instance may be split into two with
+> 1. instance on Day VM for LAN and Day VLAN usage
+> 2. instance on Dusk VM for Dusk VLAN and Night VLAN usage
+
+### Tailscale DNS
 
 All Tailscale DNS usage is Split-DNS meaning the Tailscale DNS nameservers will only be used for the specified domain(s) they are paired with.
 
-This project has three different domains for which Tailscale DNS is used, these are subdomains that treat any further domains after as part of the given listings (wildcard behavior)
+This project has three main domains for which Tailscale DNS is used, these are subdomains that treat any further domains after as part of the given listings (wildcard behavior)
 - *.day.wiresndreams.dev
 - *.dusk.wiresndreams.dev
 - *.night.wiresndreams.dev
 
 For each domain the associated nameservers are
-1. nginx_gate dns: this is the user gate that filter incoming client traffic headed to service endpoints
-2. network_center dns: this is the host specific dnsmasq instance in the network center that provides the traefik address in its network
+1. `nginx_gate` dns: this is the user gate that filter incoming client traffic headed to service endpoints
+2. `network_center` dns: this is the host specific dnsmasq instance in the network center that provides the traefik address in its network
+
+There are two additional domains meant for monitor outpost usage. They are needed because Tailscale outbound containers (of which there are two in monitor outpost) use Tailscale DNS.
+
+Already in Tailscale DNS the base *.host.wiresndreams.dev* is covered meaning if a container with the same name (traefik in monitor outpost) is setup with a different nameserver there will be a conflict. Eg.
+- points to different locations
+	- *traefik.day.wiresndreams.dev*: network center nameserver
+	- *traefik.day.wiresndreams.dev*: monitor outpost nameserver
+
+Because of this a separate domain must be made to prevent a conflict. The separate domains include
+- *.monitor.day.wiresndreams.dev
+- *.monitor.night.wiresndreams.dev

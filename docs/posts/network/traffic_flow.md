@@ -13,3 +13,5 @@ device -> Gate:(nginx, dnsmasq, tailscale) -> Reverse Proxy:(traefik, dnsmasq, t
 
 
 ### physical data flow
+#### Walkthrough from Modem to endpoint and back physically.
+Details include ports used, speed of those ports, etc.

@@ -1,0 +1,53 @@
+- total hardware available: 12 cores, 32 GB
+
+- reasoning decisions
+    - Night Server
+        - when working the interim version with Kasm Workspaces will be taken down and dev will take place on Night Server proper, when done work interim goes back up
+        - will be awhile before proper comes into play was Wave 2: Improve Security needs to be all done first
+    - Kasm Workspaces
+        - will be unneeded for me when I am in infra-homelab-mode with access to the full torrent media stack plus SquareX for unknown links
+        - needed while I don't have the torrenting stack to enable media activities
+    - Pihole
+        - the DNS server should not be getting its own core all on its own when they are in such high demand
+    - Organization
+        - doing this by risk instead of similar type leads to a more secure setup, this informed the name change from cloud, fog, media as that was too utility type oriented
+
+- end goal
+    - permanent servers - always up and manually managed
+        - OPNsense server: 2 cores, 6 GB
+        - CI/CD & DNS server: 2 cores, 4 GB
+    - homelab servers (services split by risk factor) - CI/CD Managed Servers
+        - day server: 3 cores, 8 GB
+            - operational
+                - syncthing, traefik, tailscale, dnsmasq, grafana alloy
+            - non-operational
+                - searxng, vikunja, expenseowl, nas, passwordpusher, neko, homepage
+        - fog server: 2 cores, 4 GB
+            - operational
+                - syncthing, traefik, tailscale, dnsmasq, grafana alloy, grafana, mimir, loki, user-gateway
+            - non-operational
+                - commafeed, rssbridge, tagspaces
+        - night server: 3 cores, 10 GB
+            - operational
+                - syncthing, traefik, tailscale, dnsmasq, grafana alloy, grafana alloy
+            - non-operational
+                - syncthing, jellyfin, pinchflat
+- interim v1 spec
+    - permanent servers - always up and manually managed
+        - OPNsense server: 3 cores, 8 GB
+    - homelab servers (services split by risk factor)
+        - day server: 2 cores, 6 GB
+            - operational
+                - pihole, syncthing, traefik, tailscale, dnsmasq, grafana alloy
+            - non-operational
+                - searxng, vikunja, expenseowl, nas, passwordpusher, neko, homepage
+        - dusk server: 3 cores, 8 GB
+            - operational
+                - syncthing, traefik, tailscale, dnsmasq, grafana alloy, grafana, mimir, loki, user-gateway
+            - non-operational
+                - commafeed, rssbridge, tagspaces, syncthing, jellyfin, pinchflat
+        - night server: 3 cores, 8 GB
+            - operational
+                - syncthing, traefik, tailscale, dnsmasq, grafana alloy, grafana alloy
+            - non-operational
+                - kasm workspaces

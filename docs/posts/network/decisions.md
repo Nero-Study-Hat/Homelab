@@ -1,3 +1,5 @@
+# Address Naming
+
 Note: /29 subnets one after another
 - 
 
@@ -14,11 +16,11 @@ Tags vs Hosts usage in Tailscale
 
 why edgeshark gets to reach back to host
 
-## OPNSense
+# Tool Choice
 
-OPNSense IDS & IPS Suricata Plugin ...
 
-OPNSense firewall rules ...
+# Network Isolation Approach
 
-## DNS
+
+# Why the User-Gate Filter
 

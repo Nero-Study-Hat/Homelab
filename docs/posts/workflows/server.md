@@ -1,3 +1,4 @@
+```bash
 #!/usr/bin/env bash
 
 project_dir="~/Workspace/Tech/IT/Homelab"
@@ -35,3 +36,4 @@ docker network prune
 
 # for using/keeping existing named volumes
 # docker compose dosetting up zsh autocomplete on nixos
+```

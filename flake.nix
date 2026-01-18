@@ -32,6 +32,7 @@
                 	guestfs-tools
 					nmap
 					openssl
+                    nodejs_25
 				];
 
 				shellHook = ''
