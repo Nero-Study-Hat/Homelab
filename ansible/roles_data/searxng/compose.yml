@@ -1,0 +1,37 @@
+services:
+  {{project_name}}:
+    container_name: "{{project_name}}"
+    image: docker.io/searxng/searxng:latest
+    restart: unless-stopped
+    networks:
+      {{project_name}}_backend:
+      {{network_backend.name}}:
+        ipv4_address: "{{network_backend.traefik_ips.searxng}}"
+    volumes:
+      - ./{{project_name}}:/etc/searxng:rw
+    environment:
+      - UWSGI_WORKERS=2
+      - UWSGI_THREADS=2
+    # must be run this way first time, then uncommented and ran with
+    # docker compose -f searxng_stack.yml up -d
+    # cap_drop:
+    #   - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    labels:
+      - "traefik.enable=true"
+      - "traefik.zone.main=true"
+      - "traefik.docker.network={{network_backend.name}}"
+      - "traefik.http.routers.{{project_name}}.rule=Host(`{{domain}}`)"
+      - "traefik.http.routers.{{project_name}}.entrypoints=https"
+      - "traefik.http.routers.{{project_name}}.tls=true"
+      - "traefik.http.routers.{{project_name}}.tls.certresolver=desec"
+
+networks:
+  {{project_name}}_backend:
+  tailscale-network:
+    external: true
+  {{network_backend.name}}:
+    external: true

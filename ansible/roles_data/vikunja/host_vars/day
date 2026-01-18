@@ -1,0 +1,13 @@
+### VIKUNJA SERVICE SPECIFIC VARS ###
+
+vikunja:
+  name: "vikunja"
+  domain: "vikunja.day.wiresndreams.dev"
+  network_backend:
+    name: "t3_vikunja"
+    ipam_options:
+    - subnet: "10.110.34.0/29"
+      gateway: "10.110.34.1"
+    traefik_ips:
+      traefik: "10.110.34.3"
+      vikunja: "10.110.34.5"

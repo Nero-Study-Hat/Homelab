@@ -1,0 +1,13 @@
+### SEARXNG SERVICE SPECIFIC VARS ###
+
+searxng:
+  name: "searxng"
+  domain: "searxng.day.wiresndreams.dev"
+  network_backend:
+    name: "t3_searxng"
+    ipam_options:
+    - subnet: "10.110.31.0/29"
+      gateway: "10.110.31.1"
+    traefik_ips:
+      traefik: "10.110.31.3"
+      searxng: "10.110.31.5"

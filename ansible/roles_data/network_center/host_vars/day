@@ -1,0 +1,40 @@
+### NETWORK CENTER ###
+
+# remember to
+# - copy traefik shared ip to dns reverse proxy records
+# - set tailscale acls, autoApprovers, hosts, and grants
+host_networks:
+  shared:
+  traefik_specific: # these containers don't have Tailscale DNS and connection-ability
+  tailscale_specific: # these containers are not reachable via Traefik
+
+### TRAEFIK SERVICE SPECIFIC VARS ###
+
+network_center:
+  network_backend:
+    name: "traefik_tailscale"
+    ipam_options:
+    - subnet: "10.110.0.0/29"
+      gateway: "10.110.0.1"
+    ips:
+      traefik: "10.110.0.2"
+      tailscale: "10.110.0.4"
+      dns: "10.110.0.5"
+  domains:
+    main: "wiresndreams.dev"
+    wildcard: "*.day.wiresndreams.dev"
+    traefik: "traefik.day.wiresndreams.dev"
+  dns:
+    upstream_server: "10.0.0.3"
+    config: |
+      address=/day.wiresndreams.dev/10.110.0.2
+
+# added to dhcp static mappings in opnsense
+macvlan_network_center:
+  name: "macvlan_network_center"
+  parent_interface: "eth0"
+  ip: "10.20.1.11"
+  mac_address: "c6:19:a8:7f:0e:39"
+  ipam_options:
+  - subnet: "10.20.1.8/29"
+    gateway: "10.20.1.9"

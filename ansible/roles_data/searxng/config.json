@@ -1,0 +1,18 @@
+{
+    "ProjectName": "searxng",
+    "NetworkSetup": "t3_only",
+    "UserGateDetails": {
+        "day": {
+            "searxng": [
+                "100.121.237.28 # stardom"
+            ]
+        }
+    },
+    "DirectoriesToCreate": [],
+    "TemplatesRemoteRelativePaths": {},
+    "FilesRemoteRelativePaths": {},
+    "UserGateHost": "dusk",
+    "Hosts": [
+        "day"
+    ]
+}

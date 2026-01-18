@@ -1,0 +1,20 @@
+{
+    "ProjectName": "nginx_gate",
+    "NetworkSetup": "none",
+    "UserGateDetails": {},
+    "DirectoriesToCreate": [
+        "ts-nginx",
+        "dnsmasq_image"
+    ],
+    "TemplatesRemoteRelativePaths": {
+        "nginx.conf.j2": "./nginx.conf",
+        "dnsmasq.conf.j2": "dnsmasq_image/dnsmasq.conf"
+    },
+    "FilesRemoteRelativePaths": {
+        "Dnsmasq_Dockerfile": "dnsmasq_image/Dockerfile"
+    },
+    "UserGateHost": "dusk",
+    "Hosts": [
+        "dusk"
+    ]
+}

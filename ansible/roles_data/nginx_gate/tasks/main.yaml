@@ -1,0 +1,38 @@
+### MAIN ###
+
+#TODO: check if this task is required
+- name: Create network backend
+  community.docker.docker_network:
+    name: "{{network_backend.name}}"
+    ipam_config: "{{network_backend.ipam_options}}"
+
+- name: Create .env file with ts_authkey
+  ansible.builtin.copy:
+    dest: "{{stack_dir}}/.env"
+    content: |
+      TS_AUTHKEY={{ ts_auth_key }}
+
+### DNS CONFIG
+
+- name: Add records to dnsmasq.conf file
+  ansible.builtin.lineinfile:
+    path: "{{stack_dir}}/dnsmasq_image/dnsmasq.conf"
+    line: "{{ dns.records }}"
+
+- name: Build custom dnsmasq image
+  docker_image:
+    build:
+      path: '{{stack_dir}}/dnsmasq_image'
+    name: "custom/dnsmasq"
+    tag: latest
+    source: build
+    force_source: true
+    force_tag: true
+
+- name: Create a docker MACVLAN for tailscale direct connections
+  community.docker.docker_network:
+    name: "{{ macvlan.name }}"
+    ipam_config: "{{ macvlan.ipam_options }}"
+    driver: "macvlan"
+    driver_options:
+      parent: "{{ macvlan.parent_interface }}"

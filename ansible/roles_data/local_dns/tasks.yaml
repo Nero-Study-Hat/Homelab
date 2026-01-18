@@ -1,0 +1,62 @@
+### BOILER PLATE ###
+- name: Creates remote docker projects directory
+  ansible.builtin.file:
+    path: '{{docker_dir}}'
+    state: directory
+
+- name: Update local docker directory name variable
+  ansible.builtin.set_fact:
+    docker_proj_name: "{{ [dns_project_name, 'dns'] | join('-') }}"
+
+- name: Update local docker directory name variable
+  ansible.builtin.set_fact:
+    stack_dir: "{{ [docker_dir, project_name] | join('/') }}"
+
+- name: Creates remote project directory
+  file:
+    path: '{{stack_dir}}/dns'
+    state: directory
+
+- name: Transfer and convert the docker compose jinja2 template
+  ansible.builtin.template:
+    src: "compose.yml"
+    dest: "{{stack_dir}}/dns/compose.yml"
+
+### MAIN ###
+- name: Creates docker image build directory
+  file:
+    path: '{{stack_dir}}/dns/dnsmasq_image'
+    state: directory
+
+- name: Transfer and convert the dnsmasq.conf jinja2 template
+  ansible.builtin.template:
+    src: "dnsmasq.conf.j2"
+    dest: "{{stack_dir}}/dns/dnsmasq_image/dnsmasq.conf"
+
+- name: Copy Dockerfile
+  ansible.builtin.copy:
+    src: "Dockerfile"
+    dest: "{{stack_dir}}/dns/dnsmasq_image/Dockerfile"
+
+- name: Add records to dnsmasq.conf file
+  ansible.builtin.lineinfile:
+    path: "{{stack_dir}}/dns/dnsmasq_image/dnsmasq.conf"
+    line: "{{ config }}"
+
+- name: Build custom dnsmasq image
+  docker_image:
+    build:
+      path: '{{stack_dir}}/dns/dnsmasq_image'
+    name: "custom/dnsmasq"
+    tag: latest
+    source: build
+    force_source: true
+    force_tag: true
+
+### DEPLOY ###
+- name: Deploy Docker Compose Stack
+  community.docker.docker_compose_v2:
+    project_name: '{{docker_proj_name}}'
+    project_src: '{{stack_dir}}/dns'
+    files:
+      - compose.yml

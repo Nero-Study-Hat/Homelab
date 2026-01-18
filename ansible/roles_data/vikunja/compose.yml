@@ -1,0 +1,32 @@
+services:
+  {{project_name}}:
+    container_name: "{{project_name}}"
+    image: vikunja/vikunja
+    restart: unless-stopped
+    networks:
+      {{project_name}}_backend:
+      {{network_backend.name}}:
+        ipv4_address: "{{network_backend.traefik_ips.vikunja}}"
+    volumes:
+      - ./files:/app/vikunja/files
+      - ./db:/db
+    environment:
+      VIKUNJA_SERVICE_PUBLICURL: "https://{{domain}}"
+      # Note the default path is /app/vikunja/vikunja.db.
+      # This config variable moves it to a different folder so you can use a volume and 
+      # store the database file outside the container so state is persisted even if the container is destroyed.
+      VIKUNJA_DATABASE_PATH: /db/vikunja.db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.zone.main=true"
+      - "traefik.docker.network={{network_backend.name}}"
+      - "traefik.http.routers.{{project_name}}.rule=Host(`{{domain}}`)"
+      - "traefik.http.routers.{{project_name}}.entrypoints=https"
+      - "traefik.http.routers.{{project_name}}.tls=true"
+      - "traefik.http.routers.{{project_name}}.tls.certresolver=desec"
+
+
+networks:
+  {{project_name}}_backend:
+  {{network_backend.name}}:
+    external: true

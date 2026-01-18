@@ -1,0 +1,32 @@
+{
+    "ProjectName": "monitor_outpost",
+    "NetworkSetup": "t3_only",
+    "UserGateDetails": {
+        "day": {
+            "traefik.monitor": [
+                "100.121.237.28 # stardom"
+            ]
+        },
+        "night": {
+            "traefik.monitor": [
+                "100.121.237.28 # stardom"
+            ]
+        }
+    },
+    "DirectoriesToCreate": [
+        "ts_outpost",
+        "ts_alloy",
+        "alloy"
+    ],
+    "TemplatesRemoteRelativePaths": {
+        "config.alloy": "alloy/config.alloy"
+    },
+    "FilesRemoteRelativePaths": {
+        "traefik.yml": "traefik.yml"
+    },
+    "UserGateHost": "dusk",
+    "Hosts": [
+        "day",
+        "night"
+    ]
+}

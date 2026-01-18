@@ -1,0 +1,136 @@
+logging {
+  level = "info"
+  format = "logfmt"
+}
+
+// ### LOKI DOCKER LOGS PIPELINE ###
+
+discovery.docker "linux" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "logs_integrations_docker" {
+    targets = discovery.docker.linux.targets
+
+    // Extract container name (strip leading slash)
+    rule {
+        source_labels = ["__meta_docker_container_name"]
+        regex = "/(.*)"
+        target_label = "service_name"
+    }
+
+    // Drop containers whose name ends in "-nolog"
+    rule {
+        source_labels = ["__meta_docker_container_name"]
+        regex = ".*/.*-nolog$"
+        action = "drop"
+    }
+}
+
+loki.source.docker "default" {
+    host = "unix:///var/run/docker.sock"
+    targets = discovery.relabel.logs_integrations_docker.output
+    labels = {"platform" = "docker"}
+    forward_to = [loki.process.drop_traefik_dbg.receiver]
+}
+
+loki.process "drop_traefik_dbg" {
+  stage.drop {
+      older_than = "168h"
+      drop_counter_reason = "older than a week"
+  }
+
+  // stage.docker {}
+  stage.match {
+    selector = `{container_name=~"traefik|traefik-outpost"}` //TODO: make var for center or outpost traefik container name
+    stage.drop {
+      expression = `.*DBG.*github\.com/traefik/traefik/v3/pkg/server/service/loadbalancer/wrr/wrr\.go:173.*`
+      drop_counter_reason = "traefik loki alloy log loop"
+    }
+  }
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = "https://{{domains.loki}}/loki/api/v1/push"
+    headers = {
+      "X-Scope-OrgID" = "{{outpost_header}}",
+    }
+    batch_wait = "5s"
+    batch_size = "3MiB"
+    tls_config {
+      insecure_skip_verify = false
+    }
+  }
+}
+
+// ### CADVISOR METRICS PIPELINE ###
+
+prometheus.scrape "cadvisor_standalone" {
+    targets = [
+        { __address__ = "{{ t3_network_backend.traefik_ips.cadvisor }}:8080" },
+    ]
+    scrape_interval = "30s"
+    forward_to      = [ prometheus.relabel.cadvisor_standalone_relabeled.receiver ]
+}
+
+prometheus.relabel "cadvisor_standalone_relabeled" {
+    forward_to = [ prometheus.remote_write.mimir.receiver ]
+
+    rule {
+        action        = "replace"
+        source_labels = ["container_label_com_docker_compose_service"]
+        target_label  = "compose_service"
+    }
+
+    rule {
+        action        = "replace"
+        source_labels = ["container_label_com_docker_compose_project"]
+        target_label  = "compose_project"
+    }
+
+    rule {
+        action        = "drop"
+        source_labels = ["container_name"]
+        regex         = ".*-nometrics$"
+    }
+}
+
+// ### TRAEFIK & TAILSCALE METRICS PIPELINE ###
+
+// # TRAEFIK COLLECTION AND LABELING
+// also affected by tailscale grants
+// network_center traefik ip
+prometheus.scrape "traefik" {
+  targets = [
+{% for host in traefik_scrape_addresses %}
+    { __address__ = "{{ host }}:9100" },
+{% endfor %}
+  ]
+  scrape_interval = "30s"
+  forward_to = [ prometheus.remote_write.mimir.receiver ]
+}
+
+// # TAILSCALE COLLECTION AND LABELING
+prometheus.scrape "tailscale" {
+  targets = [
+{% for host in tailscale_scrape_addresses %}
+    { __address__ = "{{ host }}:9002" },
+{% endfor %}
+  ]
+  scrape_interval = "30s"
+  forward_to = [ prometheus.remote_write.mimir.receiver ]
+}
+
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "https://{{domains.mimir}}/api/v1/push"
+    headers = {
+      "X-Scope-OrgID" = "{{outpost_header}}",
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+  }
+}

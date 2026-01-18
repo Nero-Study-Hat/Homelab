@@ -1,0 +1,42 @@
+- name: Create desec api_token file
+  ansible.builtin.copy:
+    content: "{{ desec_api_token }}"
+    dest: "{{stack_dir}}/desec_api_token.txt"
+
+- name: Create a docker MACVLAN for tailscale direct connections
+  community.docker.docker_network:
+    name: "{{ macvlan.name }}"
+    ipam_config: "{{ macvlan.ipam_options }}"
+    driver: "macvlan"
+    driver_options:
+      parent: "{{ macvlan.parent_interface }}"
+
+# - name: Create traefik specific networks
+#   community.docker.docker_network:
+#     name: "{{ t3_network_backend.name }}"
+#     ipam_config: "{{ t3_network_backend.ipam_options }}"
+
+- name: Create .env file with traefik dashboard credentials and ts_authkey
+  ansible.builtin.copy:
+    dest: "{{stack_dir}}/.env"
+    content: |
+      TRAEFIK_DASHBOARD_CREDENTIALS={{ TRAEFIK_DASHBOARD_CREDENTIALS }}
+      TS_AUTHKEY={{ ts_auth_key }}
+      TS_ALLOY_AUTHKEY={{ ts_auth_alloy_key }}
+
+- name: Create acme.json file
+  ansible.builtin.file:
+    path: "{{stack_dir}}/acme.json"
+    state: "touch"
+    mode: '0600'
+
+- name: Include Local DNS Role - User DNS
+  include_role:
+    name: local_dns
+  vars:
+    dns_docker_dir: "{{docker_dir}}"
+    dns_project_name: "{{project_name}}"
+    net_name: "{{ t3_network_backend.name }}"
+    dns_ip: "{{t3_network_backend.traefik_ips.dns}}"
+    upstream_server: "{{dns.upstream_server}}"
+    config: "{{dns.config}}"

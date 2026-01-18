@@ -1,0 +1,24 @@
+- name: Create a docker MACVLAN for tailscale direct connections
+  community.docker.docker_network:
+    name: "{{ macvlan.name }}"
+    ipam_config: "{{ macvlan.ipam_options }}"
+    driver: "macvlan"
+    driver_options:
+      parent: "{{ macvlan.parent_interface }}"
+
+- name: Include Local DNS Role - User DNS
+  include_role:
+    name: local_dns
+  vars:
+    dns_docker_dir: "{{docker_dir}}"
+    dns_project_name: "{{project_name}}"
+    net_name: "{{ shared_network_backend.name }}"
+    dns_ip: "{{shared_network_backend.ips.dns}}"
+    upstream_server: "{{dns.upstream_server}}"
+    config: "{{dns.config}}"
+
+- name: Create .env file with ts_authkey
+  ansible.builtin.copy:
+    dest: "{{stack_dir}}/.env"
+    content: |
+      TS_AUTHKEY={{ ts_auth_key }}

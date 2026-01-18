@@ -1,0 +1,64 @@
+services:
+
+  ts-gate:
+    image: tailscale/tailscale:latest
+    container_name: ts-gate
+    hostname: ts-gate
+    expose:
+      - "80"
+      - "443"
+      - "53/udp"
+      - "41641/udp"
+    networks:
+      {{ macvlan.name }}:
+        ipv4_address: "{{ macvlan.ip }}"
+        mac_address: "{{ macvlan.mac_address }}"
+      {{ network_backend.name }}:
+        ipv4_address: "{{ network_backend.ip }}"
+    environment:
+      TS_ENABLE_METRICS: "true"
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: false
+      TS_ACCEPT_ROUTES: "true"
+      TS_ADVERTISE_DNS: "{{ dns.ip }}"
+      TS_EXTRA_ARGS: "--accept-routes"
+      TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
+    volumes:
+      - ./ts-nginx:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
+  nginx-stream-proxy:
+    image: nginx:alpine
+    container_name: nginx-stream-proxy
+    network_mode: service:ts-gate
+    restart: unless-stopped
+    depends_on:
+      - ts-gate
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+  gate_dns:
+    image: custom/dnsmasq
+    container_name: gate_dns
+    depends_on:
+      - ts-gate
+    network_mode: service:ts-gate
+    volumes:
+      - ./dnsmasq_image/dnsmasq.conf:/etc/dnsmasq.conf:ro
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+networks:
+  {{ macvlan.name }}:
+    external: true
+  "{{network_backend.name}}":
+    external: true

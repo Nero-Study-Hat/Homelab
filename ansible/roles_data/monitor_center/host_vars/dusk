@@ -1,0 +1,47 @@
+### MONITOR CENTER ###
+
+monitor_center:
+  name: "monitor_center"
+  network_backend:
+    name: "monitor_center"
+    ipam_options:
+    - subnet: "10.120.20.0/28"
+      gateway: "10.120.20.1"
+    ips:
+      tailscale: "10.120.20.2"
+      traefik: "10.120.20.3"
+      dns: "10.120.20.4"
+      grafana: "10.120.20.5"
+      loki: "10.120.20.6"
+      mimir: "10.120.20.7"
+      alloy: "10.120.20.8"
+      cadvisor: "10.120.20.9"
+  outpost_header: "dusk-outpost"
+  traefik_scrape_addresses:
+    - "10.120.0.2" # network center
+  tailscale_scrape_addresses:
+    - "100.70.0.2" # dusk server - network center
+    - "100.80.1.1" # dusk server - user gateway
+    - "100.80.20.3" # dusk server - monitor center alloy
+    # - "100.80.31.1" # dusk edgeshark
+  domains:
+    traefik: "traefik.dusk.wiresndreams.dev"
+    grafana: "grafana.dusk.wiresndreams.dev"
+    loki: "loki.dusk.wiresndreams.dev"
+    mimir: "mimir.dusk.wiresndreams.dev"
+    alloy: "alloy.dusk.wiresndreams.dev"
+    cadvisor: "cadvisor.dusk.wiresndreams.dev"
+  dns:
+    upstream_server: "10.0.0.3"
+    config: |
+      address=/dusk.wiresndreams.dev/10.120.20.3
+
+# added to dhcp static mappings in opnsense
+macvlan_monitor_center:
+  name: "macvlan_monitor_center"
+  parent_interface: "eth3"
+  ip: "10.20.2.35"
+  mac_address: "26:b9:e5:80:b3:c3"
+  ipam_options:
+  - subnet: "10.20.2.32/29"
+    gateway: "10.20.2.33"

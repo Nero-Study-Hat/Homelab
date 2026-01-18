@@ -1,0 +1,90 @@
+worker_processes 1;
+
+events {
+    worker_connections 500;
+}
+
+# http block is for testing with acme staging, there is a redirect on traefik to https for when needed
+# traefik.day.wiresndreams.dev
+http {
+    server {
+        listen 0.0.0.0:80;  # Replace with actual tailscale IP
+        server_name traefik.day.wiresndreams.dev;
+
+        location / {
+            allow 100.121.237.28;  # Replace with valid tailnet client IP(s)
+            deny all;
+
+            proxy_pass http://10.110.0.2;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+
+    server {
+        listen 0.0.0.0:80;  # Replace with actual tailscale IP
+        server_name traefik.dusk.wiresndreams.dev;
+
+        location / {
+            allow 100.121.237.28;  # Replace with valid tailnet client IP(s)
+            deny all;
+
+            proxy_pass http://10.120.0.2;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+
+    server {
+        listen 0.0.0.0:80;  # Replace with actual tailscale IP
+        server_name traefik.night.wiresndreams.dev;
+
+        location / {
+            allow 100.121.237.28;  # Replace with valid tailnet client IP(s)
+            deny all;
+
+            proxy_pass http://10.130.0.2;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+}
+
+stream {
+    map_hash_bucket_size 256;
+    map "$ssl_preread_server_name:$remote_addr" $blocked {
+        default 1;
+
+        {% for instance_name, instance in traefik_instances.items() +%}
+        # {{ instance_name }}
+        {% for domain in instance.domains_list +%}
+        {%- for ip in domain.allowed_tailscale_client_ips +%}
+        "{{ domain.name }}:{{ ip }}" 0;
+        {%- endfor +%}
+        {% endfor +%}
+        {% endfor +%}
+    }
+
+    map $ssl_preread_server_name $backend {
+        hostnames;
+
+        {% for instance_name, instance in traefik_instances.items() +%}
+        # traefik-instance-{{ instance_name }}
+        {%- for domain in instance.domains_list +%}
+        {{ domain.name }}  {{ instance.traefik_ip }}:443;
+        {%- endfor +%}
+        {% endfor +%}
+    }
+
+    # conditional backend: real backend or blackhole
+    map $blocked $final_backend {
+        0 $backend;
+        1 0.0.0.0:1;  # connection refused
+    }
+
+    server {
+        listen 443;
+        ssl_preread on;
+        proxy_pass $final_backend;
+    }
+}

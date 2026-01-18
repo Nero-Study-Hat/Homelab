@@ -1,0 +1,35 @@
+{
+    "ProjectName": "network_center",
+    "NetworkSetup": "shared",
+    "UserGateDetails": {
+        "day": {
+            "traefik": [
+                "100.121.237.28 # stardom"
+            ]
+        },
+        "dusk": {
+            "traefik": [
+                "100.121.237.28 # stardom"
+            ]
+        },
+        "night": {
+            "traefik": [
+                "100.121.237.28 # stardom"
+            ]
+        }
+    },
+    "DirectoriesToCreate": [
+        "tailscale",
+        "traefik/data"
+    ],
+    "TemplatesRemoteRelativePaths": {},
+    "FilesRemoteRelativePaths": {
+        "traefik.yml": "traefik/data/traefik.yml"
+    },
+    "UserGateHost": "dusk",
+    "Hosts": [
+        "day",
+        "dusk",
+        "night"
+    ]
+}

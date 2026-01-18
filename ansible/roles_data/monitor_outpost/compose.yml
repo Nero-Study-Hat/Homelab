@@ -1,0 +1,221 @@
+services:
+
+  ts-monitor-outpost:
+    image: tailscale/tailscale:latest
+    container_name: ts-monitor-outpost
+    hostname: ts-monitor-outpost
+    expose:
+      - "80"
+      - "443"
+      - "9100"
+      - "41641/udp"
+    networks:
+      {{ macvlan.name }}:
+        ipv4_address: "{{ macvlan.ip }}"
+        mac_address: "{{ macvlan.mac_address }}"
+      {{t3_network_backend.name}}:
+        ipv4_address: "{{t3_network_backend.traefik_ips.tailscale_traefik}}" # tailscale_traefik, var is this way for automation purposes
+    environment:
+      TS_ENABLE_METRICS: "true"
+      TS_ACCEPT_DNS: "true"
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: false
+      TS_ACCEPT_ROUTES: "true"
+      TS_EXTRA_ARGS: "--accept-routes --accept-dns"
+      TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
+    volumes:
+      - ./ts_outpost:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
+  traefik-outpost:
+    image: traefik:v3.6
+    container_name: traefik-outpost
+    depends_on:
+      socket-proxy-outpost:
+        condition: "service_healthy"
+        restart: true
+    restart: unless-stopped
+    network_mode: service:ts-monitor-outpost
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      DESEC_TOKEN_FILE: /run/secrets/desec_api_token # note using _FILE for docker secrets
+      DESEC_POLLING_INTERVAL: "10"
+      DESEC_PROPAGATION_TIMEOUT: "140"
+      TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
+    secrets:
+      - desec_api_token
+    env_file: .env # use .env
+    volumes:
+      - "socket-proxy:/var/run" # access docker socket via proxy read-only
+      - /etc/localtime:/etc/localtime:ro
+      - ./traefik.yml:/traefik.yml:ro
+      - ./acme.json:/acme.json
+    labels:
+      - "traefik.enable=true"
+      - "traefik.zone.outpost=true"
+      - "traefik.docker.network=monitor_outpost"
+      - "traefik.http.routers.traefik.service=traefik-port"
+      - "traefik.http.services.traefik-port.loadbalancer.server.port=80"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`{{domains.traefik}}`)"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`{{domains.traefik}}`)"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=desec"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main={{domains.main}}"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans={{domains.wildcard}}"
+      - "traefik.http.routers.traefik-secure.service=traefik-secure-port"
+      - "traefik.http.services.traefik-secure-port.loadbalancer.server.port=443"
+
+  ts-monitor-alloy:
+    image: tailscale/tailscale:latest
+    container_name: ts-monitor-alloy
+    hostname: ts-monitor-alloy
+    expose:
+      - "41641/udp"
+    networks:
+      {{ macvlan.name }}:
+        ipv4_address: "{{ alloy_macvlan.ip }}"
+        mac_address: "{{ alloy_macvlan.mac_address }}"
+      {{t3_network_backend.name}}:
+        ipv4_address: {{t3_network_backend.traefik_ips.tailscale_alloy}}
+    environment:
+      TS_ENABLE_METRICS: "true"
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_AUTHKEY: ${TS_ALLOY_AUTHKEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: false
+      TS_ACCEPT_ROUTES: "true"
+      TS_ACCEPT_DNS: "true"
+      TS_EXTRA_ARGS: "--accept-routes --accept-dns"
+      TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
+    volumes:
+      - ./ts_alloy:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    restart: unless-stopped
+    network_mode: "service:ts-monitor-alloy"
+    depends_on:
+      ts-monitor-outpost:
+        condition: "service_started"
+        restart: true
+      socket-proxy-outpost:
+        condition: "service_healthy"
+        restart: true
+      cadvisor:
+        condition: "service_started"
+        restart: true
+    # additional required for cadvisor
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - './alloy/config.alloy:/etc/alloy/config.alloy'
+      - "socket-proxy:/var/run"
+    command:
+      - run
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.zone.outpost=true"
+      - "traefik.docker.network=monitor_outpost"
+      # Forward log pushes to the trusted Traefik instance from the untrusted Traefik instance - loki logs
+      - "traefik.http.routers.alloy-loki.entrypoints=https"
+      - "traefik.http.routers.alloy-loki.rule=Host(`{{domains.loki}}`)"
+      - "traefik.http.routers.alloy-loki.tls=true"
+      - "traefik.http.routers.alloy-loki.tls.certresolver=desec"
+      - "traefik.http.routers.alloy-loki.service=trusted-traefik-forward-loki"
+      - "traefik.http.services.trusted-traefik-forward-loki.loadbalancer.server.url=https://{{domains.loki_forward}}"
+      - "traefik.http.services.trusted-traefik-forward-loki.loadbalancer.passHostHeader=false"
+      # Forward log pushes to the trusted Traefik instance from the untrusted Traefik instance - mimir metrics
+      - "traefik.http.routers.alloy-mimir.entrypoints=https"
+      - "traefik.http.routers.alloy-mimir.rule=Host(`{{domains.mimir}}`)"
+      - "traefik.http.routers.alloy-mimir.tls=true"
+      - "traefik.http.routers.alloy-mimir.tls.certresolver=desec"
+      - "traefik.http.routers.alloy-mimir.service=trusted-traefik-forward-mimir"
+      - "traefik.http.services.trusted-traefik-forward-mimir.loadbalancer.server.url=https://{{domains.mimir_forward}}"
+      # passHostHeader is required for monitor_center to recognize the appopiate domain
+      - "traefik.http.services.trusted-traefik-forward-mimir.loadbalancer.passHostHeader=false"
+      # Add middleware
+      - "traefik.http.routers.alloy-loki.middlewares=add-tenant-header,rate-limit"
+      - "traefik.http.routers.alloy-mimir.middlewares=add-tenant-header,rate-limit"
+      - "traefik.http.middlewares.add-tenant-header.headers.customrequestheaders.X-Scope-OrgID={{outpost_header}}"
+      - "traefik.http.middlewares.rate-limit.ratelimit.average=100"
+      - "traefik.http.middlewares.rate-limit.ratelimit.burst=200"
+
+  # alloy-debug:
+  #   container_name: alloy-debug
+  #   image: alpine
+  #   command: ["sleep", "infinity"]
+  #   network_mode: "service:alloy"
+  #   stdin_open: true
+  #   tty: true
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:f5bec37-f5bec3744d92f01556c6ca528ee52f3a26402d6d
+    container_name: cadvisor
+    networks:
+      {{t3_network_backend.name}}:
+        ipv4_address: "{{t3_network_backend.traefik_ips.cadvisor}}"
+    expose:
+      - "8080"
+    # Mounts necessary directories for cAdvisor to access container runtime information.
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/run/containerd/containerd.sock:/run/containerd/containerd.sock:ro"
+      - "socket-proxy:/var/run"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.zone.outpost=true"
+      - "traefik.docker.network=monitor_outpost"
+      - "traefik.http.routers.cadvisor.rule=Host(`{{domains.cadvisor}}`)"
+      - "traefik.http.routers.cadvisor.entrypoints=https"
+      - "traefik.http.routers.cadvisor.tls=true"
+      - "traefik.http.routers.cadvisor.tls.certresolver=desec"
+      - "traefik.http.services.cadvisor.loadbalancer.server.port=8080"
+
+  socket-proxy-outpost:
+    image: "11notes/socket-proxy:2.1.6@sha256:2f4e605a5441b31389a95ef942af45927e8df4df4e974cfa271a388799d4f87b"
+    container_name: socket-proxy-outpost
+    network_mode: "none"
+    restart: "always"
+    read_only: true
+    user: "0:994"
+    volumes:
+      - "/run/docker.sock:/run/docker.sock:ro" # mount host docker socket, the :ro does not mean read-only for the socket, just for the actual file
+      - "socket-proxy:/run/proxy" # this socket is run as 1000:1000, not as root!
+
+secrets:
+  desec_api_token:
+    file: ./desec_api_token.txt
+
+volumes:
+  socket-proxy:
+
+networks:
+  {{ macvlan.name }}:
+    external: true
+  {{ t3_network_backend.name }}:
+     external: true

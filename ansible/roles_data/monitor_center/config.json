@@ -1,0 +1,42 @@
+{
+    "ProjectName": "monitor_center",
+    "NetworkSetup": "shared",
+    "UserGateDetails": {
+        "dusk": {
+            "grafana": [
+                "100.121.237.28 # stardom"
+            ],
+            "loki": [
+                "100.121.237.28 # stardom"
+            ],
+            "mimir": [
+                "100.121.237.28 # stardom"
+            ],
+            "cadvisor": [
+                "100.121.237.28 # stardom"
+            ],
+            "alloy": [
+                "100.121.237.28 # stardom"
+            ]
+        }
+    },
+    "DirectoriesToCreate": [
+        "tailscale/tailscale",
+        "tailscale/tailscale-data",
+        "loki",
+        "mimir",
+        "alloy"
+    ],
+    "TemplatesRemoteRelativePaths": {
+        "config.alloy": "alloy/config.alloy"
+    },
+    "FilesRemoteRelativePaths": {
+        "loki-config.yaml": "loki/loki-config.yaml",
+        "mimir.yaml": "mimir/mimir.yaml",
+        "alertmanager-fallback-config.yaml": "alertmanager-fallback-config.yaml"
+    },
+    "UserGateHost": "dusk",
+    "Hosts": [
+        "dusk"
+    ]
+}

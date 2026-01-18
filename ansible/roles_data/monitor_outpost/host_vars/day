@@ -1,0 +1,53 @@
+### MONITOR OUTPOST ###
+
+monitor_outpost:
+  name: "monitor_outpost"
+  network_backend:
+    name: "monitor_outpost"
+    ipam_options:
+    - subnet: "10.110.20.0/29"
+      gateway: "10.110.20.1"
+    traefik_ips:
+      traefik: "10.110.20.2"
+      tailscale_traefik: "10.110.20.3"
+      tailscale_alloy: "10.110.20.4"
+      cadvisor: "10.110.20.5"
+      dns: "10.110.20.6"
+  outpost_header: "day-outpost"
+  traefik_scrape_addresses:
+    # don't use tailscale addresses here
+    - "10.110.0.2" # network center 
+    - "10.110.20.3" # monitor outpost
+  tailscale_scrape_addresses:
+    - "100.70.0.1" # day server - network center
+    - "100.80.20.1" # day server - monitor outpost traefik
+    - "100.80.20.2" # day monitor - monitor outpost alloy
+  domains:
+    main: "day.wiresndreams.dev"
+    wildcard: "*.monitor.day.wiresndreams.dev"
+    traefik: "traefik.monitor.day.wiresndreams.dev"
+    loki: "loki.monitor.day.wiresndreams.dev"
+    loki_forward: "loki.dusk.wiresndreams.dev"
+    mimir: "mimir.monitor.day.wiresndreams.dev"
+    mimir_forward: "mimir.dusk.wiresndreams.dev"
+    cadvisor: "cadvisor.day.wiresndreams.dev"
+  dns:
+    upstream_server: "10.0.0.3"
+    config: |
+      address=/monitor.day.wiresndreams.dev/10.110.20.3
+
+# added to dhcp static mappings in opnsense
+macvlan_monitor_outpost:
+  name: "macvlan_outpost"
+  parent_interface: "eth2"
+  ip: "10.20.1.35"
+  mac_address: "da:91:79:c6:65:b6"
+  ipam_options:
+  - subnet: "10.20.1.32/29"
+    gateway: "10.20.1.33"
+
+# added to dhcp static mappings in opnsense
+host_alloy_macvlan:
+  ip: "10.20.1.36"
+  mac_address: "d6:cd:54:bc:a3:85"
+  

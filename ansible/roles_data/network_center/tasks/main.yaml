@@ -1,0 +1,64 @@
+### HANDLE SECRETS WORK ###
+
+- name: Create .env file with traefik dashboard credentials and ts_authkey
+  ansible.builtin.copy:
+    dest: "{{stack_dir}}/.env"
+    content: |
+      TRAEFIK_DASHBOARD_CREDENTIALS={{ TRAEFIK_DASHBOARD_CREDENTIALS }}
+      TS_AUTHKEY={{ ts_auth_key }}
+
+- name: Create api_token file
+  ansible.builtin.copy:
+    content: "{{ desec_api_token }}"
+    dest: "{{stack_dir}}/desec_api_token.txt"
+
+- name: Create acme.json file
+  ansible.builtin.file:
+    path: "{{stack_dir}}/traefik/data/acme.json"
+    state: "touch"
+    mode: '0600'
+
+### HANDLE NETWORKING ###
+
+- name: Create shared networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    ipam_config: "{{ item.ipam_options }}"
+  loop: "{{ networks.shared | default([], true) }}"
+  when: networks.shared is not none
+  
+
+- name: Create traefik specific networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    ipam_config: "{{ item.ipam_options }}"
+  loop: "{{ networks.traefik_specific | default([], true) }}"
+  when: networks.traefik_specific is not none
+
+- name: Create tailscale specific networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    ipam_config: "{{ item.ipam_options }}"
+  loop: "{{ networks.tailscale_specific | default([], true) }}"
+  when: networks.tailscale_specific is not none
+
+- name: Create a docker MACVLAN for tailscale direct connections
+  community.docker.docker_network:
+    name: "{{ macvlan.name }}"
+    ipam_config: "{{ macvlan.ipam_options }}"
+    driver: "macvlan"
+    driver_options:
+      parent: "{{ macvlan.parent_interface }}"
+
+### LOCAL DNS SETUP ###
+
+- name: Include Local DNS Role - User DNS
+  include_role:
+    name: local_dns
+  vars:
+    dns_docker_dir: "{{docker_dir}}"
+    dns_project_name: "{{project_name}}"
+    net_name: "{{ network_backend.name }}"
+    dns_ip: "{{network_backend.ips.dns}}"
+    upstream_server: "{{dns.upstream_server}}"
+    config: "{{dns.config}}"

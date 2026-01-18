@@ -1,0 +1,23 @@
+services:
+
+  {{project_name}}:
+    image: custom/dnsmasq
+    container_name: "{{project_name}}-dns"
+    expose:
+      - "53/udp"
+    dns: "127.0.0.1"
+    networks:
+      {{net_name}}:
+        ipv4_address: "{{dns_ip}}"
+    volumes:
+      - ./dnsmasq_image/dnsmasq.conf:/etc/dnsmasq.conf:ro
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+networks:
+  {{net_name}}:
+    external: true

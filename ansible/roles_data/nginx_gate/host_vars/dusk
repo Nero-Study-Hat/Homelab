@@ -1,0 +1,39 @@
+#### USER GATEWAY ###
+
+gate_name: "dusk_gate"
+
+gate_dns_conf:
+  ip: "100.80.1.1"
+  upstream_server: "10.0.0.3"
+  records: |
+    address=/day.wiresndreams.dev/100.80.1.1
+    address=/dusk.wiresndreams.dev/100.80.1.1
+    address=/night.wiresndreams.dev/100.80.1.1
+
+gate_traefik_instances:
+  day:
+    traefik_ip: 10.110.0.2
+    domains_list: # day
+  dusk:
+    traefik_ip: 10.120.0.2
+    domains_list: # dusk
+  night:
+    traefik_ip: 10.130.0.2
+    domains_list: # night
+
+# added to dhcp static mappings in opnsense
+macvlan_user_gate:
+  name: "macvlan_user_gate"
+  parent_interface: "eth1"
+  ip: "10.20.2.19"
+  mac_address: "56:9d:02:b2:98:a4"
+  ipam_options:
+  - subnet: "10.20.2.16/29"
+    gateway: "10.20.2.17"
+
+gate_network_backend:
+  name: "gate-tailscale-network"
+  ip: "10.120.4.2"
+  ipam_options:
+  - subnet: "10.120.4.0/29"
+    gateway: "10.120.4.1"

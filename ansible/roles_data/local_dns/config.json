@@ -1,0 +1,14 @@
+{
+    "ProjectName": "local_dns",
+    "NetworkSetup": "none",
+    "UserGateDetails": {},
+    "DirectoriesToCreate": [],
+    "TemplatesRemoteRelativePaths": {
+        "dnsmasq.conf.j2": "dnsmasq.conf"
+    },
+    "FilesRemoteRelativePaths": {
+        "Dockerfile": "Dockerfile"
+    },
+    "UserGateHost": "dusk",
+    "Hosts": []
+}
