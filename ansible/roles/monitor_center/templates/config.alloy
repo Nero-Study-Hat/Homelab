@@ -58,73 +58,50 @@ loki.write "default" {
       "X-Scope-OrgID" = "{{outpost_header}}",
     }
     batch_wait = "5s"
-    batch_size = "15MiB" //FIXME: larger than max loki msg_size
+    batch_size = "3MiB"
     tls_config {
       insecure_skip_verify = false
     }
   }
 }
 
-// ### PROMETHEUS METRICS PIPELINE ###
+// ### CADVISOR METRICS PIPELINE ###
 
-// # CADVISOR COLLECTION AND LABELING
-prometheus.exporter.cadvisor "linux_metric" {
-  store_container_labels = true
-  docker_host = "unix:///var/run/docker.sock"
-  docker_only = true
-  storage_duration = "5m"
+prometheus.scrape "cadvisor_standalone" {
+    targets = [
+        { __address__ = "{{ shared_network_backend.ips.cadvisor }}:8080" },
+    ]
+    scrape_interval = "30s"
+    forward_to      = [ prometheus.relabel.cadvisor_standalone_relabeled.receiver ]
 }
 
-discovery.relabel "metrics_integrations_docker" {
-  targets = prometheus.exporter.cadvisor.linux_metric.targets
+prometheus.relabel "cadvisor_standalone_relabeled" {
+    forward_to = [ prometheus.remote_write.mimir.receiver ]
 
-  rule {
-    source_labels = ["__meta_docker_container_name"]
-    regex         = "/(.*)"
-    target_label  = "service_name"
-  }
+    rule {
+        action        = "replace"
+        source_labels = ["container_label_com_docker_compose_service"]
+        target_label  = "compose_service"
+    }
 
-  rule {
-    source_labels = ["__meta_docker_container_image"]
-    target_label  = "image"
-  }
+    rule {
+        action        = "replace"
+        source_labels = ["container_label_com_docker_compose_project"]
+        target_label  = "compose_project"
+    }
 
-  rule {
-    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
-    target_label  = "compose_service"
-  }
-
-  rule {
-    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
-    target_label  = "compose_project"
-  }
-
-  rule {
-    replacement   = "docker"
-    target_label  = "platform"
-  }
-
-  rule {
-    replacement = "cadvisor"
-    target_label = "job"
-  }
-
-  rule {
-    source_labels = ["__meta_docker_container_name"]
-    regex = ".*/.*-nometrics$"
-    action = "drop"
-  }
+    rule {
+        action        = "drop"
+        source_labels = ["container_name"]
+        regex         = ".*-nometrics$"
+    }
 }
 
-prometheus.scrape "scraper" {
-  targets         = discovery.relabel.metrics_integrations_docker.output
-  scrape_interval = "30s"
-  forward_to      = [ prometheus.remote_write.mimir.receiver ]
-}
+// ### TRAEFIK & TAILSCALE METRICS PIPELINE ###
 
 // # TRAEFIK COLLECTION AND LABELING
 // also affected by tailscale grants
-// main traefik-day ip
+// network_center traefik ip
 prometheus.scrape "traefik" {
   targets = [
 {% for host in traefik_scrape_addresses %}

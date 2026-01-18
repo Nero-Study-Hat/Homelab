@@ -80,6 +80,7 @@ services:
     image: "11notes/socket-proxy:2.1.6@sha256:2f4e605a5441b31389a95ef942af45927e8df4df4e974cfa271a388799d4f87b"
     container_name: socket-proxy-alloy
     restart: "always"
+    network_mode: "none"
     read_only: true
     user: "0:994"
     volumes:
@@ -106,7 +107,7 @@ services:
       TS_SOCKET: /var/run/tailscale/tailscaled.sock
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
-      TS_USERSPACE: false # this line breaks dns but is needed for reaching out to tailscale devices
+      TS_USERSPACE: false
       TS_ACCEPT_ROUTES: "true"
       TS_EXTRA_ARGS: "--accept-routes --accept-dns"
       TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
@@ -118,26 +119,29 @@ services:
     cap_add:
       - net_admin
 
+  # NOTE: recreating this container requires recreating the tailscale container which
+  #       requires clearing out the existing device entry in the tailscale admin ui
   alloy:
-    image: grafana/alloy:latest
+    image: grafana/alloy:v1.12.1
     container_name: alloy
     restart: unless-stopped
     depends_on:
-    - socket-proxy-alloy
     - ts-monitor-center
+    - socket-proxy-alloy
+    - cadvisor
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
       - --storage.path=/var/lib/alloy/data
       - /etc/alloy/config.alloy
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'  # Limit to 50% of one CPU core
-          memory: 512M  # Limit to 512MB RAM
-        reservations:
-          cpus: '0.1'  # Reserve 10% of one CPU core
-          memory: 128M  # Reserve 128MB RAM
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '0.5'  # Limit to 50% of one CPU core
+    #       memory: 512M  # Limit to 512MB RAM
+    #     reservations:
+    #       cpus: '0.1'  # Reserve 10% of one CPU core
+    #       memory: 128M  # Reserve 128MB RAM
     network_mode: "service:ts-monitor-center"
     # additional required for cadvisor
     volumes:
@@ -145,8 +149,8 @@ services:
       - "/var/run:/var/run:ro"
       - "/sys:/sys:ro"
       - "/var/lib/docker/:/var/lib/docker:ro"
-      - './alloy/config.alloy:/etc/alloy/config.alloy'
       - "socket-proxy:/var/run"
+      - './alloy/config.alloy:/etc/alloy/config.alloy'
     labels:
       - "traefik.enable=true"
       - "traefik.zone.main=true"
@@ -158,19 +162,22 @@ services:
       - "traefik.http.services.alloy.loadbalancer.server.port=12345"
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: ghcr.io/google/cadvisor:f5bec37-f5bec3744d92f01556c6ca528ee52f3a26402d6d
     container_name: cadvisor
     dns: "{{shared_network_backend.ips.dns}}"
     networks:
       monitoring_backend:
       {{shared_network_backend.name}}:
         ipv4_address: "{{shared_network_backend.ips.cadvisor}}"
+    expose:
+      - "8080"
     # Mounts necessary directories for cAdvisor to access container runtime information.
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:ro"
       - "/sys:/sys:ro"
       - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/run/containerd/containerd.sock:/run/containerd/containerd.sock:ro"
       - "socket-proxy:/var/run"
     labels:
       - "traefik.enable=true"

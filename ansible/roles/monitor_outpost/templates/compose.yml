@@ -14,15 +14,15 @@ services:
         ipv4_address: "{{ macvlan.ip }}"
         mac_address: "{{ macvlan.mac_address }}"
       {{t3_network_backend.name}}:
-        ipv4_address: {{t3_network_backend.traefik_ips.tailscale_traefik}}
+        ipv4_address: "{{t3_network_backend.traefik_ips.tailscale_traefik}}" # tailscale_traefik, var is this way for automation purposes
     environment:
       TS_ENABLE_METRICS: "true"
+      TS_ACCEPT_DNS: "true"
       TS_SOCKET: /var/run/tailscale/tailscaled.sock
       TS_AUTHKEY: ${TS_AUTHKEY}
       TS_STATE_DIR: /var/lib/tailscale
       TS_USERSPACE: false
       TS_ACCEPT_ROUTES: "true"
-      TS_ACCEPT_DNS: "true"
       TS_EXTRA_ARGS: "--accept-routes --accept-dns"
       TS_TAILSCALED_EXTRA_ARGS: "--port=41641"
     volumes:
@@ -46,6 +46,8 @@ services:
       - no-new-privileges:true
     environment:
       DESEC_TOKEN_FILE: /run/secrets/desec_api_token # note using _FILE for docker secrets
+      DESEC_POLLING_INTERVAL: "10"
+      DESEC_PROPAGATION_TIMEOUT: "140"
       TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
     secrets:
       - desec_api_token
@@ -86,7 +88,7 @@ services:
         ipv4_address: "{{ alloy_macvlan.ip }}"
         mac_address: "{{ alloy_macvlan.mac_address }}"
       {{t3_network_backend.name}}:
-        ipv4_address: {{t3_network_backend.traefik_ips.alloy}}
+        ipv4_address: {{t3_network_backend.traefik_ips.tailscale_alloy}}
     environment:
       TS_ENABLE_METRICS: "true"
       TS_SOCKET: /var/run/tailscale/tailscaled.sock
@@ -111,8 +113,14 @@ services:
     restart: unless-stopped
     network_mode: "service:ts-monitor-alloy"
     depends_on:
+      ts-monitor-outpost:
+        condition: "service_started"
+        restart: true
       socket-proxy-outpost:
         condition: "service_healthy"
+        restart: true
+      cadvisor:
+        condition: "service_started"
         restart: true
     # additional required for cadvisor
     volumes:
@@ -145,6 +153,7 @@ services:
       - "traefik.http.routers.alloy-mimir.tls.certresolver=desec"
       - "traefik.http.routers.alloy-mimir.service=trusted-traefik-forward-mimir"
       - "traefik.http.services.trusted-traefik-forward-mimir.loadbalancer.server.url=https://{{domains.mimir_forward}}"
+      # passHostHeader is required for monitor_center to recognize the appopiate domain
       - "traefik.http.services.trusted-traefik-forward-mimir.loadbalancer.passHostHeader=false"
       # Add middleware
       - "traefik.http.routers.alloy-loki.middlewares=add-tenant-header,rate-limit"
@@ -160,6 +169,32 @@ services:
   #   network_mode: "service:alloy"
   #   stdin_open: true
   #   tty: true
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:f5bec37-f5bec3744d92f01556c6ca528ee52f3a26402d6d
+    container_name: cadvisor
+    networks:
+      {{t3_network_backend.name}}:
+        ipv4_address: "{{t3_network_backend.traefik_ips.cadvisor}}"
+    expose:
+      - "8080"
+    # Mounts necessary directories for cAdvisor to access container runtime information.
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/run/containerd/containerd.sock:/run/containerd/containerd.sock:ro"
+      - "socket-proxy:/var/run"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.zone.outpost=true"
+      - "traefik.docker.network=monitor_outpost"
+      - "traefik.http.routers.cadvisor.rule=Host(`{{domains.cadvisor}}`)"
+      - "traefik.http.routers.cadvisor.entrypoints=https"
+      - "traefik.http.routers.cadvisor.tls=true"
+      - "traefik.http.routers.cadvisor.tls.certresolver=desec"
+      - "traefik.http.services.cadvisor.loadbalancer.server.port=8080"
 
   socket-proxy-outpost:
     image: "11notes/socket-proxy:2.1.6@sha256:2f4e605a5441b31389a95ef942af45927e8df4df4e974cfa271a388799d4f87b"
@@ -182,5 +217,5 @@ volumes:
 networks:
   {{ macvlan.name }}:
     external: true
-  "{{t3_network_backend.name}}":
+  {{ t3_network_backend.name }}:
      external: true
