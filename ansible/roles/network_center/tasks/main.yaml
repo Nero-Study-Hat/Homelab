@@ -67,7 +67,6 @@
 - name: Create traefik specific networks
   community.docker.docker_network:
     name: "{{ item.name }}"
-    internal: "true"
     ipam_config: "{{ item.ipam_options }}"
   loop: "{{ networks.traefik_specific | default([], true) }}"
   when: networks.traefik_specific is not none
@@ -75,7 +74,6 @@
 - name: Create tailscale specific networks
   community.docker.docker_network:
     name: "{{ item.name }}"
-    # internal: "true"
     ipam_config: "{{ item.ipam_options }}"
   loop: "{{ networks.tailscale_specific | default([], true) }}"
   when: networks.tailscale_specific is not none

@@ -77,6 +77,8 @@ services:
       {%- endfor +%}
     environment:
       DESEC_TOKEN_FILE: /run/secrets/desec_api_token # note using _FILE for docker secrets
+      DESEC_POLLING_INTERVAL: "10"
+      DESEC_PROPAGATION_TIMEOUT: "140"
       TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
     secrets:
       - desec_api_token
