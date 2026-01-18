@@ -41,3 +41,11 @@ terraform.rc
 
 # Ignore nix flake generated .direnv dir
 **/.direnv/
+
+# Ignore for Vitepress Docs
+**/node_modules
+**/.vitepress/cache
+**/.vitepress/dist
+
+# Ignore private .env files which may I may leave by accident
+**/.env.private
