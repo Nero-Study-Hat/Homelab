@@ -240,6 +240,7 @@ Those in use below.
 | night-server-monitor-alloy   | tailscale container +<br>alloy sidecar                                      | monitor_outpost                           | "100.80.20.5/32"         |
 | me-client                    | n/a                                                                         | n/a                                       | n/a                      |
 | webvm-server                 | Web Dev Proxmox VM                                                          | VLAN: Web_Dev                             | "100.90.0.0/32"          |
+| ci-dev                       | Github Actions Runners                                                      | n/a                                       | n/a                      |
 
 > [!warning]
 > - `day-shark-server` needs to be matched by tags for dusk and night, all with up to date nodeAttr IP Pool assignments

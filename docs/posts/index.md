@@ -55,7 +55,7 @@ I chose it over alternatives such as Palumi, OpenTofu, etc. because
 > - https://github.com/Nero-Study-Hat/Homelab/blob/feat/v1-safe-end-services/secrets/state-read.sh
 > 
 > No further comment will be made of my secrets management approach here because there is separate doc for that.
-> > [Homelab - Secrets Management](docs/servers/secret_management.md)
+> > [Homelab - Secrets Management](./servers/secret_management.md)
 
 #### Proxmox VE
 https://yasha.solutions/posts/2025-09-01-introduction-to-proxmox-virtualization/
@@ -89,7 +89,7 @@ https://www.scalecomputing.com/resources/what-is-ansible
 I am not using Ansible Tower or Ansible Semaphore because
 1. I am currently the only administrator of my relatively small environment. I don't need RBAC (Role Based Access Controls) at the moment.
 2. I plan to orchestrate my automation tasks using a separate orchestration service that will handle more than just Ansible.
-   refer to this roadmap doc for more details: [Roadmap Overview](docs/roadmap/roadmap_overview.md)
+   refer to this roadmap doc for more details: [Roadmap Overview](./roadmap/roadmap_overview.md)
 3. I don't need a web UI for replacing the small amount of Ansible cli-tool usage I currently have.
 
 I am not using other system configuration tools because it offers many benefits of a proper system configuration management tool that go beyond scripting without the increased complexity and knowledge requirements of other tools in the same space.
@@ -103,12 +103,12 @@ I chose Docker Compose over Podman and K3S because
 1. Learning and using it boosts my chances of getting a job.
 2. It offered a very simple introduction to containerization.
 
-I will continue to use it until I feel I have learned Docker at a deep level and wave 1 of my [Roadmap](docs/roadmap/roadmap_overview.md) is complete.
+I will continue to use it until I feel I have learned Docker at a deep level and wave 1 of my [Roadmap](./roadmap/roadmap_overview.md) is complete.
 
 ## Core Network Tools
 > [!important]
 > To learn more about what I am using in my networking setup and how I have approached it with why go to these docs.
-> > [Network Setup](docs/network/main.md)
+> > [Network Setup](./network/main.md)
 
 #### OPNSense
 https://www.zenarmor.com/docs/network-security-tutorials/what-is-opnsense

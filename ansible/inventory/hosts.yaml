@@ -1,14 +1,6 @@
 myhosts:
   hosts:
     day:
-        ansible_host: 100.80.0.2
-        ansible_become: yes
-        ansible_become_method: sudo
-        ansible_connection: ssh
-        ansible_user: ansible
-        ansible_python_interpreter: "/usr/bin/python3.11"
-
-    dusk:
         ansible_host: 100.80.0.1
         ansible_become: yes
         ansible_become_method: sudo
@@ -16,8 +8,16 @@ myhosts:
         ansible_user: ansible
         ansible_python_interpreter: "/usr/bin/python3.11"
 
+    dusk:
+        ansible_host: 100.80.0.0
+        ansible_become: yes
+        ansible_become_method: sudo
+        ansible_connection: ssh
+        ansible_user: ansible
+        ansible_python_interpreter: "/usr/bin/python3.11"
+
     night:
-        ansible_host: 100.80.0.3
+        ansible_host: 100.80.0.2
         ansible_become: yes
         ansible_become_method: sudo
         ansible_connection: ssh

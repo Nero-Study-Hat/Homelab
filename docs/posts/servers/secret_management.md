@@ -5,7 +5,7 @@
 > What feels like glaring holes are acceptable at the current project stage because they aren't actually glaring holes for where my threat model is at right now. This is considering what is being run and how access is being handled currently.
 > 
 > To see planned changes look in the
-> > [Roadmap Doc](roadmap_overview.md)
+> > [Roadmap Doc](../roadmap/roadmap_overview.md)
 
 ## Why I Use SOPS with the Age Backend
 

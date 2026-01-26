@@ -1,0 +1,50 @@
+name: Build Vitepress Docs and if successful call my Personal-Website repository to pull the built docs.
+
+on:
+  push:
+    paths:
+      - "docs/**"
+  pull_request:
+    paths:
+      - "docs/**"
+
+jobs:
+  docs-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install Node.js (includes npm)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: docs/package-lock.json
+
+      # Install dependencies
+      - name: Install npm dependencies
+        working-directory: docs
+        run: npm ci
+
+      # Vitepress build
+      - name: Build Vitepress site
+        working-directory: docs
+        run: npx vitepress build
+      
+      # Not uploading build based on standard practice.
+      - name: Upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: homelab-vitepress-docs
+          path: docs
+
+
+  pull-build-to-site-repo:
+    needs: docs-build
+    uses: Nero-Study-Hat/Personal_Website/.github/workflows/ci-pull-homelab-docs.yml@mvp
+    with:
+      artifact_name: homelab-vitepress-docs

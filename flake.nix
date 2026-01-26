@@ -23,21 +23,20 @@
 			devShell = pkgs.mkShell {
 				packages = with pkgs; [
 					terraform
-					go
 					ansible
 					ansible-lint
 					sops
 					age
-                	libguestfs
-                	guestfs-tools
 					nmap
 					openssl
                     nodejs_25
+                    act
 				];
 
 				shellHook = ''
 					echo "Starting new shell";
 					export ANSIBLE_CONFIG="ansible/ansible.cfg"
+                    export DOCKER_HOST="unix:///run/user/$(id -u)/docker.sock"
 				'';
 			};
 		}

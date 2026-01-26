@@ -1,0 +1,52 @@
+name: Check for end Ansible role drift from role_data.
+
+on:
+  push:
+    paths:
+      - "ansible/**"
+  pull_request:
+    paths:
+      - "ansible/**"
+
+jobs:
+  build-role-data-and-check-output-drift:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Checkout the repository
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+        with:
+          ref: feat/v1-safe-end-services
+
+      - name: Checkout Service Config Generator repository
+        run: |
+          git clone https://github.com/Nero-Study-Hat/Homelab-Tools.git
+          mv "Homelab-Tools" "tools-repo"
+
+      - name: Create build output directory for the tool
+        run: mkdir -p role-data-build
+
+      - name: Create a new input.txt file and write headless inputs
+        working-directory: tools-repo/service_config_generator/app
+        run: |
+          realpath "$GITHUB_WORKSPACE/ansible/roles_data" >> input.txt
+          echo "$GITHUB_WORKSPACE/role-data-build" >> input.txt
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build role data from current repository
+        working-directory: tools-repo/service_config_generator/app
+        run: |
+          dotnet run "headless" < input.txt
+
+        # if either diff step fails, they exit with a code 0 failing the step and job
+      - name: Diff check host_vars
+        run: diff -r "ansible/inventory/host_vars" "role-data-build/inventory/host_vars"
+
+      - name: Diff check roles
+        run: diff -r "ansible/roles" "role-data-build/roles"

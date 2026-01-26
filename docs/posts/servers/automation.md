@@ -79,7 +79,7 @@ Responsibilities
 #### `local_dns`
 
 This is never used directly in an Ansible playbook. Instead it is used by particular Ansible roles. To so more about my DNS setup and the decisions made there here are my network docs.
-> [Network Docs](.././network)
+> [Network Docs#DNS](../network/main.md#DNS)
 
 Responsibilities
 - deploy `dnsmasq` instance
@@ -102,7 +102,7 @@ Responsibilities
 - filter what services given users can access in the Tailnet
 
 To learn more about traffic flow and how that is being handled look at
-> [Traffic Flow](.././network/traffic_flow.md)
+> [Traffic Flow](../network/traffic_flow.md)
 
 #### `monitor_center` & `monitor_outpost`
 These are the key roles in my monitoring setup which is discussed in depth in this document.

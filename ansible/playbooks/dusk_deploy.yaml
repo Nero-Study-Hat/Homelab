@@ -17,10 +17,10 @@
     #   vars:
     #     swap_file_size_mb: '1024'
 
-
     # - name: Pause for 1 minute for dns propagation to finish before running network role
     #   ansible.builtin.pause:
     #     minutes: 1
+
 
     # - name: Include Network Role
     #   include_role:
@@ -40,19 +40,20 @@
     #     networks: "{{host_networks}}"
     #     macvlan: "{{macvlan_network_center}}"
 
-    # - name: Include NGINX Gate Role - User Gateway
-    #   include_role:
-    #     name: nginx_gate
-    #   vars:
-    #     docker_dir: "{{host_docker_dir}}"
-    #     project_name: "nginx_gate"
-    #     traefik_instances: "{{ gate_traefik_instances }}"
-    #     ts_auth_key: "{{ sops_secrets.dusk_gate_server_ts_auth_key }}"
-    #     dns:
-    #       ip: "{{ gate_dns_conf.ip }}"
-    #       upstream_server: "{{ gate_dns_conf.upstream_server }}"
-    #       records: "{{ gate_dns_conf.records }}"
-    #     macvlan: "{{macvlan_user_gate}}"
+    - name: Include NGINX Gate Role - User Gateway
+      include_role:
+        name: nginx_gate
+      vars:
+        docker_dir: "{{host_docker_dir}}"
+        project_name: "nginx_gate"
+        network_backend: "{{ gate_network_backend }}"
+        traefik_instances: "{{ gate_traefik_instances }}"
+        ts_auth_key: "{{ sops_secrets.dusk_gate_server_ts_auth_key }}"
+        dns:
+          ip: "{{ gate_dns_conf.ip }}"
+          upstream_server: "{{ gate_dns_conf.upstream_server }}"
+          records: "{{ gate_dns_conf.records }}"
+        macvlan: "{{macvlan_user_gate}}"
 
 
 
@@ -69,17 +70,17 @@
     #     network_backend: "{{ edgeshark.network_backend }}"
     #     macvlan: "{{macvlan_edgeshark}}"
 
-    - name: Include Monitor Center Role
-      include_role:
-        name: monitor_center
-      vars:
-        ts_auth_key: "{{ sops_secrets.dusk_server_monitor_center_ts_auth_key }}"
-        docker_dir: "{{host_docker_dir}}"
-        project_name: "{{monitor_center.name}}"
-        shared_network_backend: "{{monitor_center.network_backend}}"
-        outpost_header: "{{monitor_center.outpost_header}}"
-        domains: "{{monitor_center.domains}}"
-        traefik_scrape_addresses: "{{monitor_center.traefik_scrape_addresses}}"
-        tailscale_scrape_addresses: "{{monitor_center.tailscale_scrape_addresses}}"
-        dns: "{{monitor_center.dns}}"
-        macvlan: "{{macvlan_monitor_center}}"
+    # - name: Include Monitor Center Role
+    #   include_role:
+    #     name: monitor_center
+    #   vars:
+    #     ts_auth_key: "{{ sops_secrets.dusk_server_monitor_center_ts_auth_key }}"
+    #     docker_dir: "{{host_docker_dir}}"
+    #     project_name: "{{monitor_center.name}}"
+    #     shared_network_backend: "{{monitor_center.network_backend}}"
+    #     outpost_header: "{{monitor_center.outpost_header}}"
+    #     domains: "{{monitor_center.domains}}"
+    #     traefik_scrape_addresses: "{{monitor_center.traefik_scrape_addresses}}"
+    #     tailscale_scrape_addresses: "{{monitor_center.tailscale_scrape_addresses}}"
+    #     dns: "{{monitor_center.dns}}"
+    #     macvlan: "{{macvlan_monitor_center}}"
