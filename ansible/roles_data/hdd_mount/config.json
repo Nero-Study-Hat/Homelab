@@ -1,0 +1,10 @@
+{
+    "ProjectName": "debian_server",
+    "NetworkSetup": "none",
+    "UserGateDetails": {},
+    "DirectoriesToCreate": [],
+    "TemplatesRemoteRelativePaths": {},
+    "FilesRemoteRelativePaths": {},
+    "UserGateHost": "dusk",
+    "Hosts": []
+}

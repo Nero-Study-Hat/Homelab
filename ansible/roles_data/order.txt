@@ -1,0 +1,9 @@
+debian_server
+hdd_mount
+local_dns
+nginx_gate
+network_center
+monitor_center
+monitor_outpost
+searxng
+vikunja
